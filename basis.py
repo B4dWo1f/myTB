@@ -57,8 +57,8 @@ class Base(object):
       self.x = self.pos[:,0]
       self.y = self.pos[:,1]
       self.z = self.pos[:,2]
-      ## Lattice vectors
-      self.latt = latt          # Lattice vectors
+      ## Lattice vectors  XXX Warning!! will fail if self.centter()  FIX
+      self.latt = latt
       self.recip = geo.reciprocal(latt)
       ## list of index per atom
       self.get_indices()
