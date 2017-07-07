@@ -135,7 +135,8 @@ class Hamiltonian(object):
       else:
          LG.info('Bands with eigevectors')
          Opp = Op
-      X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
+      #X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
+      X,Y,Z = bands.bands(path,self.lista,Op=Opp) #,sigma=sigma,n=k,ncpus=ncpus)
       if Opp: Z = [(v * Op * v.H)[0,0].real for v in Z]
       bname = folder+'%s.bands'%(self.tag)
       LG.debug('Writing bands to: '+bname)
@@ -342,7 +343,7 @@ def kinetic(base,hoppings,func=None,coup=1):
       JJ = np.append(JJ,auxJJ)
       DD = np.append(DD,auxDD)
       LG.info('  ...added %s term'%(nam))
-      H_aux = csc_matrix( (DD, (II, JJ)) )
+      H_aux = csc_matrix( (DD, (II, JJ)), shape=(ndim,ndim) )
       H_aux.eliminate_zeros()
       Htot.append( HTerm(H_aux,v,coup,name=nam) )
    return Htot
@@ -411,9 +412,10 @@ def electric(base,lElec):
    #XXX may fail for multiorbital
    LG.info('Doing matrix for electric field. lelec=%s'%(lElec))
    v = np.array([0.,0.,0.])
+   ndim = len(base.INDS)
    II = list(range(len(base.LAYS)))
    JJ = list(range(len(base.LAYS)))
-   H_aux = csc_matrix( (base.LAYS, (II, JJ)) )
+   H_aux = csc_matrix( (base.LAYS, (II, JJ)), shape=(ndim,ndim) )
    H_aux.eliminate_zeros()
    LG.info('... added electric field')
    return HTerm(H_aux,v,lElec,name='electric')

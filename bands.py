@@ -10,6 +10,32 @@ import logging
 import log_help
 LG = logging.getLogger(__name__)
 
+###################################
+def Hamil(Hlist,k,chk=True):
+   """
+     Hlist: list of HTerms (class) which contains the name of the element,
+            the coupling, the matrix and the exponential
+     k: np.array k point in which we want to evaluate the hamiltonian
+   *** Assumes only intra,x,y,xy terms are provided
+   """
+   Hamiltoniano = np.matrix(np.zeros(Hlist[0].mat.shape,dtype=complex))
+   for Hterm in Hlist:
+      l = Hterm.coup
+      M = Hterm.mat #.todense()   # XXX
+      v = Hterm.exp
+      if np.linalg.norm(v) != 0.:
+         Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
+         Hamiltoniano += l * M.H * np.exp(-1.j*np.dot(k,-v))
+      else: Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
+   if chk:      # Check for Hermiticity
+      A = Hamiltoniano-Hamiltoniano.H
+      if np.allclose(A,np.zeros(A.shape,dtype=complex)): pass
+      else:
+         msg = 'Hamiltonian is not hermitian H(%.2f,%.2f,%.2f)'%(k[0],k[1],k[2])
+         LG.critical(msg)
+         sys.exit(1)
+   return Hamiltoniano
+###################################
 
 def diagon(Htot,K,Op,sigma=0,n=0):
    """ Full diagonalization of the Hamiltonian for a given k """

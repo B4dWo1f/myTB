@@ -53,7 +53,7 @@ print(' '*18,'-'*40,' '*20)
 
 import IO
 ats,pos,latt,sub = IO.xyz(SP.xyz_file)
-latt = []
+#latt = []
 
 
 ## Base
@@ -64,7 +64,7 @@ for i in range(len(pos)):
    elems.append( Base_Element(i,a,atoms[a],r) )
 
 from time import time
-base = Base(elems,latt)
+base = Base(elems,latt,cent=False)
 base.get_neig(fol=FP.ham)
 base.get_sublattice(sub)
 base.get_layer()
@@ -122,7 +122,7 @@ import geometry as geo
 #from random import uniform, choice
 #op = OP.orbital(base_dfct,'s')
 if CP.bands:
-   Shw = False
+   Shw = True
    LG.info('Calculating bands')
    points = geo.get_points(base_pris.recip)
    points = [points[0],points[6],points[9], points[0]]
@@ -132,9 +132,10 @@ if CP.bands:
    LG.info('Bands Pristine done')
    LG.debug('Bands Defected')
    #print(IND_vac)
-   op = OP.atom(base_dfct,[IND_vac[0]])
-   H_dfct.get_bands(path,Op=op,folder=FP.out,show=Shw)
+   #op = OP.atom(base_dfct,[IND_vac[0]])
+   H_dfct.get_bands(path,folder=FP.out,show=Shw)
    LG.info('Bands Defected done')
+exit()
 
 if CP.spectrum:
    #Shw = False
