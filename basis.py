@@ -50,30 +50,77 @@ class Base_Element(object):
 
 class Base(object):
    def __init__(self, elements=[],latt=[],cent=True):
+      """
+        Capital letter attirbutes must have the dimension of the hamiltonian
+        Lower letter attirbutes must have the dimension of the number of atoms
+      """
       self.elements = elements  # List of Base_Elements
-      if cent: self.center()    # center unit cell in (0,0,0)
+      ats,orbs,pos = [],[],[]   #TODO adapt to include the sublattice
+      for e in elements:
+         ats.append(e.element)
+         orbs.append(e.orbitals)
+         pos.append(e.position)
+      inds,ATS = [],[]
+      for i in range(len(orbs)):
+         for _ in orbs[i]:
+            inds.append(i)
+            ATS.append(ats[i])
+      aux_orbs = []
+      for o in orbs:
+         for io in o:
+            aux_orbs.append(io)
+      ## Everything to numpy array
+      pos = np.array(pos)
+      ats = np.array(ats)
+      orbs = np.array(aux_orbs)
+      ATS = np.array(ATS)
+      inds = np.array(inds)
+      aux_inds = np.array(range(len(inds)))
+      ## Useful attributes
+      # Number of atoms
+      self.pos = pos
+      self.ats = ats
+      # Number of orbitals
+      self.ATS = ATS
+      self.ORBS = orbs
+      self.INDS = inds          #[0,0,0,1,1,1,.... Nats, Nats]
+      self.AUX_INDS = aux_inds  #[0,1,2,...Norbs]
       ## Positions of the atoms
-      self.pos = np.array([ e.position for e in self.elements ])
       self.x = self.pos[:,0]
       self.y = self.pos[:,1]
       self.z = self.pos[:,2]
-      ## Lattice vectors
-      self.latt = latt          # Lattice vectors
-      self.recip = geo.reciprocal(latt)
-      ## list of index per atom
-      self.get_indices()
-      self.update_basis()
-      ## auxiliary list of indices
-      self.inds = np.array([i for i in range(len(self.elements))])
+      ## Lattice vectors  #TODO Fix center of cell
+      self.latt = np.array(latt)
+      self.recip = np.array(geo.reciprocal(latt))
+      ### list of index per atom
+      #self.get_indices()
+      #self.update_basis()
+      ### auxiliary list of indices
+      #self.inds = np.array([i for i in range(len(self.elements))])
+      ## Fix geometry
+      if cent: sc = self.center()    # center unit cell in (0,0,0)
+      del pos,ats,orbs,ATS,inds,aux_inds
    def copy(self): return deepcopy(self)
-   def update_basis(self):
-      self.basis = []
-      for E in self.elements:
-         for o in E.orbitals:
-            try: ID = (E.place,E.element,o,E.sublattice)
-            except: ID = (E.place,E.element,o)
-            self.basis.append(ID)
-   def center(self): geo.center_cell(self)
+   ### Deprecated
+   #def update_basis(self):
+   #   self.basis = []
+   #   for E in self.elements:
+   #      for o in E.orbitals:
+   #         try: ID = (E.place,E.element,o,E.sublattice)
+   #         except: ID = (E.place,E.element,o)
+   #         self.basis.append(ID)
+   def center(self):
+      LG.debug('Centering cell')
+      v = np.mean(self.pos,axis=0)
+      LG.info('Center cell by vector: (%.3f,%.3f,%.3f)'%(v[0],v[1],v[2]))
+      for i in range(len(self.elements)):
+         self.elements[i].position -= v
+      self.pos -= v
+      if len(self.latt) > 0:
+         LG.info('Center lattice vectors')
+         self.latt -= v
+         LG.info('Recalculate reciprocal vectors')
+         self.recip = np.array(geo.reciprocal(self.latt))
    def __getitem__(self,index):  return self.elements[index]
    def __iter__(self): return (x for x in self.elements)
    def __str__(self):
@@ -110,8 +157,11 @@ class Base(object):
       for i in range(len(subs)):
          self.elements[i].sublattice = subs[i]
       self.sublattices = np.array(subs)
-      for i in range(len(self.basis)):
-         self.basis[i] += (self.sublattices[self.basis[i][0]],)
+      for i in range(len(self.sublattices)):
+         self.elements[i].sublattice = self.sublattices[i]
+      self.SUBS = []
+      for i in range(len(self.INDS)):
+         self.SUBS.append(self.sublattices[self.INDS[i]])
    def get_layer(self):
       """
         This function adds a sublattice attribute to the base elements
@@ -119,9 +169,14 @@ class Base(object):
       LG.info('Calculating Layer for each element')
       lays = geo.layer(self.pos)
       lays = 2*np.array(lays) - 1   #TODO general map to interval [-1,1]
+      self.layers = np.array(lays)
       for i in range(len(lays)):
          self.elements[i].layer = lays[i]
-      self.layers = lays
+      for i in range(len(self.layers)):
+         self.elements[i].layer = self.layers[i]
+      self.LAYS = []
+      for i in range(len(self.INDS)):
+         self.LAYS.append(self.layers[self.INDS[i]])
    def get_neig(self,nvec=5,fol='./'):
       LG.info('Looking for neighbors')
       self.bonds = []
@@ -141,7 +196,7 @@ class Base(object):
       LG.info('Neighbors done')
       return self.bonds
    @log_help.log2screen(LG)
-   def vacancy(self,N=1,d=None,alpha=0.,ind=None,inf=1000000.):
+   def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1000000.):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings
@@ -151,10 +206,14 @@ class Base(object):
         ind: Not implemented
       """
       ## Get atoms in layer 1 and not connected in layer 0
-      sub_atsA =np.where((self.layers==1)&(self.sublattices=='A'),self.inds,-1)
+      #print(len(self.layers),len(self.sublattices),len(self.INDS))
+      l = max(set(self.layers))
+      LG.info('Vacancies introduced in layer: %s'%(l))
+      aux = range(max(self.INDS)+1)   #+1 because python starts in 0
+      sub_atsA =np.where((self.layers==l)&(self.sublattices=='A'),aux,-1)
       sub_atsA = sub_atsA[sub_atsA>0]
       lena = len(self.find_neig(sub_atsA[0]))
-      sub_atsB =np.where((self.layers==1)&(self.sublattices=='B'),self.inds,-1)
+      sub_atsB =np.where((self.layers==l)&(self.sublattices=='B'),aux,-1)
       sub_atsB = sub_atsB[sub_atsB>0]
       lenb = len(self.find_neig(sub_atsB[0]))
 
@@ -212,16 +271,13 @@ class Base(object):
       if len(ret) == 1: return ret[0]
       else: return ret
    def save(self,f_ind='base.basis',f_xyz='base.xyz'):
-      self.update_basis()
+      #self.update_basis()
       f = open(f_ind,'w')
       f.write('#ind   n_atom   atom   orb   sublatt\n')
-      for i in range(len(self.basis)):
-         #e = self.basis[i]
-         f.write(str(i))
-         for e in self.basis[i]:
-            f.write('   '+str(e))
-         f.write('\n')
-#+'   '+str(e[0])+'   '+str(e[1])+'   '+str(e[2])+'\n')
+      for i in range(len(self.INDS)):
+         f.write(str(self.AUX_INDS[i])+'   '+str(self.INDS[i]))
+         f.write('   '+str(self.ATS[i])+'   '+str(self.ORBS[i]))
+         f.write('   '+str(self.SUBS[i])+'\n')
       f.close()
       self.save_xyz(f_xyz)
    def save_xyz(self,fname='base.xyz'):

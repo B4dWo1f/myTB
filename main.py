@@ -75,7 +75,8 @@ base_dfct = base.copy()
 del base
 
 
-IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
+if SP.vac.N > 0:
+   IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
 
 
 ## Save basis
@@ -144,8 +145,6 @@ if CP.spectrum:
    #op = OP.atom(base_dfct,[IND_vac[0]])
    #es,_ = H_dfct.get_spectrum(Op=True,folder=FP.out)   #,show=Shw)
    es,v = H_dfct.get_N_states(Op=True,folder=FP.out)
-   #for i in range(len(es)):
-   #   print(es[i])
 print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
