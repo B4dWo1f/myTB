@@ -148,3 +148,5 @@ if CP.spectrum:
 print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
+exit()
+print('bla')
