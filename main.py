@@ -53,7 +53,7 @@ print(' '*18,'-'*40,' '*20)
 
 import IO
 ats,pos,latt,sub = IO.xyz(SP.xyz_file)
-#latt = []
+latt = []
 
 
 ## Base
@@ -64,7 +64,7 @@ for i in range(len(pos)):
    elems.append( Base_Element(i,a,atoms[a],r) )
 
 from time import time
-base = Base(elems,latt,cent=False)
+base = Base(elems,latt) #,cent=False)
 base.get_neig(fol=FP.ham)
 base.get_sublattice(sub)
 base.get_layer()
@@ -77,6 +77,7 @@ del base
 
 if SP.vac.N > 0:
    IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
+else: IND_vac = []
 
 
 ## Save basis
