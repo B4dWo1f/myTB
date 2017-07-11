@@ -167,9 +167,9 @@ def sublattice(intra,dist=1.5,lim=100):
          for j in c[r==i]:   # neighbors of atom i
             try: subs[j] = tcid_bus[-1*sub_dict[subs[i]]]
             except KeyError:
-                  #print('   atom',i,'still has no sublattice')
-                  #print('        but its neighbor',j,'is sublatt:',subs[j])
-                  #print('        so atom',i,'should be',-1*sub_dict[subs[j]])
+               #print('   atom',i,'still has no sublattice')
+               #print('        but its neighbor',j,'is sublatt:',subs[j])
+               #print('        so atom',i,'should be',-1*sub_dict[subs[j]])
                try: subs[i] = tcid_bus[-1*sub_dict[subs[j]]]
                except KeyError: pass
       types = set([type(x) for x in subs])
@@ -355,26 +355,37 @@ def vecinlist(vec,lista,eps=0.00001):
 
 
 @log_help.log2screen(LG)
-def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4):
+def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4,force=False):
    """
     Fortran implementation of the neighbor finding algorithm
    """
    aux = [p for p in product([0,1,-1], repeat=len(latt)) ]
    aux = sorted(aux,key=np.linalg.norm)  #XXX Check correct order
-   perms = []
-   VIL = vecinlist   # Local rename
-   for i in range(len(aux)):
-      v = np.array(aux[i])
-      if not VIL(v,perms) and not VIL(-v,perms): perms.append(aux[i])
-   perms = sorted(perms,key=np.linalg.norm)
+   #perms = []
+   #VIL = vecinlist   # Local rename
+   #for i in range(len(aux)):
+   #   v = np.array(aux[i])
+   #   if not VIL(v,perms) and not VIL(-v,perms): perms.append(aux[i])
+   #perms = sorted(perms,key=lambda x: np.linalg.norm(x))
+   # TODO this should be automatic for 3D  extension
+   if len(latt) == 2:
+      perms = [(0,0),(1,0),(0,1),(1,1),(1,-1)]
+      names = ['intra','x','y','xy','xmy']
+   elif len(latt) == 1:
+      perms = [(0,0),(1,0)]
+      names = ['intra','x']
+   elif len(latt) == 0:
+      perms = [(0,0)]
+      names = ['intra']
+   else: LG.critical('Dimensionality not implemented')
    # all_vecs contains the vectors: 0, a1, a2, a1+a2, a1-a2
    all_vecs = [ vecfromcoef(p,latt) for p in perms]
-   names = ['intra','x','y','xy','xmy']
    neigs = []
    for i in range(len(all_vecs)):
       LG.info('Calculating distances in cell %s'%(names[i]))
       try:
          LG.info('Trying to read from file: %s'%(fol+names[i]+'.H'))
+         if force: raise
          rows,cols = np.loadtxt(fol+names[i]+'.H',dtype=int)
       except:
          LG.info('Failed. Calculating with fortran')
@@ -385,7 +396,7 @@ def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4):
          rows,cols = num.dists(pos,pos+all_vecs[i],nn)
          rows -= 1   # XXX because python counts from 0
          cols -= 1   #
-         np.savetxt(fol+names[i]+'.H',(rows,cols),fmt='%d')  # save as int
+         if fol != '': np.savetxt(fol+names[i]+'.H',(rows,cols),fmt='%d')
       neigs.append( ((rows,cols),all_vecs[i],names[i]) )
    LG.info('Neighbors calculated using Fortran')
    return neigs

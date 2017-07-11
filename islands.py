@@ -347,7 +347,7 @@ def mullen(Nx,Ny,pas=False):
 
 
 import numeric as num
-def pasivate(pos,atoms=['C'],nneig=3): #,atom=Atom()):
+def pasivate(pos,atoms=['C'],sub=[],nneig=3): #,atom=Atom()):
    """ Return the position of the H atoms to pasivate the edges. """
    #TODO include consideration of lattice vectors
    ## List all the atoms of a given kind with less than nneig neighbours
@@ -356,11 +356,14 @@ def pasivate(pos,atoms=['C'],nneig=3): #,atom=Atom()):
    rows,cols = num.dists(pos,pos,nn)
    rows -= 1
    cols -= 1
+   aux_sub = []
    for i in range(len(pos)):
       if len(cols[rows==i]) < nneig:
          needH.append( (i,cols[rows==i]) )
-   new_atoms = []
-   for at,neig in needH:
+         aux_sub.append( sub[i] )
+   new_atoms, new_sub = [],[]
+   for i in range(len(needH)):
+      at,neig = needH[i]
       at2neig = pos[at]
       v1 = pos[neig[0]]
       v2 = pos[neig[1]]
@@ -380,7 +383,9 @@ def pasivate(pos,atoms=['C'],nneig=3): #,atom=Atom()):
       # position of the new atom
       v3 = r3 + pos[at]
       new_atoms.append(v3)
-   return new_atoms
+      try: new_sub.append(sub[i])
+      except IndexError: pass
+   return new_atoms,new_sub
 
 
 
@@ -436,17 +441,18 @@ if __name__ == '__main__':
    pos,latt,sub = func(N)
    latt = []
    ats = ['C' for _ in pos]
-   hs = pasivate(pos)
+   hs,ss = pasivate(pos,sub=sub)
    pos += hs
    ats += ['H' for _ in hs]
-   print(len(pos),len(ats))
+   sub += ss
+   print(len(pos),len(ats),len(sub))
    for i in range(len(pos)):
       print(pos[i],ats[i])
 
    ats,pos,sub = multilayer(pos,sub,N=2)
    nam = acronym[func.__name__]+'%s_l2.xyz'%(N)
-   print(len(pos),len(ats))
-   print(latt)
-   pos2xyz(pos,latt,at=ats,fname='AAA.xyz')
+   print(len(pos),len(ats),len(sub))
+   pos2xyz(pos,latt,at=ats,sub=sub,fname='AAA.xyz')
+   print(ats)
    exit()
    pos2xyz(pos,latt,at='C',sub=sub,fname=nam) #'%s_%s_bi.xyz'%(func.__name__,N))

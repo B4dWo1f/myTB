@@ -55,6 +55,15 @@ class calc_param(object):
       msg += '  Spectrum: %s\n'%(self.spectrum)
       return msg
 
+class adatom_param(object):
+   def __init__(self,N):
+      self.N = N
+   def __str__(self):
+      if self.N == 0: msg = 'No adatoms to be introduced\n'
+      elif self.N == 1:
+         msg = '%s adatom to be introduced\n'%(self.N)
+      return msg
+
 class vacancy_param(object):
    def __init__(self,N,d,alpha):
       self.N = N
@@ -70,11 +79,12 @@ class vacancy_param(object):
       return msg
 
 class sys_param(vacancy_param):
-   def __init__(self,xyz_file,pasivate,dists,vacancy_param): #,defect,dists):
+   def __init__(self,xyz_file,pasivate,dists,vacancy_param,adatom_param):
       self.xyz_file = xyz_file
       self.pasivate = pasivate
       #self.defect = defect
       self.dists = dists
+      self.ada = adatom_param
       self.vac = vacancy_param
    def __str__(self):
       msg = 'Physical system parameters\n'
@@ -91,6 +101,7 @@ def setup(fname='SK1.ini'):
    """
     Parse an ini file returning the parameter classes
     TODO: Log this function
+          try/except for format errors
    """
    config = ConfigParser(inline_comment_prefixes='#')
    config._interpolation = ExtendedInterpolation()
@@ -114,14 +125,18 @@ def setup(fname='SK1.ini'):
 
    xyz_file = config['system']['xyz_file']
    pasivate = eval(config['system']['pasivate'].capitalize())
-   #defect = config['system']['defect']
    dist = eval(config['system']['dist'])
-   ##SP = sys_param(xyz_file,pasivate,dist)
+
    N = int(config['vacancy']['N'])
    d = float(config['vacancy']['d'])
    alpha = float(config['vacancy']['alpha'])
    vp = vacancy_param(N,d,alpha)
-   SP = sys_param(xyz_file,pasivate,dist,vp)
+
+   N = int(config['adatom']['na'])
+   ap = adatom_param(N)
+
+   ## System parameters
+   SP = sys_param(xyz_file,pasivate,dist,vp,ap)
 
    keys,values = [],[]
    for key in config['atoms']:
