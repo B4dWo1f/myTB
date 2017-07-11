@@ -135,17 +135,22 @@ if CP.bands:
    #op = OP.atom(base_dfct,[IND_vac[0]])
    H_dfct.get_bands(path,folder=FP.out,show=Shw)
    LG.info('Bands Defected done')
-exit()
 
 if CP.spectrum:
    #Shw = False
    LG.info('Spectrum: Pristine')
    #es,_ = H_pris.get_spectrum(Op=True,folder=FP.out)   #,show=Shw)
    es,v = H_pris.get_N_states(Op=True,folder=FP.out)
+   print('  ---- Pristine ----')
+   for e in es:
+      print(e)
    LG.info('Spectrum: Defected')
    #op = OP.atom(base_dfct,[IND_vac[0]])
    #es,_ = H_dfct.get_spectrum(Op=True,folder=FP.out)   #,show=Shw)
    es,v = H_dfct.get_N_states(Op=True,folder=FP.out)
+   print('  ---- Defected ----')
+   for e in es:
+      print(e)
 print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')

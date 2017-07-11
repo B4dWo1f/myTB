@@ -92,23 +92,10 @@ class Base(object):
       ## Lattice vectors  #TODO Fix center of cell
       self.latt = np.array(latt)
       self.recip = np.array(geo.reciprocal(latt))
-      ### list of index per atom
-      #self.get_indices()
-      #self.update_basis()
-      ### auxiliary list of indices
-      #self.inds = np.array([i for i in range(len(self.elements))])
       ## Fix geometry
       if cent: sc = self.center()    # center unit cell in (0,0,0)
       del pos,ats,orbs,ATS,inds,aux_inds
    def copy(self): return deepcopy(self)
-   ### Deprecated
-   #def update_basis(self):
-   #   self.basis = []
-   #   for E in self.elements:
-   #      for o in E.orbitals:
-   #         try: ID = (E.place,E.element,o,E.sublattice)
-   #         except: ID = (E.place,E.element,o)
-   #         self.basis.append(ID)
    def center(self):
       LG.debug('Centering cell')
       v = np.mean(self.pos,axis=0)
@@ -154,6 +141,8 @@ class Base(object):
       else:
          if len(subs) != len(self.pos):
             LG.critical('Different number of atoms and sublattice')
+            LG.info('Trying to calculate again the sublattice')
+            subs = geo.sublattice(self.bonds[0][0])
       for i in range(len(subs)):
          self.elements[i].sublattice = subs[i]
       self.sublattices = np.array(subs)
