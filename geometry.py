@@ -5,6 +5,7 @@ import os
 import numpy as np
 import numeric as num
 from random import uniform,choice
+from random import random as rand
 from scipy.sparse import coo_matrix
 from scipy.spatial import KDTree
 from itertools import product
@@ -62,22 +63,6 @@ def analyze(atoms,points,pairs=[],maxneigh=5,fname='cell.info'):
       if S < 0.1:
          LG.warning('STD of the %s distance is suspiciously low'%(bond))
    return dict(zip(keys,values))
-
-
-def center_cell(base,C=None):
-   """
-     shift the position of the atoms to center the unit cell.
-     If C == vector then center the unit cell in C
-   """
-   pos = np.array([E.position for E in base.elements])
-   X = pos[:,0]
-   Y = pos[:,1]
-   Z = pos[:,2]
-   if C == None: C = np.array( [np.mean(X),np.mean(Y),np.mean(Z)] )
-   ## Translation
-   for i in range(len(base.elements)):
-      base.elements[i].position -= C
-   LG.info('Re-centered cell by vector: (%.3f,%.3f,%.3f)'%(C[0],C[1],C[2]))
 
 
 def snap(P,points,retpoint=False):
@@ -246,7 +231,7 @@ def reciprocal(latt_vec):
       if len(latt_vec) == 1:
          a1 = latt_vec[0]
          # Define more direct vectors to use the same formula
-         a2 = np.cross( a1,np.array([random(),random(),random()]) )
+         a2 = np.cross( a1,np.array([rand(),rand(),rand()]) )
          a2 = a2*np.linalg.norm(a1)/np.linalg.norm(a2)
          a3 = np.cross(a1,a2)
          a3 = a3*np.linalg.norm(a1)/np.linalg.norm(a3)
@@ -394,6 +379,9 @@ def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4):
       except:
          LG.info('Failed. Calculating with fortran')
          nn = num.count_neig(pos,pos+all_vecs[i])
+         if nn == 0:
+            LG.info('No neighbours in cell %s'%(names[i]))
+            continue
          rows,cols = num.dists(pos,pos+all_vecs[i],nn)
          rows -= 1   # XXX because python counts from 0
          cols -= 1   #

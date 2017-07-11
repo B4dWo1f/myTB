@@ -87,6 +87,12 @@ def FBZ(recip,N=3,ax=None,tit=None,show=False):
    if show: plt.show()
 
 
+def vec_in_list(v,l,eps=0.000000001):
+   """ Returns True if vector v is in the list of vectors l """
+   for x in l:
+      if np.linalg.norm(x-v) < eps: return True
+   return False
+
 
 def UCell(pos,latt=[],ax=None,tit=None,show=False):
    """
@@ -156,7 +162,7 @@ def UCell(pos,latt=[],ax=None,tit=None,show=False):
          aux = np.array([0.,0.,0.])
          for ip in range(len(p)):
             aux += p[ip] * latt[ip]
-         if not ut.vec_in_list(aux,fake_latt): repited_vecs.append(aux)
+         if not vec_in_list(aux,fake_latt): repited_vecs.append(aux)
       for v in repited_vecs:
          X,Y = [],[]
          for r in pos:

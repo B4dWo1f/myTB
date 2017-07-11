@@ -1,0 +1,2 @@
+add options for:
+  - Force island (ignoring lattice vectors)

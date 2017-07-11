@@ -135,7 +135,8 @@ class Hamiltonian(object):
       else:
          LG.info('Bands with eigevectors')
          Opp = Op
-      X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
+      #X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
+      X,Y,Z = bands.bands(path,self.lista,Op=Opp) #,sigma=sigma,n=k,ncpus=ncpus)
       if Opp: Z = [(v * Op * v.H)[0,0].real for v in Z]
       bname = folder+'%s.bands'%(self.tag)
       LG.debug('Writing bands to: '+bname)
@@ -281,9 +282,10 @@ def kinetic(base,hoppings,func=None,coup=1):
    """
    import newSK as SK
    base.get_indices()
-   ndim = len(base.basis)
+   ndim = len(base.INDS)
    diag_onsite = []
-   for e in base.basis:
+   for i in range(len(base.INDS)):
+      e = base.INDS[i], base.ATS[base.AUX_INDS[i]], base.ORBS[i]
       diag_onsite.append(base[e[0]].onsite[e[2]])
    LG.debug('Expecting to create a %sx%s Hamiltonian'%(ndim,ndim))
    try: bonds = base.bonds
@@ -312,9 +314,13 @@ def kinetic(base,hoppings,func=None,coup=1):
          at2 = base[j]  # atoms
          r = at1.position - (at2.position+v)
          for ih in at1.indices:     # actually we only need half of these
+            #ei = base.INDS[ih], base.AUX_INDS[ih], base.ORBS[ih]
             for jh in at2.indices:  # elements. It has to be symmetric
-               bra = base.basis[ih]
-               ket = base.basis[jh]
+               #ej = base.INDS[jh], base.AUX_INDS[jh], base.ORBS[jh]
+               bra = base.INDS[ih], base.ATS[base.AUX_INDS[ih]], base.ORBS[ih]
+               ket = base.INDS[jh], base.ATS[base.AUX_INDS[jh]], base.ORBS[jh]
+               #bra = base.basis[ih]
+               #ket = base.basis[jh]
                ab = sorted([bra[1],ket[1]])
                hop_ato = '%s-%s'%(ab[0],ab[1])
                hop_orb = 't_%s_%s'%(bra[2],ket[2])
@@ -322,8 +328,10 @@ def kinetic(base,hoppings,func=None,coup=1):
                except KeyError:
                   LG.debug('No %s hopping'%(hop_ato))
                   continue
-               ii = base.basis[ih][0]
-               jj = base.basis[jh][0]
+               ii = bra[0]  #base.basis[ih][0]
+               jj = ket[0]  #base.basis[jh][0]
+               #ii = base.basis[ih][0]
+               #jj = base.basis[jh][0]
                t = SK.hoppings[hop_orb]
                if base[jj].layer != base[ii].layer: f = hoppings['Interlayer']
                else: f = 1.
@@ -335,68 +343,11 @@ def kinetic(base,hoppings,func=None,coup=1):
       JJ = np.append(JJ,auxJJ)
       DD = np.append(DD,auxDD)
       LG.info('  ...added %s term'%(nam))
-      H_aux = csc_matrix( (DD, (II, JJ)) )
+      H_aux = csc_matrix( (DD, (II, JJ)), shape=(ndim,ndim) )
       H_aux.eliminate_zeros()
       Htot.append( HTerm(H_aux,v,coup,name=nam) )
    return Htot
 
-#def kinetic_old(base,hoppings,func=None,coup=1):
-#   """
-#   TODO: dont run over the basis elements, instead run over the bonds
-#     Converts a matrix of neighbours in a mtrix of hoppings. NOTICE that
-#     the input and output size may differ
-#   """
-#   import newSK as SK
-#   base.get_indices()
-#   ndim = len(base.basis)
-#   diag_onsite = []
-#   for e in base.basis:
-#      diag_onsite.append(base[e[0]].onsite[e[2]])
-#   #for E in base:
-#   #   print(E.onsite)
-#   #   exit()
-#   #   diag_onsite += E.onsite
-#   LG.debug('Expecting to create a %sx%s Hamiltonian'%(ndim,ndim))
-#   try: bonds = base.bonds
-#   except AttributeError: bonds = base.get_neig()
-#   if np.linalg.norm(bonds[0][1]) != 0:
-#      LG.warning('Incorrect order of vectors (0, a1, a2, a1+a2..)')
-#   names = ['intra','x','y','xmy','xy']  # XXX fix names!!!
-#   iname = 0
-#   Htot = []
-#   for ib in range(len(bonds)):
-#      nam = names[ib]
-#      LG.info('Doing matrix: %s'%(nam))
-#      M,v = bonds[ib]
-#      if np.linalg.norm(v) == 0: H_aux = np.diag(diag_onsite)
-#      else: H_aux = np.zeros((ndim,ndim))
-#      H_aux = np.matrix(H_aux)
-#      for i,j in zip(M.row,M.col):  # i,j label connected atoms
-#         at1 = base[i]  # we build here the Hamiltonian termS between these 2
-#         at2 = base[j]  # atoms
-#         r = at1.position - (at2.position+v)
-#         for ih in at1.indices:     # actually we only need half of these
-#            for jh in at2.indices:  # elements. It has to be symmetric
-#               bra = base.basis[ih]
-#               ket = base.basis[jh]
-#               ab = sorted([bra[1],ket[1]])
-#               hop_ato = '%s-%s'%(ab[0],ab[1])
-#               hop_orb = 't_%s_%s'%(bra[2],ket[2])
-#               try: SKp = hoppings[hop_ato][1]
-#               except KeyError:
-#                  LG.debug('No %s hopping'%(hop_ato))
-#                  continue
-#               ii = base.basis[ih][0]
-#               jj = base.basis[jh][0]
-#               t = SK.hoppings[hop_orb]
-#               if base[jj].layer != base[ii].layer: f = hoppings['Interlayer']
-#               else: f = 1.
-#               H_aux[ih,jh] = f*t(r,SKp)
-#      LG.info('  ...added %s term'%(nam))
-#      H_aux = csc_matrix(H_aux)
-#      H_aux.eliminate_zeros()
-#      Htot.append( HTerm(H_aux,v,coup,name=nam) )
-#   return Htot
 
 def mass(base,lmass):
    """ Assumes sublattice attribute already calculated """
@@ -461,20 +412,10 @@ def electric(base,lElec):
    #XXX may fail for multiorbital
    LG.info('Doing matrix for electric field. lelec=%s'%(lElec))
    v = np.array([0.,0.,0.])
-   #diag_layer = []
-   #for e in base.basis:
-   #   diag_layer.append(base[e[0]].layer)
-   II = list(range(len(base.layers)))
-   JJ = list(range(len(base.layers)))
-   ##II = [i for i in range(len(diag_layer))]
-   ##JJ = [i for i in range(len(diag_layer))]
-   #aux = [[None for _ in base] for _ in base]
-   #for i in range(len(base.elements)):
-   #   E = base.elements[i]
-   #   mat = E.layer * np.identity(len(E.onsite))   #XXX
-   #   aux[i][i] = csc_matrix(mat)
-   H_aux = csc_matrix( (base.layers, (II, JJ)) )
-   #H_aux = csc_matrix( (diag_layer, (II, JJ)) )
+   ndim = len(base.INDS)
+   II = list(range(len(base.LAYS)))
+   JJ = list(range(len(base.LAYS)))
+   H_aux = csc_matrix( (base.LAYS, (II, JJ)), shape=(ndim,ndim) )
    H_aux.eliminate_zeros()
    LG.info('... added electric field')
    return HTerm(H_aux,v,lElec,name='electric')

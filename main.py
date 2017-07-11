@@ -64,7 +64,7 @@ for i in range(len(pos)):
    elems.append( Base_Element(i,a,atoms[a],r) )
 
 from time import time
-base = Base(elems,latt)
+base = Base(elems,latt) #,cent=False)
 base.get_neig(fol=FP.ham)
 base.get_sublattice(sub)
 base.get_layer()
@@ -75,7 +75,9 @@ base_dfct = base.copy()
 del base
 
 
-IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
+if SP.vac.N > 0:
+   IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
+else: IND_vac = []
 
 
 ## Save basis
@@ -121,7 +123,7 @@ import geometry as geo
 #from random import uniform, choice
 #op = OP.orbital(base_dfct,'s')
 if CP.bands:
-   Shw = False
+   Shw = True
    LG.info('Calculating bands')
    points = geo.get_points(base_pris.recip)
    points = [points[0],points[6],points[9], points[0]]
@@ -131,8 +133,8 @@ if CP.bands:
    LG.info('Bands Pristine done')
    LG.debug('Bands Defected')
    #print(IND_vac)
-   op = OP.atom(base_dfct,[IND_vac[0]])
-   H_dfct.get_bands(path,Op=op,folder=FP.out,show=Shw)
+   #op = OP.atom(base_dfct,[IND_vac[0]])
+   H_dfct.get_bands(path,folder=FP.out,show=Shw)
    LG.info('Bands Defected done')
 
 if CP.spectrum:
@@ -140,12 +142,16 @@ if CP.spectrum:
    LG.info('Spectrum: Pristine')
    #es,_ = H_pris.get_spectrum(Op=True,folder=FP.out)   #,show=Shw)
    es,v = H_pris.get_N_states(Op=True,folder=FP.out)
+   print('  ---- Pristine ----')
+   for e in es:
+      print(e)
    LG.info('Spectrum: Defected')
    #op = OP.atom(base_dfct,[IND_vac[0]])
    #es,_ = H_dfct.get_spectrum(Op=True,folder=FP.out)   #,show=Shw)
    es,v = H_dfct.get_N_states(Op=True,folder=FP.out)
-   #for i in range(len(es)):
-   #   print(es[i])
+   print('  ---- Defected ----')
+   for e in es:
+      print(e)
 print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
