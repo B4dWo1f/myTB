@@ -295,14 +295,15 @@ def plot_cell(pos,latt=[],tit=None):
 
 def multilayer(pos,sub=[],N=2):
    """ Generates the positions for a multilayer ABC... """
-   new_pos, new_sub = [], []
+   new_ats, new_pos, new_sub = [], [], []
    rs = [i*np.array((1.4,0,1.4)) for i in range(N)]
    for r in rs:
       for j in range(len(pos)):
+         new_ats.append(ats[j])
          new_pos.append(pos[j]+r)
          try: new_sub.append(sub[j])
          except: pass
-   return new_pos, new_sub
+   return new_ats, new_pos, new_sub
 
 def pos2xyz(pos,latt,at='C',sub=[],fname='lattice.xyz'):
    """ at has to be a string or a list/array of strings """
@@ -348,6 +349,7 @@ def mullen(Nx,Ny,pas=False):
 import numeric as num
 def pasivate(pos,atoms=['C'],nneig=3): #,atom=Atom()):
    """ Return the position of the H atoms to pasivate the edges. """
+   #TODO include consideration of lattice vectors
    ## List all the atoms of a given kind with less than nneig neighbours
    needH = []
    nn = num.count_neig(pos,pos)
@@ -432,6 +434,19 @@ if __name__ == '__main__':
    ##Do the calculation
    print('Using funcion',func.__name__,'with index',N)
    pos,latt,sub = func(N)
-   pos,sub = multilayer(pos,sub,N=2)
+   latt = []
+   ats = ['C' for _ in pos]
+   hs = pasivate(pos)
+   pos += hs
+   ats += ['H' for _ in hs]
+   print(len(pos),len(ats))
+   for i in range(len(pos)):
+      print(pos[i],ats[i])
+
+   ats,pos,sub = multilayer(pos,sub,N=2)
    nam = acronym[func.__name__]+'%s_l2.xyz'%(N)
+   print(len(pos),len(ats))
+   print(latt)
+   pos2xyz(pos,latt,at=ats,fname='AAA.xyz')
+   exit()
    pos2xyz(pos,latt,at='C',sub=sub,fname=nam) #'%s_%s_bi.xyz'%(func.__name__,N))
