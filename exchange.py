@@ -104,7 +104,6 @@ class Spectrum(object):
       ## Electric Field
       self.elec = float(fname.split('/')[-2].replace('e',''))
       ## Get conduction, valence, and in-gap states and indices
-      #try:   # Defected spectrum
       M = np.load(pris)
       self.Ep = M[:,0].real
       _,self.Pcond,self.Pvale = get_ingap(self.Ep, Nv=0)
