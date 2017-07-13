@@ -53,43 +53,50 @@ class Hamiltonian(object):
       """ Generate kdependent hamiltonian"""
       return hk_gen(self)
    def get_k(self,k): return Hamil(self.lista,k)
-   def diag0D(self,Op=False,border=True):
-      """
-       border: if True ---> open bound condition
-               if False ---> closed bound condition
-      """
-      try: self.intra
-      except: self.names()
-      if border: H = self.intra
-      else: H = self.get_k((0,0,0))
-      if not Op:
-         Es = np.linalg.eigvalsh(H)
-         Z = []
-      else:
-         Es,Vs = np.linalg.eigh(H)
-         Vs = Vs.transpose()
-         Z = [np.matrix(z) for z in Vs]
-      return Es,Z
-   def get_N_states(self,Op=False,border=True,folder='./',n=7,sigma=0):
+   #def diag0D(self,Op=False,border=True):
+   #   """
+   #    border: if True ---> open bound condition
+   #            if False ---> closed bound condition
+   #   """
+   #   try: self.intra
+   #   except: self.names()
+   #   if border: H = self.intra
+   #   else: H = self.get_k((0,0,0))
+   #   if not Op:
+   #      Es = np.linalg.eigvalsh(H)
+   #      Z = []
+   #   else:
+   #      Es,Vs = np.linalg.eigh(H)
+   #      Vs = Vs.transpose()
+   #      Z = [np.matrix(z) for z in Vs]
+   #   return Es,Z
+   def get_N_states(self,Op=False,border=True,n=7,sigma=0,
+                                                        folder='./',shw=False):
       from scipy.sparse.linalg import eigsh
       from scipy.sparse import csc_matrix
       try: self.intra
       except: self.names()
       LG.info('In get_N_states')
       if border: H = csc_matrix(self.intra)       # Island
-      else: H = csc_matrix(self.get_k((0,0,0)))   # Periodic boundary conditions
+      else: H = csc_matrix( self.get_k(np.array((0,0,0))) )  # Peri bound cond
       LG.info('H acquired')
       if Op:
-         es,v = eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=True)
+         LG.info('Start Diagonalization')
+         es,v = eigsh(H,k=n+1,sigma=sigma+0.000001,which='LM',return_eigenvectors=True)
          v = v.transpose()
+         ind_ord = np.argsort(es)   #XXX check that this works as expected
+         es=es[ind_ord]
+         v=v[ind_ord]
       else:
+         LG.info('Start Diagonalization')
          es = eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=False)
          v = [0 for _ in es]
       bname = folder+'%s_spectrum'%(self.tag)
       LG.debug('Writing spectrum to: '+bname)
       np.save(bname,np.column_stack((es,v)))
+      if shw: graphs.spectrum(es,show=True)
       return es,v
-   def get_spectrum(self,Op=False,border=True,folder='./'):  #,show=False):
+   def get_spectrum(self,Op=False,border=True,folder='./',shw=False):
       """
        border: if True ---> open bound condition
                if False ---> closed bound condition
@@ -98,35 +105,29 @@ class Hamiltonian(object):
       try: self.intra
       except: self.names()
       LG.info('In get_spectrum')
-      if border: H = self.intra       # Island
-      else: H = self.get_k((0,0,0))   # Periodic boundary conditions
+      if border: H = self.intra                 # Island
+      else: H = self.get_k(np.array((0,0,0)))   # Periodic boundary conditions
+      H = H.todense()
       LG.info('H acquired')
       if not Op:
          LG.info('Diagonalize without eigenvectors')
-         Es = np.linalg.eigvalsh(H)
-         Cs = [0 for _ in Es]
+         es = np.linalg.eigvalsh(H)
+         v = [0 for _ in es]
       else:
          LG.info('Diagonalize with eigenvectors')
-         Es,Z = np.linalg.eigh(H)
-         Z = Z.transpose()
+         es,v = np.linalg.eigh(H)
+         v = v.transpose()
+         ind_ord = np.argsort(es)   #XXX check that this works as expected
+         es=es[ind_ord]
+         v=v[ind_ord]
          #Cs = [(v * Op * v.H)[0,0].real for v in Z]
-         Cs = []
-         for i in range(len(Es)):
-            v = np.matrix(Z[i])
-            Cs.append( v )   #(v * Op * v.H)[0,0].real )
-      bname = folder+'%s.spectrum'%(self.tag)
-      print('Writing spectrum to: '+bname)
+      bname = folder+'%s_spectrum'%(self.tag)
       LG.debug('Writing spectrum to: '+bname)
-      f = open(bname,'w')
-      for x,y in zip(Es,Cs):
-         f.write('%s'%(x))
-         for i in range(y.shape[1]):
-            f.write('   %s'%(y[0,i]))
-         f.write('\n')
-      f.close()
-      #LG.info('Plotting')
-      #graphs.spectrum(Es,Cs=Cs,show=show)
-      return Es,Cs
+      np.save(bname,np.column_stack((es,v)))
+      if shw:
+         LG.info('Plotting')
+         graphs.spectrum(es,show=True)
+      return es,v
    def get_bands(self,path,Op=False,sigma=None,k=None,show=False,ncpus=4,
                                                                   folder='./'):
       if not isinstance(Op,bool):
@@ -150,35 +151,36 @@ class Hamiltonian(object):
    def dospin(self):
       Hs = self.lista
       for h in Hs:
-         h.mat = coo_matrix(alg.m2spin(h.mat.todense()))  #XXX
+         h.mat = coo_matrix(alg.m2spin(h.mat))
       self.names()
       self.dim = self.intra.shape[0]
-   def disconnect(self,indices=[],inf=100000,hop=False):
-      """
-        This method will disconnect a given atom leaving inf for the onsite
-        energy and putting 0 to every hopping.
-        the provided indices are the rows/cols in the matrix to be put to
-        zero or infinity
-      """
-      for ih in range(len(self.lista)):
-         h = self.lista[ih]
-         if h.name in ['intra']: #,'x','y','xy','xmy']:
-            M = h.mat.todense()    #XXX
-            for i in indices:
-               if hop:
-                  M[i,:] = 0.0   # Switch off hoppings as well
-                  M[:,i] = 0.0
-               M[i,i] = inf
-            self.lista[ih].mat = coo_matrix(M)
-            self.intra = M   #XXX call names here?
-   def pick_orbitals(self,orbitals): #XXX DEPRECATED
-      """
-        DEPRECATED
-        This method picks by index the elements of the Hamiltonian
-      """
-      for Ht in self.lista:
-         Ht.mat = coo_matrix( Ht.mat.todense()[orbitals,:][:,orbitals] )
-      self.dim = self.lista[0].mat.shape[0]
+   #DEPRECATED
+   #def disconnect(self,indices=[],inf=100000,hop=False):
+   #   """
+   #     This method will disconnect a given atom leaving inf for the onsite
+   #     energy and putting 0 to every hopping.
+   #     the provided indices are the rows/cols in the matrix to be put to
+   #     zero or infinity
+   #   """
+   #   for ih in range(len(self.lista)):
+   #      h = self.lista[ih]
+   #      if h.name in ['intra']: #,'x','y','xy','xmy']:
+   #         M = h.mat
+   #         for i in indices:
+   #            if hop:
+   #               M[i,:] = 0.0   # Switch off hoppings as well
+   #               M[:,i] = 0.0
+   #            M[i,i] = inf
+   #         self.lista[ih].mat = coo_matrix(M)
+   #         self.intra = M   #XXX call names here?
+   #def pick_orbitals(self,orbitals): #XXX DEPRECATED
+   #   """
+   #     DEPRECATED
+   #     This method picks by index the elements of the Hamiltonian
+   #   """
+   #   for Ht in self.lista:
+   #      Ht.mat = coo_matrix( Ht.mat.todense()[orbitals,:][:,orbitals] )
+   #   self.dim = self.lista[0].mat.shape[0]
    def names(self,d=2):
       """ Assumes the correct order 0,a1,a2,a1+a2,a1-a2 """
       dd = 0
@@ -235,22 +237,22 @@ def Hamil(Hlist,k,chk=True):
       k: np.array k point in which we want to evaluate the hamiltonian
       *** Assumes only intra,x,y,xy terms are provided
    """
-   Hamiltoniano = np.matrix(np.zeros(Hlist[0].mat.shape,dtype=complex))
+   Hamiltoniano = Hlist[0].mat * 0.0
    for Hterm in Hlist:
       l = Hterm.coup
-      M = Hterm.mat.todense()   # XXX
+      M = Hterm.mat #.todense()   # XXX
       v = Hterm.exp
       if np.linalg.norm(v) != 0.:
          Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
          Hamiltoniano += l * M.H * np.exp(-1.j*np.dot(k,-v))
       else: Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
-   if chk:      # Check for Hermiticity
-      A = Hamiltoniano-Hamiltoniano.H
-      if np.allclose(A,np.zeros(A.shape,dtype=complex)): pass
-      else:
-         msg = 'Hamiltonian is not hermitian H(%.2f,%.2f,%.2f)'%(k[0],k[1],k[2])
-         LG.critical(msg)
-         sys.exit(1)
+   #if chk:      # Check for Hermiticity
+   #   A = Hamiltoniano-Hamiltoniano.H
+   #   if np.allclose(A,np.zeros(A.shape,dtype=complex)): pass
+   #   else:
+   #      msg = 'Hamiltonian is not hermitian H(%.2f,%.2f,%.2f)'%(k[0],k[1],k[2])
+   #      LG.critical(msg)
+   #      sys.exit(1)
    return Hamiltoniano
 
 
@@ -273,7 +275,7 @@ def dic2vec(d):
 
 
 
-@log_help.log2screen(LG)
+#@log_help.log2screen(LG)
 def kinetic(base,hoppings,func=None,coup=1):
    """
    TODO: dont run over the basis elements, instead run over the bonds
@@ -333,12 +335,18 @@ def kinetic(base,hoppings,func=None,coup=1):
                #ii = base.basis[ih][0]
                #jj = base.basis[jh][0]
                t = SK.hoppings[hop_orb]
-               if base[jj].layer != base[ii].layer: f = hoppings['Interlayer']
+               if base[jj].layer != base[ii].layer:
+                  # TODO generalize condition, or modify input
+                  if base[jj].element == 'C' and base[ii].element == 'H':
+                     f = 0.
+                  elif base[jj].element == 'H' and base[ii].element == 'C':
+                     f = 0.
+                  else: f = hoppings['Interlayer']
                else: f = 1.
                auxII.append(ih)
                auxJJ.append(jh)
                auxDD.append( f*t(r,SKp) )
-               #print(hop_orb,f,f*t(r,SKp))
+               #print(hop_ato,hop_orb,f,f*t(r,SKp))
       II = np.append(II,auxII)
       JJ = np.append(JJ,auxJJ)
       DD = np.append(DD,auxDD)

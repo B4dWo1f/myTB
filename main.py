@@ -53,7 +53,6 @@ print(' '*18,'-'*40,' '*20)
 
 import IO
 ats,pos,latt,sub = IO.xyz(SP.xyz_file)
-latt = []
 
 
 ## Base
@@ -61,13 +60,15 @@ from basis import Base_Element,Base
 elems = []
 for i in range(len(pos)):
    a,r = ats[i],pos[i]
-   elems.append( Base_Element(i,a,atoms[a],r) )
+   elems.append( Base_Element(i,a,atoms,r) )
 
 from time import time
-base = Base(elems,latt) #,cent=False)
+base = Base(elems,latt,atoms=atoms) #,cent=False)
 base.get_neig(fol=FP.ham)
 base.get_sublattice(sub)
 base.get_layer()
+
+
 
 LG.info('Duplicating basis')
 base_pris = base.copy()
@@ -79,6 +80,9 @@ if SP.vac.N > 0:
    IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
 else: IND_vac = []
 
+if SP.ada.N >0:
+   IND_ada = base_dfct.adatom(N=SP.ada.N)
+
 
 ## Save basis
 told = time()
@@ -86,7 +90,6 @@ base_pris.save(FP.out+'pris.basis',FP.out+'base_pris.xyz')
 base_dfct.save(FP.out+'dfct.basis',FP.out+'base_dfct.xyz')
 LG.info('Base created')
 print('            *** Base:',time()-told)
-
 
 
 told = time()
@@ -115,6 +118,7 @@ H_dfct.names()
 H_dfct.save_matrix(FP.ham)
 LG.info('Hamiltonians done')
 print('     *** Hamiltonian:',time()-told)
+del Htot
 
 
 told = time()
@@ -123,32 +127,36 @@ import geometry as geo
 #from random import uniform, choice
 #op = OP.orbital(base_dfct,'s')
 if CP.bands:
-   Shw = True
-   LG.info('Calculating bands')
-   points = geo.get_points(base_pris.recip)
-   points = [points[0],points[6],points[9], points[0]]
-   path = geo.recorrido(points,CP.nk)
-   LG.debug('Bands Pristine')
-   H_pris.get_bands(path,folder=FP.out,show=Shw)
-   LG.info('Bands Pristine done')
-   LG.debug('Bands Defected')
-   #print(IND_vac)
-   #op = OP.atom(base_dfct,[IND_vac[0]])
-   H_dfct.get_bands(path,folder=FP.out,show=Shw)
-   LG.info('Bands Defected done')
+   if len(latt) != 0:
+      Shw = True
+      LG.info('Calculating bands')
+      points = geo.get_points(base_pris.recip)
+      points = [points[0],points[6],points[9], points[0]]
+      path = geo.recorrido(points,CP.nk)
+      LG.debug('Bands Pristine')
+      H_pris.get_bands(path,folder=FP.out,show=Shw)
+      LG.info('Bands Pristine done')
+      LG.debug('Bands Defected')
+      H_dfct.get_bands(path,folder=FP.out,show=Shw)
+      LG.info('Bands Defected done')
+   else: LG.critical('No lattice vectors ==> No bands')
 
 if CP.spectrum:
-   #Shw = False
+   Shw = True
    LG.info('Spectrum: Pristine')
-   #es,_ = H_pris.get_spectrum(Op=True,folder=FP.out)   #,show=Shw)
-   es,v = H_pris.get_N_states(Op=True,folder=FP.out)
+   import numpy as np
+   n_es = min([H_pris.dim,10])
+   #es,v = H_pris.get_N_states(Op=True,folder=FP.out,border=False,n=n_es)
+   es,v = H_pris.get_N_states(Op=True,folder=FP.out,n=n_es)
+   #es,v = H_pris.get_spectrum(Op=True,folder=FP.out)
    print('  ---- Pristine ----')
    for e in es:
       print(e)
    LG.info('Spectrum: Defected')
-   #op = OP.atom(base_dfct,[IND_vac[0]])
-   #es,_ = H_dfct.get_spectrum(Op=True,folder=FP.out)   #,show=Shw)
-   es,v = H_dfct.get_N_states(Op=True,folder=FP.out)
+   n_es = min([H_dfct.dim,10])
+   #es,v = H_dfct.get_N_states(Op=True,folder=FP.out,border=False,n=n_es)
+   es,v = H_dfct.get_N_states(Op=True,folder=FP.out,n=n_es)
+   #es,v = H_dfct.get_spectrum(Op=True,folder=FP.out)
    print('  ---- Defected ----')
    for e in es:
       print(e)

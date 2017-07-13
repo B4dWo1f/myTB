@@ -17,16 +17,22 @@ class fol_param(object):
       self.out = out
       self.slf = slf
       self.ham = ham
+      comm = []
+      for o,s,h in zip(out.split('/'),slf.split('/'),ham.split('/')):
+         if o==s==h: comm.append(o)
+         else:break
+      self.root = '/'.join(comm)
       self.create()
    def __str__(self):
       msg = 'Folder structure\n'
-      msg += '        Outputs: %s\n'%(self.out)
-      msg += '  Self-Energies: %s\n'%(self.slf)
-      msg += '   Hamiltonians: %s\n'%(self.ham)
+      msg += 'root foder: %s\n'%(self.root)
+      msg += '        Outputs: %s\n'%(self.out.replace(self.root,''))
+      msg += '  Self-Energies: %s\n'%(self.slf.replace(self.root,''))
+      msg += '   Hamiltonians: %s\n'%(self.ham.replace(self.root,''))
       return msg
    def create(self):
       for f in [self.out,self.slf,self.ham]:
-         LG.warning('Creating folder: %s'%(f))
+         LG.debug('Creating folder: %s'%(f.replace(self.root,'')))
          os.system('mkdir -p %s'%(f))
 
 class ham_param(object):
