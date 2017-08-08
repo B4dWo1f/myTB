@@ -54,7 +54,8 @@ ax.grid()
 
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots()
-ax.plot(X,hyper)
+ax.plot(X,hyper,'o-')
+ax.set_xlim([min(X),max(X)])
 ax.grid()
 
 
