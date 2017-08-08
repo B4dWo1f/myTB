@@ -346,7 +346,9 @@ def kinetic(base,hoppings,func=None,coup=1):
                auxII.append(ih)
                auxJJ.append(jh)
                auxDD.append( f*t(r,SKp) )
-               #print(hop_ato,hop_orb,f,f*t(r,SKp))
+               #if hop_ato == 'C-H' or hop_ato == 'H-C':
+               #   print(hop_ato,hop_orb,f,r,f*t(r,SKp))
+               #print(hop_ato,hop_orb,f,r,f*t(r,SKp))
       II = np.append(II,auxII)
       JJ = np.append(JJ,auxJJ)
       DD = np.append(DD,auxDD)
