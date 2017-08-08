@@ -459,4 +459,8 @@ if __name__ == '__main__':
 
    if pas: nam = acronym[func.__name__]+'_n%s_l%s_H.xyz'%(N,lN)
    else: nam = acronym[func.__name__]+'_n%s_l%s.xyz'%(N,lN)
+
+   C = np.mean(pos,axis=0)
+   for i in range(len(pos)):
+      pos[i] -= C
    pos2xyz(pos,latt,at=ats,sub=sub,fname=nam)
