@@ -34,7 +34,7 @@ for i in range(len(inps)):
    print('='*w)
    print(l)
    print('='*w)
-   sleep(10)
+   #sleep(10)
    os.system('python3 main.py checks/%s'%(inps[i]))
    os.system('rm -r /tmp/OUTs/ /tmp/HAMILs/ /tmp/SELFEs/')
    print('\n\n')
