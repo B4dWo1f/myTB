@@ -15,10 +15,11 @@ STOP_file = 'STOP'
 
 def modify(template,inp,modified):
    # alpha, dist, elec
-   x,y,z = inp[0],inp[1],inp[2]
+   #x,y,z = inp[0],inp[1],inp[2]
+   z = inp[0]
    com = 'sed \'s/XXelecXX/%s/\' %s '%(z,template)
-   com += ' | sed \'s/XXdXX/%s/\''%(y)
-   com += ' | sed \'s/XXalphaXX/%s/\''%(x)
+   #com += ' | sed \'s/XXdXX/%s/\''%(y)
+   #com += ' | sed \'s/XXalphaXX/%s/\''%(x)
    com += ' > %s'%(modified)
    print('-'*80)
    print(com)

@@ -193,6 +193,7 @@ def bands(X,Y,Z,show=False):
    ax = plt.subplot(gs[0,0])  # Original plot
    ax.scatter(X,Y,c=Z,s=20,cmap=my_cmap,edgecolors='none')
    ax.grid()
+   ax.set_xlim([min(X),max(X)])
    ax.set_ylim([-10,10])
    if show:
       plt.tight_layout()

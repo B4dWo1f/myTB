@@ -43,13 +43,17 @@ def get_geo_stuff(fol):
    try:
       com = 'grep " Requested-dist/Real-dist: " %s'%(log)
       dis = os.popen(com).read().split()[-1].split('/')[-1]
-   except IndexError: dis = fol.split('/')[-3].split('_')[-2].replace('d','')
+   except IndexError:
+      print('Distance not found')
+      dis = 0.0
    dis = float(dis)
    ## Get angle
    try:
       com = 'grep " Requested-angle/Real-angle: " %s'%(log)
       ang = os.popen(com).read().split()[-1].split('/')[-1]
-   except IndexError: ang=fol.split('/')[-3].split('_')[-1].replace('alpha','')
+   except IndexError:
+      print('Angle not found')
+      ang = 0.0
    ang = float(ang)
    return Nv, dis, ang, vacs
 
@@ -64,10 +68,13 @@ def get_exchanges(vL,vR):
       tRL += np.conj(vR[iv])*vR[iv] * np.conj(vR[iv])*vL[iv]
    return UL, UR, 2*JF, D, tLR, tRL
 
-def get_lc(v,pos,r0,lim=0.9):
+def get_lc(Ba,pos,v,r0,lim=0.9):
+   v = np.conj(v)*v
+   v = v.real   # by  construction v is real
+   vp = np.bincount(Ba.n, weights=v)
    dist_aux = np.array([np.linalg.norm(r-r0) for r in pos])
    inds_dist = np.argsort(dist_aux)
-   v_sorted = np.conj(v[inds_dist]) * v[inds_dist]
+   v_sorted = vp[inds_dist]  #np.conj(v[inds_dist]) * v[inds_dist]
    dist_aux = dist_aux[inds_dist]
    aux = 0.0
    for i in range(len(v_sorted)):
@@ -97,13 +104,12 @@ class Spectrum(object):
       ## Electric Field
       self.elec = float(fname.split('/')[-2].replace('e',''))
       ## Get conduction, valence, and in-gap states and indices
-      #try:   # Defected spectrum
       M = np.load(pris)
-      self.Ep = M[:,0]
+      self.Ep = M[:,0].real
       _,self.Pcond,self.Pvale = get_ingap(self.Ep, Nv=0)
       self.gap_pris = self.Pvale-self.Pcond
       M = np.load(dfct)
-      self.E = M[:,0]
+      self.E = M[:,0].real
       self.V = M[:,1:]
       ## Position of atoms
       pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3))
@@ -113,12 +119,12 @@ class Spectrum(object):
       sub = np.array([a.replace('\'','') for a in sub])
       #sublatice to num
       subdic = {'A':1,'B':-1}
-      self.sub = np.array([subdic[s] for s in sub])
       aux = []
       for i in range(len(sub)):
          for _ in self.Ba.ind[self.Ba.n==i]:
             aux.append(sub[i])
       sub = np.array(aux)
+      self.sub = np.array([subdic[s] for s in sub])
       #position
       self.pos = pos
       inds,cond,vale = get_ingap(self.E, Nv=self.Nv)
@@ -172,7 +178,8 @@ class Spectrum(object):
       ## Geometry and localization
       if self.V_ingap.shape[0] == 1:
          r0 = self.pos[self.vacs[0]]
-         self.lc = [get_lc(self.V_ingap[0], self.pos, r0)]
+         #self.lc = [get_lc(self.V_ingap[0], self.pos, r0)]
+         self.lc = [get_lc(self.Ba,self.pos,self.V_ingap[0],r0,lim=0.9)]
          self.r0 = [r0]
       elif self.V_ingap.shape[0] == 2:
          ## In-gap splitting
@@ -193,8 +200,10 @@ class Spectrum(object):
          else:
             rL = self.pos[self.vacs[0]]
             rR = self.pos[self.vacs[1]]
-         lcL = get_lc(self.LR[0], self.pos, rL)
-         lcR = get_lc(self.LR[1], self.pos, rR)
+         #lcL = get_lc(self.LR[0], self.pos, rL)
+         #lcR = get_lc(self.LR[1], self.pos, rR)
+         lcL = get_lc(self.Ba,self.pos,self.LR[0],rL)
+         lcR = get_lc(self.Ba,self.pos,self.LR[1],rR)
          self.lc = [lcL,lcR]
          self.r0 = [rL,rR]
          UL, UR, JF, D, tLR, tRL = get_exchanges(self.LR[0], self.LR[1])
@@ -223,6 +232,11 @@ class Spectrum(object):
       ## Layer Polarization
       Z = self.pos[:,2]
       LA = np.where(Z>0,1,-1)  # Layer operator
+      aux = []
+      for i in range(len(LA)):
+         for _ in self.Ba.ind[self.Ba.n==i]:
+            aux.append(LA[i])
+      LA = np.array(aux)
       self.SL_eig = [mean_val(v,LA) for v in self.V_ingap]
       if self.Nv == 2:
          self.SL_LR = [mean_val(v,LA) for v in [self.LR[0],self.LR[1]]]
@@ -231,16 +245,13 @@ class Spectrum(object):
       pos = self.pos
       vacs = self.vacs
       for ind in inds:
-      #for i in range(len(inds)):
-         #ind = inds[i]
          v = self.V[ind]
          cc = np.conj(v) * v   # contains the square of the elements already
+         cc = cc.real  # by construction cc is real
          X = pos[:,0]
          Y = pos[:,1]
          Z = pos[:,2]
-      #self.ind,self.n = np.loadtxt(fname,usecols=(0,1),unpack=True,dtype=int)
-         #C = cc #XXX multiorbital: np.bincount(Ba.ind, weights=cc) 
-         C = np.bincount(self.Ba.ind, weights=cc)  #XXX check Ba.ind, or Ba.n
+         C = np.bincount(self.Ba.n, weights=cc)
          # Normalize the scalar
          C = C/np.max(C)
          zz = np.unique(Z)
@@ -251,11 +262,13 @@ class Spectrum(object):
          zord = 9
          for i in range(len(zz)):
             z = zz[i]
-            ax.scatter(X[Z==z],Y[Z==z],c='k',s=10,marker=mks[i],
+            try:
+               ax.scatter(X[Z==z],Y[Z==z],c='k',s=10,marker=mks[i],
                                                         alpha=0.1,zorder=1)
-            ax.scatter(X[Z==z],Y[Z==z],c=cls[i],s=500*C[Z==z],marker=mks[i],
-                                      edgecolor='none',alpha=0.5,zorder=zord)
-            zord += 1
+               ax.scatter(X[Z==z],Y[Z==z],c=cls[i],s=500*C[Z==z],marker=mks[i],
+                                     edgecolor='none',alpha=0.5,zorder=zord)
+               zord += 1
+            except: pass
          # Vacancies
          ax.scatter(X[vacs],Y[vacs],c='b',s=200,marker='>',zorder=21)
          ax.plot(X[vacs],Y[vacs],'k--',lw=2,zorder=22)
@@ -285,10 +298,10 @@ class Spectrum(object):
 
 
 if __name__ == '__main__':
-   #fol = 'OUTs/ac10_l2/nv2_d33.0_alpha0.0/e0.2/'
-   #fol = 'OUTs/ac10_l2/nv1_d0.0_alpha0.0/e0.2/'
    import sys
    fol = sys.argv[1]
    A = Spectrum(fol)
-   print(A)
+   v = np.conj(A.V_ingap[0]) * A.V_ingap[0]
+   v = v.real   # a is real by construction
+   print('hyper:',A.elec,'',v[-1]*1420)    # elec   hyperfine (MHz)
    A.plot_state()

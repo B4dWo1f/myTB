@@ -18,9 +18,11 @@ LG = logging.getLogger(__name__)
 
 
 class Base_Element(object):
-   def __init__(self,n=0,elem='',onsites={},pos=np.array(())):
+   #def __init__(self,n=0,elem='',onsites={},pos=np.array(())):
+   def __init__(self,n=0,elem='',atoms={},pos=np.array(())):
       self.place = n
       self.element = elem
+      onsites = atoms[elem]
       # s, px, py, pz, dxy, dyz, dzx, dx2y2, d3z2r2
       order = {'s':0, 'px':1, 'py':2, 'pz':3,
                'dxy':4, 'dyz':5, 'dzx':6, 'dx2y2':7, 'd3z2r2':8}
@@ -49,14 +51,23 @@ class Base_Element(object):
 
 
 class Base(object):
-   def __init__(self, elements=[],latt=[],cent=True):
+   def __init__(self, elements=[],latt=[],atoms={},cent=True):
       """
         Capital letter attirbutes must have the dimension of the hamiltonian
         Lower letter attirbutes must have the dimension of the number of atoms
       """
-      self.elements = elements  # List of Base_Elements
+      self.elements = elements     # List of Base_Elements
+      self.atoms = atoms           # Dictionary of on-site energies
+      ## Lattice vectors
+      self.latt = np.array(latt)
+      self.recip = np.array(geo.reciprocal(latt))
+      ## Fix geometry
+      if cent: sc = self.center()    # center unit cell in (0,0,0)
+      self.evaluate()
+   def evaluate(self):
+      self.Natoms = len(self.elements)  # Number of atoms in the system
       ats,orbs,pos = [],[],[]   #TODO adapt to include the sublattice
-      for e in elements:
+      for e in self.elements:
          ats.append(e.element)
          orbs.append(e.orbitals)
          pos.append(e.position)
@@ -81,6 +92,7 @@ class Base(object):
       self.pos = pos
       self.ats = ats
       # Number of orbitals
+      self.ndim = len(ATS)
       self.ATS = ATS
       self.ORBS = orbs
       self.INDS = inds          #[0,0,0,1,1,1,.... Nats, Nats]
@@ -89,25 +101,16 @@ class Base(object):
       self.x = self.pos[:,0]
       self.y = self.pos[:,1]
       self.z = self.pos[:,2]
-      ## Lattice vectors  #TODO Fix center of cell
-      self.latt = np.array(latt)
-      self.recip = np.array(geo.reciprocal(latt))
-      ## Fix geometry
-      if cent: sc = self.center()    # center unit cell in (0,0,0)
       del pos,ats,orbs,ATS,inds,aux_inds
    def copy(self): return deepcopy(self)
    def center(self):
       LG.debug('Centering cell')
-      v = np.mean(self.pos,axis=0)
+      pos = np.array([e.position for e in self.elements])
+      v = np.mean(pos,axis=0)
       LG.info('Center cell by vector: (%.3f,%.3f,%.3f)'%(v[0],v[1],v[2]))
       for i in range(len(self.elements)):
          self.elements[i].position -= v
-      self.pos -= v
-      if len(self.latt) > 0:
-         LG.info('Center lattice vectors')
-         self.latt -= v
-         LG.info('Recalculate reciprocal vectors')
-         self.recip = np.array(geo.reciprocal(self.latt))
+      self.pos = np.array([e.position for e in self.elements])
    def __getitem__(self,index):  return self.elements[index]
    def __iter__(self): return (x for x in self.elements)
    def __str__(self):
@@ -137,9 +140,11 @@ class Base(object):
       """
       LG.info('Calculating sublattice for each element')
       #subs = geo.fsublattice(self.bonds[0][0])
-      if len(subs) == 0: subs = geo.sublattice(self.bonds[0][0])
+      if len(subs) == 0:
+         try: subs = [e.sublattice for e in self.elements]
+         except AttributeError: subs = geo.sublattice(self.bonds[0][0])
       else:
-         if len(subs) != len(self.pos):
+         if len(subs) != self.Natoms:
             LG.critical('Different number of atoms and sublattice')
             LG.info('Trying to calculate again the sublattice')
             subs = geo.sublattice(self.bonds[0][0])
@@ -156,8 +161,11 @@ class Base(object):
         This function adds a sublattice attribute to the base elements
       """
       LG.info('Calculating Layer for each element')
-      lays = geo.layer(self.pos)
-      lays = 2*np.array(lays) - 1   #TODO general map to interval [-1,1]
+      try:
+         lays = [e.layer for e in self.elements]
+      except AttributeError: 
+         lays = geo.layer(self.pos)
+         lays = 2*np.array(lays) - 1   #TODO general map to interval [-1,1]
       self.layers = np.array(lays)
       for i in range(len(lays)):
          self.elements[i].layer = lays[i]
@@ -173,7 +181,7 @@ class Base(object):
          LG.info('Neighbor: %s'%(A[2]))
          v0,v1 = A[0][0], A[0][1]
          data = [1 for _ in range(len(v0))]
-         a = coo_matrix( (data,(v0,v1)), shape=(len(self.pos),len(self.pos)) )
+         a = coo_matrix( (data,(v0,v1)), shape=(self.Natoms,self.Natoms) )
          self.bonds.append((a,A[1]))
       # TODO check symmetic intra
       #M = self.bonds[0][0].todense()
@@ -184,6 +192,56 @@ class Base(object):
       #   exit('Aborted @ get_neig method')
       LG.info('Neighbors done')
       return self.bonds
+   @log_help.log2screen(LG)
+   def adatom(self,l=1,N=1,at='H'):
+      """
+        This function chooses N atoms in the center of the cell and adds an
+        infinite on-site energy to them killing the hoppings
+        N: number of vacancies to add
+        d: distance between vacancies
+        alpha: angle (respect to X axis) of the vector between vacancies
+        ind: Not implemented
+      """
+      ## Get atoms in layer 1 and not connected in layer 0
+      #print(len(self.layers),len(self.sublattices),len(self.INDS))
+      l = max(set(self.layers))
+      LG.info('Vacancies introduced in layer: %s'%(l))
+      aux = range(max(self.INDS)+1)   #+1 because python starts in 0
+      sub_atsA =np.where((self.layers==l)&(self.sublattices=='A'),aux,-1)
+      sub_atsA = sub_atsA[sub_atsA>0]
+      lena = len(self.find_neig(sub_atsA[0]))
+      sub_atsB =np.where((self.layers==l)&(self.sublattices=='B'),aux,-1)
+      sub_atsB = sub_atsB[sub_atsB>0]
+      lenb = len(self.find_neig(sub_atsB[0]))
+
+      ## sub_ats contains the hollow atoms in layer 1
+      if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
+      else: sub_ats = sub_atsB  # indices of hollow atoms
+
+      ## Select atoms for defects
+      if N == 1: ## 1 defect   #XXX TODO LOG this funcion
+         C = np.mean(self.pos[sub_ats],axis=0)
+         ind = geo.snap(C,self.pos[sub_ats])
+         indices = [sub_ats[ind]]
+         LG.info('Changing onsite of atom: %s'%(indices[0])) #XXX XXX XXX
+         ## TODO generalize for list of adatoms
+         pl = self.elements[-1].place + 1
+         r = self.pos[indices[0]] + np.array([0,0,1.4])
+         LG.info('Adatom in position: %.3f, %.3f, %.3f'%(r[0],r[1],r[2]))
+         la = self.elements[-1].layer  # TODO think + 1
+         sub_dict = {'A':1,'B':-1}
+         tcid_bus = {1:'A',-1:'B'}
+         su = -1 * sub_dict[self.elements[-1].sublattice]
+         su = tcid_bus[su]
+         self.elements.append( Base_Element(pl,at,self.atoms,r) )
+         self.elements[-1].layer = la  #TODO fix
+         self.elements[-1].sublattice = su  #TODO fix
+         ## Update basis attributes
+         self.evaluate()
+         self.get_neig(fol='')   #TODO Fix to read from file?
+         self.get_layer()
+         self.get_sublattice()
+      return indices
    @log_help.log2screen(LG)
    def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1000000.):
       """
