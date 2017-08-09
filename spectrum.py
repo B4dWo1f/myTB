@@ -29,7 +29,7 @@ print('Analyzing %s folders'%(len(folders)))
 X,hyper = [],[]
 Xplt,Yplt,YPplt = [],[],[]
 for f in folders:
-   try: A = ex.Spectrum(f)
+   try: A = ex.Spectrum(f,nv=2)
    except: continue
    X.append( A.elec )
    Xplt.append( [A.elec for _ in A.E] )
@@ -38,6 +38,10 @@ for f in folders:
    #v = A.V_ingap[0]
    #vv = np.conj(v) * v
    #hyper.append(vv[-1]*1420)
+   hyper.append( abs(A.E_ingap[0]-A.E_ingap[1]) )
+X = np.array(X)
+hyper = np.array(hyper)
+h0 = hyper[X==0]
 
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots()
@@ -52,11 +56,11 @@ ax.set_xlim([mx,Mx])
 ax.grid()
 
 
-#import matplotlib.pyplot as plt
-#fig, ax = plt.subplots()
-#ax.plot(X,hyper,'o-')
-#ax.set_xlim([min(X),max(X)])
-#ax.grid()
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(X,hyper-h0,'o-')
+ax.set_xlim([min(X),max(X)])
+ax.grid()
 
 
 plt.show()
