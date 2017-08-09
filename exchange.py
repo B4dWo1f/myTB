@@ -102,7 +102,7 @@ class Spectrum(object):
       ## Basis for multiorbital systems
       self.Ba = basis(dfct_basis)
       ## Electric Field
-      self.elec = float(fname.split('/')[-2].replace('e',''))
+      self.elec = float(fname.split('/')[-2][1:]) #.replace('e',''))
       ## Get conduction, valence, and in-gap states and indices
       M = np.load(pris)
       self.Ep = M[:,0].real

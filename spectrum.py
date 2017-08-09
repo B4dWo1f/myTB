@@ -22,7 +22,7 @@ folders = []
 for a in os.walk(fol):
    folders.append( a[0]+'/' )
 folders = folders[1:]
-folders = sorted(folders,key=lambda x: float(x.split('/')[-2].replace('e','')))
+folders = sorted(folders,key=lambda x: float(x.split('/')[-2][1:]))
 
 print('Analyzing %s folders'%(len(folders)))
 
@@ -35,9 +35,9 @@ for f in folders:
    Xplt.append( [A.elec for _ in A.E] )
    Yplt.append( A.E )
    YPplt.append( A.Ep )
-   v = A.V_ingap[0]
-   vv = np.conj(v) * v
-   hyper.append(vv[-1]*1420)
+   #v = A.V_ingap[0]
+   #vv = np.conj(v) * v
+   #hyper.append(vv[-1]*1420)
 
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots()
@@ -52,11 +52,11 @@ ax.set_xlim([mx,Mx])
 ax.grid()
 
 
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots()
-ax.plot(X,hyper,'o-')
-ax.set_xlim([min(X),max(X)])
-ax.grid()
+#import matplotlib.pyplot as plt
+#fig, ax = plt.subplots()
+#ax.plot(X,hyper,'o-')
+#ax.set_xlim([min(X),max(X)])
+#ax.grid()
 
 
 plt.show()
