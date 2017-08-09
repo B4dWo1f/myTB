@@ -435,14 +435,14 @@ def electric(base,lElec):
 @log_help.log2screen(LG)
 def pseudo_rashba(base,lElec):
    LG.info('Doing matrix for Rashba')
-   ndim = len(base.basis)
+   ndim = base.ndim
    v = np.array([0.,0.,0.])
    M = np.matrix(np.zeros((ndim,ndim)))
-   for i in range(len(base.basis)):
-      it = base.basis[i]
-      for j in range(len(base.basis)):
-         jt = base.basis[j]
-         if (it[2]=='s' and jt[2]=='pz') or (it[2]=='pz' and jt[2]=='s'):
+   for i in range(len(base.ORBS)):
+      it = base.ORBS[i]
+      for j in range(len(base.ORBS)):
+         jt = base.ORBS[j]
+         if (it=='s' and jt=='pz') or (it=='pz' and jt=='s'):
             M[i,j] = 1
    LG.info('... added Rashba term')
    return HTerm(csc_matrix(M),v,lElec,name='rashba')
