@@ -410,6 +410,7 @@ def pasivate(pos,sub=[],nneig=3):
 
 if __name__ == '__main__':
    ## Read island type, size and layers from standard input  (TODO argparse)
+   # Usage: python islands.py armchair 20 2  ---> armchair island 20x20 bilayer
    import sys
    pas = False
    try: func = sys.argv[1]
