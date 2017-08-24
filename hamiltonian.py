@@ -434,6 +434,8 @@ def electric(base,lElec):
 
 @log_help.log2screen(LG)
 def pseudo_rashba(base,lElec):
+   ## TODO this creates a dense matrix. it WILL explode for big systems
+   # Replace the initialization with just rows,cols and data
    LG.info('Doing matrix for Rashba')
    ndim = base.ndim
    v = np.array([0.,0.,0.])
