@@ -80,6 +80,7 @@ for x,y,yp in zip(Xplt,Yplt,YPplt):
    mx = min([min(x),mx])
    Mx = max([max(x),Mx])
 
+#xx = np.linspace(mx,MX)
 ax.set_xlim([mx,Mx])
 ax.grid()
 
