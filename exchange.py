@@ -90,9 +90,13 @@ class basis(object):
 
 
 class Spectrum(object):
-   def __init__(self,fname):
+   def __init__(self,fname,nv=None):
       self.f = fname
-      self.Nv, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
+      if nv == None:
+         self.Nv, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
+      else:
+         _, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
+         self.Nv = nv
       pris = fname + 'pris_spectrum.npy'
       dfct = fname + 'dfct_spectrum.npy'
       pris_pos = fname + 'base_pris.xyz'
@@ -102,7 +106,7 @@ class Spectrum(object):
       ## Basis for multiorbital systems
       self.Ba = basis(dfct_basis)
       ## Electric Field
-      self.elec = float(fname.split('/')[-2].replace('e',''))
+      self.elec = float(fname.split('/')[-2][1:]) #.replace('e',''))
       ## Get conduction, valence, and in-gap states and indices
       M = np.load(pris)
       self.Ep = M[:,0].real
@@ -174,7 +178,7 @@ class Spectrum(object):
       msg += '  -Dfct: %s\n'%(self.gap_dfct)
       return msg
    def properties(self):
-      Rx = self.pos[:,0]   # Operator position
+      Rx = self.pos[:,0][self.Ba.n]   # Operator position
       ## Geometry and localization
       if self.V_ingap.shape[0] == 1:
          r0 = self.pos[self.vacs[0]]
@@ -192,20 +196,20 @@ class Spectrum(object):
          ## Order of LR = vL, vR
          if A > B: self.LR = [v2,v1]      # Left, Right
          else: self.LR = [v1,v2]          # Left, Right
-         ## position of left and right vacancies
-         A,B = self.pos[self.vacs][:,0]
-         if A > B:
-            rL = self.pos[self.vacs[1]]
-            rR = self.pos[self.vacs[0]]
-         else:
-            rL = self.pos[self.vacs[0]]
-            rR = self.pos[self.vacs[1]]
-         #lcL = get_lc(self.LR[0], self.pos, rL)
-         #lcR = get_lc(self.LR[1], self.pos, rR)
-         lcL = get_lc(self.Ba,self.pos,self.LR[0],rL)
-         lcR = get_lc(self.Ba,self.pos,self.LR[1],rR)
-         self.lc = [lcL,lcR]
-         self.r0 = [rL,rR]
+         try:  #XXX check if this is harmless
+            ## position of left and right vacancies
+            A,B = self.pos[self.vacs][:,0]
+            if A > B:
+               rL = self.pos[self.vacs[1]]
+               rR = self.pos[self.vacs[0]]
+            else:
+               rL = self.pos[self.vacs[0]]
+               rR = self.pos[self.vacs[1]]
+            lcL = get_lc(self.Ba,self.pos,self.LR[0],rL)
+            lcR = get_lc(self.Ba,self.pos,self.LR[1],rR)
+            self.lc = [lcL,lcR]
+            self.r0 = [rL,rR]
+         except: pass
          UL, UR, JF, D, tLR, tRL = get_exchanges(self.LR[0], self.LR[1])
          self.J_f = JF
          self.UL = UL
