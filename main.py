@@ -136,7 +136,7 @@ if CP.bands:
       points = [points[0],points[6],points[9], points[0]]
       path = geo.recorrido(points,CP.nk)
       LG.debug('Bands Pristine')
-      H_pris.get_bands(path,folder=FP.out,show=Shw)
+      I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Pristine done')
       LG.debug('Bands Defected')
       H_dfct.get_bands(path,folder=FP.out,show=Shw)
@@ -165,3 +165,36 @@ if CP.spectrum:
 print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
+
+exit()
+print('='*80)
+print('='*80)
+
+
+import mygreen_tools as green
+import numpy as np
+
+def get_DOS(Emin,Emax,vintra,h,path_slf,nE=101,use_all=False,fol='./'):
+   de = 0.1* (Emax - Emin)
+   E = np.linspace(int(Emin-de),int(Emax+de),nE)
+   DOS = []
+   f = open(fol+'pris.dos','w')
+   for e in E:
+      G = green.green_function(e,H_dfct.intra,H_pris,path_selfes=path_slf,force=True)
+      d = -G.trace()[0,0].imag/np.pi
+      f.write(str(e)+'   ')
+      v = -G.diagonal().imag/np.pi
+      for ix in range(max(v.shape)):
+         f.write(str(v[0,ix])+'   ')
+      f.write('\n')
+      DOS.append(d)
+   f.close()
+   return E,DOS
+
+nE = 1*int((np.max(E)-np.min(E))/0.1)
+E,DOS = get_DOS(np.min(E),np.max(E), H_dfct.intra,H_pris, FP.slf,nE=nE,fol=FP.out)
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(E,DOS)
+ax.grid()
+plt.show()

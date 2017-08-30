@@ -7,13 +7,7 @@ LG = logging.getLogger(__name__)
 
 import mygreen
 import numpy as np
-#from os import listdir
-#from os.path import isfile, join
-#import os
-#from copy import deepcopy
 import algebra as alg
-##from clases import Selfenergy
-#import cmath
 
 
 def green_function(e,v,h,delta=0.01,path_selfes='.',force=False,l=1.0):
@@ -32,6 +26,7 @@ def green_function(e,v,h,delta=0.01,path_selfes='.',force=False,l=1.0):
    else:
       sname = path_selfes + 'self%s.npy'%(e)
       try:
+         if force: raise FileNotFoundError
          s = np.load( sname )
          if v.shape != s.shape: s = alg.m2spin(s)
          LG.info('loaded from file '+sname)
@@ -52,18 +47,18 @@ def green_function(e,v,h,delta=0.01,path_selfes='.',force=False,l=1.0):
       return (emat - v - l*s ).I
 
 
-def calc_selfe(e,h,delta=0.01,path=None):
-   g,selfe = mygreen.bloch_selfenergy(h,energy=e,delta=delta,\
-                                    nk=100,error=10**(-5),\
-                                    #mode="full")
-                                    #mode="renormalization")
-                                    mode="adaptative")
-   if path != None:
-      sname = path+'self%s.npy'%(e)
-      np.save(sname,selfe)
-      #mygreen.Selfenergy(e,g,selfe).write(path)
-      LG.info('Writing: '+sname)
-   return g,selfe
+#def calc_selfe(e,h,delta=0.01,path=None):
+#   g,selfe = mygreen.bloch_selfenergy(h,energy=e,delta=delta,\
+#                                    nk=100,error=10**(-5),\
+#                                    mode="adaptative")
+#                                    #mode="full")
+#                                    #mode="renormalization")
+#   if path != None:
+#      sname = path+'self%s.npy'%(e)
+#      np.save(sname,selfe)
+#      #mygreen.Selfenergy(e,g,selfe).write(path)
+#      LG.info('Writing: '+sname)
+#   return g,selfe
 
 
 

@@ -359,8 +359,8 @@ def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4,force=False):
    """
     Fortran implementation of the neighbor finding algorithm
    """
-   aux = [p for p in product([0,1,-1], repeat=len(latt)) ]
-   aux = sorted(aux,key=np.linalg.norm)  #XXX Check correct order
+   #aux = [p for p in product([0,1,-1], repeat=len(latt)) ]
+   #aux = sorted(aux,key=np.linalg.norm)  #XXX Check correct order
    #perms = []
    #VIL = vecinlist   # Local rename
    #for i in range(len(aux)):
@@ -384,9 +384,15 @@ def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4,force=False):
    for i in range(len(all_vecs)):
       LG.info('Calculating distances in cell %s'%(names[i]))
       try:
-         LG.info('Trying to read from file: %s'%(fol+names[i]+'.H'))
+         LG.info('Trying to read "%s" matrix'%(names[i]))
          if force: raise
-         rows,cols = np.loadtxt(fol+names[i]+'.H',dtype=int)
+         #rows,cols = np.loadtxt(fol+names[i]+'.H',dtype=int,unpack=True)
+         M = np.matrix(np.loadtxt(fol+names[i]+'.H',dtype=int))
+         r = np.array(M[:,0])
+         c = np.array(M[:,1])
+         rows = np.reshape(r,(max((r.shape)),))
+         cols = np.reshape(c,(max((c.shape)),))
+         LG.info('Read from file: %s'%(fol+names[i]+'.H'))
       except:
          LG.info('Failed. Calculating with fortran')
          nn = num.count_neig(pos,pos+all_vecs[i])
@@ -396,7 +402,9 @@ def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4,force=False):
          rows,cols = num.dists(pos,pos+all_vecs[i],nn)
          rows -= 1   # XXX because python counts from 0
          cols -= 1   #
-         if fol != '': np.savetxt(fol+names[i]+'.H',(rows,cols),fmt='%d')
+         aux = np.column_stack((rows,cols))
+         if fol != '': np.savetxt(fol+names[i]+'.H',aux,fmt='%d')
+         #if fol != '': np.savetxt(fol+names[i]+'.H',(rows,cols),fmt='%d')
       neigs.append( ((rows,cols),all_vecs[i],names[i]) )
    LG.info('Neighbors calculated using Fortran')
    return neigs
