@@ -8,8 +8,10 @@ import sys
 try: fname = sys.argv[1]
 except IndexError: exit() #fname = ['mag.dat']
 
+try: tag = sys.argv[2]
+except IndexError: tag = 'dfct'
+
 #fname = '/tmp/OUTs/simple1_l2/nv0_d0.0_alpha0.0/e0.0/'
-tag = 'dfct'
 ban = fname + tag + '.bands'
 dos = fname + tag + '.dos'
 bas = fname + tag + '.basis'
