@@ -82,6 +82,7 @@ else: IND_vac = []
 
 if SP.ada.N >0:
    IND_ada = base_dfct.adatom(N=SP.ada.N)
+   base_pris.adatom(N=SP.ada.N, dummy=True)
 
 
 ## Save basis
@@ -166,7 +167,6 @@ print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
 
-exit()
 print('='*80)
 print('='*80)
 
@@ -178,9 +178,9 @@ def get_DOS(Emin,Emax,vintra,h,path_slf,nE=101,use_all=False,fol='./'):
    de = 0.1* (Emax - Emin)
    E = np.linspace(int(Emin-de),int(Emax+de),nE)
    DOS = []
-   f = open(fol+'pris.dos','w')
+   f = open(fol+'dfct.dos','w')
    for e in E:
-      G = green.green_function(e,H_dfct.intra,H_pris,path_selfes=path_slf,force=True)
+      G = green.green_function(e,H_dfct.intra,H_pris,path_selfes=path_slf)
       d = -G.trace()[0,0].imag/np.pi
       f.write(str(e)+'   ')
       v = -G.diagonal().imag/np.pi
@@ -191,6 +191,7 @@ def get_DOS(Emin,Emax,vintra,h,path_slf,nE=101,use_all=False,fol='./'):
    f.close()
    return E,DOS
 
+E = E[(E>-50) & (E<50)]
 nE = 1*int((np.max(E)-np.min(E))/0.1)
 E,DOS = get_DOS(np.min(E),np.max(E), H_dfct.intra,H_pris, FP.slf,nE=nE,fol=FP.out)
 import matplotlib.pyplot as plt

@@ -5,7 +5,7 @@ import numpy as np
 
 
 def green_renormalization(intra,inter,energy=0.0,nite=None,
-                                       error=0.0001,info=False,delta=0.001):
+                                       error=0.0001,info=False,delta=0.01):
    """
      Calculates bulk and surface Green function by a renormalization
      algorithm, as described in I. Phys. F: Met. Phys. 15 (1985) 851-858

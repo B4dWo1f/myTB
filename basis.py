@@ -92,7 +92,7 @@ class Base(object):
       self.pos = pos
       self.ats = ats
       # Number of orbitals
-      self.ndim = len(ATS)
+      self.ndim = len(ATS)  # Hamiltonian dimension
       self.ATS = ATS
       self.ORBS = orbs
       self.INDS = inds          #[0,0,0,1,1,1,.... Nats, Nats]
@@ -193,7 +193,7 @@ class Base(object):
       LG.info('Neighbors done')
       return self.bonds
    @log_help.log2screen(LG)
-   def adatom(self,l=1,N=1,at='H'):
+   def adatom(self,l=1,N=1,at='H',dummy=False,inf=1e6):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings
@@ -219,7 +219,7 @@ class Base(object):
       else: sub_ats = sub_atsB  # indices of hollow atoms
 
       ## Select atoms for defects
-      if N == 1: ## 1 defect   #XXX TODO LOG this funcion
+      if N == 1: ## 1 defect
          C = np.mean(self.pos[sub_ats],axis=0)
          ind = geo.snap(C,self.pos[sub_ats])
          indices = [sub_ats[ind]]
@@ -233,7 +233,12 @@ class Base(object):
          tcid_bus = {1:'A',-1:'B'}
          su = -1 * sub_dict[self.elements[-1].sublattice]
          su = tcid_bus[su]
-         self.elements.append( Base_Element(pl,at,self.atoms,r) )
+         if dummy:
+            fake_atoms = deepcopy(self.atoms)
+            for k,v in fake_atoms[at].items():
+               fake_atoms[at][k] = inf
+            self.elements.append( Base_Element(pl,at,fake_atoms,r) )
+         else: self.elements.append( Base_Element(pl,at,self.atoms,r) )
          self.elements[-1].layer = la  #TODO fix
          self.elements[-1].sublattice = su  #TODO fix
          ## Update basis attributes
@@ -243,7 +248,7 @@ class Base(object):
          self.get_sublattice()
       return indices
    @log_help.log2screen(LG)
-   def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1000000.):
+   def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1e6):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings

@@ -147,7 +147,7 @@ class Hamiltonian(object):
       f.close()
       LG.info('Bands saved to: '+bname)
       if show: graphs.bands(X,Y,Z,True)
-      return X,Y,Z
+      return np.array(X),np.array(Y),np.array(Z)  #TODO check type compatib
    def dospin(self):
       Hs = self.lista
       for h in Hs:
