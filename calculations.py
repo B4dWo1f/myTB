@@ -6,7 +6,8 @@ import numpy as np
 import os
 
 
-def get_DOS(Emin,Emax,vintra,h,path_slf='/tmp',nE=101,use_all=True,fol='./'):
+def get_DOS(Emin, Emax, vintra, h, path_slf='/tmp', nE=101, use_all=True,
+                                                        fol='./', delta=0.01):
    de = 0.1* (Emax - Emin)
    E = np.linspace(int(Emin-de),int(Emax+de),nE)
    if use_all:
@@ -20,8 +21,8 @@ def get_DOS(Emin,Emax,vintra,h,path_slf='/tmp',nE=101,use_all=True,fol='./'):
    f = open(fol+'dfct.dos','w')
    g = open(fol+'pris.dos','w')
    for e in E:
-      Gd = green.green_function(e,vintra,h,path_selfes=path_slf)
-      Gp = green.green_function(e,h.intra,h,path_selfes=path_slf)
+      Gd = green.green_function(e,vintra,h,path_selfes=path_slf,delta=delta)
+      Gp = green.green_function(e,h.intra,h,path_selfes=path_slf,delta=delta)
       dd = -Gd.trace()[0,0].imag/np.pi
       dp = -Gp.trace()[0,0].imag/np.pi
       f.write(str(e)+'   ')
