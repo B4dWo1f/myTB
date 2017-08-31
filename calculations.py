@@ -14,6 +14,7 @@ def get_DOS(Emin,Emax,vintra,h,path_slf='/tmp',nE=101,use_all=True,fol='./'):
       es = [x.split('/')[-1].replace('.npy','') for x in files]
       es = [x.split('/')[-1].replace('self','') for x in es]
       es = np.array(sorted([float(x) for x in es]))
+      es = es[(es>Emin) & (es<Emax)]
       E = np.sort(np.append(E,es))
    DOSd,DOSp = [],[]
    f = open(fol+'dfct.dos','w')
