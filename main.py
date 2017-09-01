@@ -102,8 +102,8 @@ LG.debug('Starting kinetic terms')
 Htot = ham.kinetic(base_pris,hoppings)
 if HP.lelec != 0.0:
    LG.info('Electric field: %s'%(HP.lelec))
-   Htot.append( ham.pseudo_rashba(base_pris,HP.lelec) )
-   #Htot.append( ham.electric(base_pris,HP.lelec) )
+   #Htot.append( ham.pseudo_rashba(base_pris,HP.lelec) )
+   Htot.append( ham.electric(base_pris,HP.lelec) )
 LG.info('Hamiltonian ready')
 H_pris = ham.Hamiltonian(Htot,tag='pris')
 H_pris.names()
@@ -113,8 +113,8 @@ LG.info('Creating Defected Hamiltonian')
 LG.debug('Starting kinetic terms')
 Htot = ham.kinetic(base_dfct,hoppings)
 if HP.lelec != 0.0:
-   Htot.append( ham.pseudo_rashba(base_dfct,HP.lelec) )
-   #Htot.append( ham.electric(base_dfct,HP.lelec) )
+   #Htot.append( ham.pseudo_rashba(base_dfct,HP.lelec) )
+   Htot.append( ham.electric(base_dfct,HP.lelec) )
 LG.info('Hamiltonian ready')
 H_dfct = ham.Hamiltonian(Htot,tag='dfct')
 H_dfct.names()
@@ -131,7 +131,7 @@ import geometry as geo
 #op = OP.orbital(base_dfct,'s')
 if CP.bands:
    if len(latt) != 0:
-      Shw = True
+      Shw = False
       LG.info('Calculating bands')
       points = geo.get_points(base_pris.recip)
       points = [points[0],points[6],points[9], points[0]]
@@ -171,50 +171,15 @@ print('='*80)
 print('='*80)
 
 
-#import mygreen_tools as green
-#import numpy as np
-#import os
-#
-#def get_DOS(Emin,Emax,vintra,h,path_slf='/tmp',nE=101,use_all=True,fol='./'):
-#   de = 0.1* (Emax - Emin)
-#   E = np.linspace(int(Emin-de),int(Emax+de),nE)
-#   if use_all:
-#      files = os.popen('ls -1 %s*.npy'%(path_slf)).read().splitlines()
-#      es = [x.split('/')[-1].replace('.npy','') for x in files]
-#      es = [x.split('/')[-1].replace('self','') for x in es]
-#      es = np.array(sorted([float(x) for x in es]))
-#      E = np.sort(np.append(E,es))
-#   DOSd,DOSp = [],[]
-#   f = open(fol+'dfct.dos','w')
-#   g = open(fol+'pris.dos','w')
-#   for e in E:
-#      Gd = green.green_function(e,H_dfct.intra,H_pris,path_selfes=path_slf)
-#      Gp = green.green_function(e,H_pris.intra,H_pris,path_selfes=path_slf)
-#      dd = -Gd.trace()[0,0].imag/np.pi
-#      dp = -Gp.trace()[0,0].imag/np.pi
-#      f.write(str(e)+'   ')
-#      g.write(str(e)+'   ')
-#      vd = -Gd.diagonal().imag/np.pi
-#      for ix in range(max(vd.shape)):
-#         f.write(str(vd[0,ix])+'   ')
-#      f.write('\n')
-#      vp = -Gp.diagonal().imag/np.pi
-#      for ix in range(max(vp.shape)):
-#         g.write(str(vp[0,ix])+'   ')
-#      g.write('\n')
-#      DOSd.append(dd)
-#      DOSp.append(dp)
-#   f.close()
-#   g.close()
-#   return E,DOSp,DOSd
-
 from calculations import get_DOS
 E = E[(E>-50) & (E<50)]
 mE,ME = min(E),max(E)
-nE = 2*int((ME-mE)/0.1)
-E,_,DOS = get_DOS(mE,ME, H_dfct.intra,H_pris, path_slf=FP.slf,nE=nE,fol=FP.out)
+nE = int((ME-mE)/0.01)
+E,Dp,Dd = get_DOS(mE,ME, H_dfct.intra,H_pris, path_slf=FP.slf,nE=nE,fol=FP.out,delta=0.01)
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots()
-ax.plot(E,DOS)
+ax.plot(E,Dp,label='Pristine')
+ax.plot(E,Dd,label='Defected')
 ax.grid()
+ax.legend()
 plt.show()
