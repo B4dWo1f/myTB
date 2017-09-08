@@ -420,6 +420,8 @@ def zeeman(base,lzee):
 def electric(base,lElec):
    """ Returns the Electric Field term """
    #XXX may fail for multiorbital
+   #XXX will use the layer number as a factor for the electric field.
+   #    This may result in unexpected results for multilayers CHECK
    LG.info('Doing matrix for electric field. lelec=%s'%(lElec))
    v = np.array([0.,0.,0.])
    ndim = len(base.INDS)
