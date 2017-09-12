@@ -329,7 +329,7 @@ class Base(object):
       for i in range(len(self.INDS)):
          f.write(str(self.AUX_INDS[i])+'   '+str(self.INDS[i]))
          f.write('   '+str(self.ATS[i])+'   '+str(self.ORBS[i]))
-         f.write('   '+str(self.SUBS[i])+'   'str(self.LAYS[i])+'\n')
+         f.write('   '+str(self.SUBS[i])+'   '+str(self.LAYS[i])+'\n')
       f.close()
       self.save_xyz(f_xyz)
    def save_xyz(self,fname='base.xyz'):
