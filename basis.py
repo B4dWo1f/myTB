@@ -325,11 +325,11 @@ class Base(object):
    def save(self,f_ind='base.basis',f_xyz='base.xyz'):
       #self.update_basis()
       f = open(f_ind,'w')
-      f.write('#ind   n_atom   atom   orb   sublatt\n')
+      f.write('#ind   n_atom   atom   orb   sublatt   lay\n')
       for i in range(len(self.INDS)):
          f.write(str(self.AUX_INDS[i])+'   '+str(self.INDS[i]))
          f.write('   '+str(self.ATS[i])+'   '+str(self.ORBS[i]))
-         f.write('   '+str(self.SUBS[i])+'\n')
+         f.write('   '+str(self.SUBS[i])+'   'str(self.LAYS[i])+'\n')
       f.close()
       self.save_xyz(f_xyz)
    def save_xyz(self,fname='base.xyz'):

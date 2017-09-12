@@ -7,9 +7,10 @@ import os
 
 
 def get_DOS(Emin, Emax, vintra, h, path_slf='/tmp', nE=101, use_all=True,
-                                                        fol='./', delta=0.01):
+                                               fol='./', delta=0.01,add0=True):
    de = 0.1* (Emax - Emin)
    E = np.linspace(int(Emin-de),int(Emax+de),nE)
+   if add0: E = np.sort(np.append(E,np.linspace(-1,1,201)))
    if use_all:
       files = os.popen('ls -1 %s*.npy'%(path_slf)).read().splitlines()
       es = [x.split('/')[-1].replace('.npy','') for x in files]
