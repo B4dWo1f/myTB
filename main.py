@@ -174,7 +174,7 @@ print('='*80)
 from calculations import get_DOS
 E = E[(E>-50) & (E<50)]
 mE,ME = min(E),max(E)
-nE = int((ME-mE)/0.01)
+nE = int((ME-mE)/0.1)
 E,Dp,Dd = get_DOS(mE,ME, H_dfct.intra,H_pris, path_slf=FP.slf,nE=nE,fol=FP.out,delta=0.001)
 
 import matplotlib.pyplot as plt
