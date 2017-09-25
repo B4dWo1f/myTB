@@ -11,8 +11,9 @@ def get_DOS(Emin, Emax, vintra, h, path_slf='/tmp', nE=101, use_all=True,
    de = 0.1* (Emax - Emin)
    E = np.linspace(int(Emin-de),int(Emax+de),nE)
    if add0:
-      nn = int(2/delta)+1
-      E = np.sort(np.append(E,np.linspace(-1,1,nn)))
+      l0 = 1       # max resolution in [-l0, l0]
+      nn = int(2*l0/delta)+1
+      E = np.sort(np.append(E,np.linspace(-l0,l0,nn)))
    if use_all:
       files = os.popen('ls -1 %s*.npy'%(path_slf)).read().splitlines()
       es = [x.split('/')[-1].replace('.npy','') for x in files]
