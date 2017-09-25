@@ -148,7 +148,7 @@ if CP.spectrum:
    Shw = False
    LG.info('Spectrum: Pristine')
    import numpy as np
-   n_es = min([H_pris.dim,10])
+   n_es = min([int(H_pris.dim//2),8])
    #es,v = H_pris.get_N_states(Op=True,folder=FP.out,border=False,n=n_es)
    es,v = H_pris.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw)
    #es,v = H_pris.get_spectrum(Op=True,folder=FP.out,border=False,shw=Shw)
@@ -156,7 +156,7 @@ if CP.spectrum:
    for e in es:
       print(e)
    LG.info('Spectrum: Defected')
-   n_es = min([H_dfct.dim,10])
+   n_es = min([int(H_dfct.dim//2),8])
    #es,v = H_dfct.get_N_states(Op=True,folder=FP.out,border=False,n=n_es)
    es,v = H_dfct.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw)
    #es,v = H_dfct.get_spectrum(Op=True,folder=FP.out,border=False,shw=Shw)
