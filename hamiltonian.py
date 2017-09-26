@@ -372,7 +372,7 @@ def mass(base,lmass):
 
 
 def soc(base,lso):
-   """ Returns the SOC term """
+   """ Returns the SOC Hterm """
    v = np.array([0.,0.,0.])
    from SOC import soc_l
    aux = [[None for _ in base.elements] for _ in base.elements]
