@@ -100,6 +100,13 @@ LG.info('Creating Pristine Hamiltonian')
 # Pristine
 LG.debug('Starting kinetic terms')
 Htot = ham.kinetic(base_pris,hoppings)
+import numpy as np
+if np.linalg.norm(HP.lzee) != 0.0:
+   LG.info('Zeeman Term: %s'%(HP.lzee))
+   Htot.append( ham.zeeman(base_pris,HP.lzee) )
+if HP.lSO != 0.0:
+   LG.info('Spin-Orbit coupling: %s'%(HP.lSO))
+   Htot.append( ham.soc(base_pris,HP.lSO) )
 if HP.lelec != 0.0:
    LG.info('Electric field: %s'%(HP.lelec))
    #Htot.append( ham.pseudo_rashba(base_pris,HP.lelec) )
@@ -112,6 +119,12 @@ del Htot
 LG.info('Creating Defected Hamiltonian')
 LG.debug('Starting kinetic terms')
 Htot = ham.kinetic(base_dfct,hoppings)
+if np.linalg.norm(HP.lzee) != 0.0:
+   LG.info('Zeeman Term: %s'%(HP.lzee))
+   Htot.append( ham.zeeman(base_pris,HP.lzee) )
+if HP.lSO != 0.0:
+   LG.info('Spin-Orbit coupling: %s'%(HP.lSO))
+   Htot.append( ham.soc(base_dfct,HP.lSO) )
 if HP.lelec != 0.0:
    #Htot.append( ham.pseudo_rashba(base_dfct,HP.lelec) )
    Htot.append( ham.electric(base_dfct,HP.lelec) )
@@ -120,15 +133,18 @@ H_dfct = ham.Hamiltonian(Htot,tag='dfct')
 H_dfct.names()
 H_dfct.save_matrix(FP.ham)
 LG.info('Hamiltonians done')
-print('     *** Hamiltonian:',time()-told)
 del Htot
+print('     *** Hamiltonian:',time()-told)
 
 
 told = time()
 import operators as OP
 import geometry as geo
-#from random import uniform, choice
+from random import uniform, choice
 #op = OP.orbital(base_dfct,'s')
+import algebra as alg
+op = OP.spin(base_pris)
+#op = alg.m2spin(OP.orbital(base_pris,'pz'))
 if CP.bands:
    if len(latt) != 0:
       Shw = False
@@ -137,7 +153,7 @@ if CP.bands:
       points = [points[0],points[6],points[9], points[0]]
       path = geo.recorrido(points,CP.nk)
       LG.debug('Bands Pristine')
-      I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
+      I,E,Z = H_pris.get_bands(path,Op=op,folder=FP.out,show=Shw)
       LG.info('Bands Pristine done')
       LG.debug('Bands Defected')
       H_dfct.get_bands(path,folder=FP.out,show=Shw)
@@ -167,6 +183,7 @@ print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
 
+exit()
 print('='*80)
 print('='*80)
 

@@ -12,8 +12,9 @@ def m2spin(matin,Delt=0.0): #,matin2=None):
      c d        c+Delt   0    d+Delt   0
                   0    c-Delt   0    d-Delt
    """
+   matin = matin.todense()  # XXX Noooooooooooo
    n = matin.shape[0]
-   keep_type = 0*matin[0,0]  # Preserve type (int, float, complex...)
+   keep_type = 0.0 #*matin[0,0]  # Preserve type (int, float, complex...)
    matout = np.matrix([[keep_type for i in range(2*n)] for j in range(2*n)])
    for i in range(n):
       for j in range(n):

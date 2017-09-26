@@ -14,6 +14,9 @@ import logging
 import log_help
 LG = logging.getLogger(__name__)   # Logger for this module
 
+l_orb = {'s':0,'p':1,'d':2}
+orb_group = {'s':'s','px':'p','py':'p','pz':'p',
+             'dxy':'d','dyz':'d','dzx':'d','dx2y2':'d','d3z2r2':'d'}
 
 class HTerm(object):
    """ Elements of the Hamiltonian """
@@ -32,12 +35,36 @@ class HTerm(object):
       return msg
 
 class Hamiltonian(object):
+   @log_help.log2screen(LG)
    def __init__(self, Hlist,tag=''):
+      ## Check dimensionality
+      dims = [x.mat.shape[0] for x in Hlist]
+      if len(set(dims)) == 1:
+         pass  # same dimension for every term
+      elif len(set(dims)) == 2:
+         if 2*min(dims) != max(dims):
+            LG.critical('Different dimensions for Hamiltonian terms')
+            exit()
+         else:
+            LG.info('Spin doubling')
+            md, Md = min(dims), max(dims)
+            for i in range(len(Hlist)):
+               x = Hlist[i]
+               if x.mat.shape[0] == md:
+                  LG.info('spin doubling term: %s'%(x.name))
+                  x.mat = csc_matrix(alg.m2spin(x.mat))
+                  if x.mat.shape[0] != Md:
+                     LG.critical('Error doubling spin in term %s'%(x.name))
+      else:
+         LG.critical('Different dimensions not coherent with spin')
+         exit()
+      ## Old stuff
       self.lista = Hlist
-      self.dim = Hlist[0].mat.shape[0]
-      #self.dimensionality = 2 #XXX
-      if len(tag) != 0: self.tag = tag
-      else: self.tag = ''
+      try: self.dim = int(list(set([x.mat.shape[0] for x in Hlist]))[0])
+      except TypeError:
+         LG.critical('Different dimensions not coherent with spin')
+         exit()
+      self.tag = tag
    def __iter__(self): return (x for x in self.lista)
    def save_matrix(self,folder='./'):
       for i in range(len(self.lista)):
@@ -148,13 +175,13 @@ class Hamiltonian(object):
       LG.info('Bands saved to: '+bname)
       if show: graphs.bands(X,Y,Z,True)
       return np.array(X),np.array(Y),np.array(Z)  #TODO check type compatib
-   def dospin(self):
-      Hs = self.lista
-      for h in Hs:
-         h.mat = coo_matrix(alg.m2spin(h.mat))
-      self.names()
-      self.dim = self.intra.shape[0]
    #DEPRECATED
+   #def dospin(self):
+   #   Hs = self.lista
+   #   for h in Hs:
+   #      h.mat = coo_matrix(alg.m2spin(h.mat))
+   #   self.names()
+   #   self.dim = self.intra.shape[0]
    #def disconnect(self,indices=[],inf=100000,hop=False):
    #   """
    #     This method will disconnect a given atom leaving inf for the onsite
@@ -375,17 +402,42 @@ def soc(base,lso):
    """ Returns the SOC Hterm """
    v = np.array([0.,0.,0.])
    from SOC import soc_l
-   aux = [[None for _ in base.elements] for _ in base.elements]
+   #L_s = soc_l(0)
+   #L_p = soc_l(1)
+   #L_d = soc_l(2)
+   #orb_mat = {'s':L_s,'p':L_p,'d':L_d}
+   #s_ord = {'s':0}
+   #p_ord = {'px':0,'py':1,'pz':2}
+   #d_ord = {'dxy':0,'dyz':1,'dzx':2,'dx2y2':3,'d3r2y2':4}
+   #ord_orb = {'s':s_ord, 'p':p_ord, 'd':d_ord}
+   #print(L_s)
+   #print(L_p)
+   #aux = [] # will contain the blocks of the SOC matrix
+   #for ei in base.ORBS:
+   #   print(ei)
+   #   Mi = orb_mat[ei[0]]
+   #   dici = ord_orb[ei[0]]
+   #   print(Mi)
+   #   indi = dici[ei]
+   #   print(M[ind])
+   #exit()
+   aux = [[None for _ in base.elements] for _ in base.elements] # Size=num atoms
    base.DOspin = True
-   l_orb = {'s':0,'p':1,'d':2} #TODO complete
+   l_orb = {'s':0,'p':1,'d':2}
    for i in range(len(base.elements)):
       E = base.elements[i]
-      auxx = [[None for _ in E.orbs] for _ in E.orbs]
-      for j in range(len(E.orbs)):
-         o = E.orbs[j]
-         auxx[j][j] = coo_matrix(soc_l(l_orb[o]))
+      orbs = []
+      for x in E.orbitals:
+         if x[0] not in orbs: orbs.append(x[0])
+      auxx = [[None for _ in orbs] for _ in orbs]
+      for j in range(len(auxx)):
+         auxx[j][j] = soc_l(l_orb[orbs[j]])
+      #auxx = [[None for _ in E.orbitals] for _ in E.orbitals]
+      #for j in range(len(E.orbitals)):
+      #   o = E.orbitals[j]
+      #   auxx[j][j] = coo_matrix(soc_l(l_orb[o]))
       aux[i][i] = bmat(auxx)
-   return HTerm(csc(bmat(aux)),v,lso,name='soc')
+   return HTerm(csc_matrix(bmat(aux)),v,lso,name='soc')
 
 
 def zeeman(base,lzee):
@@ -406,11 +458,10 @@ def zeeman(base,lzee):
          auxY[i][i] = Sy
          auxZ[i][i] = Sz
       return bmat(auxX), bmat(auxY), bmat(auxZ)
+   base.DOspin = True
    v = np.array([0.,0.,0.])
    coup = 1.0
-   N = 0
-   for E in base:
-      N += len(E.onsite)
+   N = len(base.ORBS)
    sig = pauli_matrix(N)
    M = lzee[0]*sig[0] + lzee[1]*sig[1] + lzee[2]*sig[2]
    return HTerm(csc_matrix(M),v,coup,name='zeeman')
