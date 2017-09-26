@@ -282,6 +282,28 @@ def Hamil(Hlist,k,chk=True):
    #      sys.exit(1)
    return Hamiltoniano
 
+def build_ham(base,hp,tag):
+   LG.info('Creating %s Hamiltonian'%(tag))
+   LG.debug('Starting kinetic terms')
+   Htot = kinetic(base,hp.hoppings)
+   if np.linalg.norm(hp.lzee) != 0.0:
+      LG.info('Zeeman Term: %s'%(hp.lzee))
+      Htot.append( zeeman(base,hp.lzee) )
+   if hp.lmass != 0.0:
+      LG.info('Mass Term: %s'%(hp.lmass))
+      Htot.append( mass(base,hp.lmass) )
+   if hp.lSO != 0.0:
+      LG.info('Spin-Orbit coupling: %s'%(hp.lSO))
+      Htot.append( soc(base,hp.lSO) )
+   if hp.lelec != 0.0:
+      LG.info('Electric field: %s'%(hp.lelec))
+      Htot.append( electric(base,hp.lelec) )
+   LG.info('Hamiltonian %s ready'%(tag))
+   H_pris = Hamiltonian(Htot,tag=tag)
+   H_pris.names()
+   del Htot
+   return H_pris
+
 
 
 def dic2vec(d):
@@ -394,8 +416,8 @@ def mass(base,lmass):
    for i in range(len(base.elements)):
       E = base.elements[i]
       f = sub_dic[E.sublattice]
-      aux[i][i] = coo_matrix(f/2. * np.identity(len(E.onsite)))
-   return HTerm(csc(bmat(aux)),v,lmass,name='mass')
+      aux[i][i] = coo_matrix(f * np.identity(len(E.onsite)))
+   return HTerm(csc_matrix(bmat(aux)),v,lmass,name='mass')
 
 
 def soc(base,lso):

@@ -56,6 +56,7 @@ class Base(object):
         Capital letter attirbutes must have the dimension of the hamiltonian
         Lower letter attirbutes must have the dimension of the number of atoms
       """
+      self.DOspin = False
       self.elements = elements     # List of Base_Elements
       self.atoms = atoms           # Dictionary of on-site energies
       ## Lattice vectors

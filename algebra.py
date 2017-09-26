@@ -2,6 +2,8 @@
 # -*- coding: UTF-8 -*-
 
 import numpy as np
+from scipy.sparse import coo_matrix, bmat,csc_matrix
+
 
 
 def m2spin(matin,Delt=0.0): #,matin2=None):
@@ -20,7 +22,7 @@ def m2spin(matin,Delt=0.0): #,matin2=None):
       for j in range(n):
          matout[2*i,2*j] = matin[i,j]+Delt
          matout[2*i+1,2*j+1] = matin[i,j]-Delt
-   return matout
+   return csc_matrix(matout)
 
 def isinb2een(x,a,b):
    try: return np.array([isinb2een(ix,a,b) for ix in x])

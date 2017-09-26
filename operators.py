@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import numpy as np
+import algebra as alg
 from scipy.sparse import coo_matrix,bmat
 import logging
 
@@ -60,7 +61,8 @@ def sublattice(base,Subs=['A']):
       dim = len(E.onsite)
       if E.sublattice in Subs: aux[i][i] = np.identity(dim,dtype=int)
       else: aux[i][i] = np.zeros((dim,dim),dtype=int)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)
 
 
 def orbital(base,Orbs=['pz']):
@@ -78,7 +80,8 @@ def orbital(base,Orbs=['pz']):
    diag = [0 for _ in diag_name]
    for i in range(len(diag_name)):
       if diag_name[i] in Orbs: diag[i] = 1
-   return coo_matrix(np.diag(diag))
+   if base.DOspin: return alg.m2spin(coo_matrix(np.diag(diag)))
+   else: return coo_matrix(np.diag(diag))
 
 
 def atom(base,Ats=[1]):
@@ -94,7 +97,8 @@ def atom(base,Ats=[1]):
       dim = len(E.onsite)
       if E.place in Ats: aux[E.place][E.place] = np.identity(dim,dtype=int)
       else: aux[E.place][E.place] = np.zeros((dim,dim),dtype=int)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)
 
 
 def layer(base):
@@ -106,7 +110,8 @@ def layer(base):
    for E in base:
       N = len(E.onsite)
       aux[E.place][E.place] = E.layer * np.identity(N)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)
 
 
 def dist(base,r0=np.array([0.,0.,0.])):
@@ -119,7 +124,8 @@ def dist(base,r0=np.array([0.,0.,0.])):
       r = np.linalg.norm( E.position - r0 )
       N = len(E.onsite)
       aux[E.place][E.place] = r * np.identity(N)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)
 
 
 def position(base,coor=2):
@@ -131,4 +137,5 @@ def position(base,coor=2):
       r = E.position
       N = len(E.onsite)
       aux[E.place][E.place] = r[coor] * np.identity(N)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)

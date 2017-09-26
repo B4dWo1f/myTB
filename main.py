@@ -6,7 +6,8 @@ import sys
 try: fini = sys.argv[1]
 except IndexError: fini = 'SK1.ini'
 import setup
-FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
+#FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
+FP,HP,CP,SP,atoms = setup.setup(fini)
 
 ############################### LOGGING #####################################
 import logging
@@ -94,46 +95,9 @@ print('            *** Base:',time()-told)
 
 
 told = time()
-## Create the Hamiltonians
 import hamiltonian as ham
-LG.info('Creating Pristine Hamiltonian')
-# Pristine
-LG.debug('Starting kinetic terms')
-Htot = ham.kinetic(base_pris,hoppings)
-import numpy as np
-if np.linalg.norm(HP.lzee) != 0.0:
-   LG.info('Zeeman Term: %s'%(HP.lzee))
-   Htot.append( ham.zeeman(base_pris,HP.lzee) )
-if HP.lSO != 0.0:
-   LG.info('Spin-Orbit coupling: %s'%(HP.lSO))
-   Htot.append( ham.soc(base_pris,HP.lSO) )
-if HP.lelec != 0.0:
-   LG.info('Electric field: %s'%(HP.lelec))
-   #Htot.append( ham.pseudo_rashba(base_pris,HP.lelec) )
-   Htot.append( ham.electric(base_pris,HP.lelec) )
-LG.info('Hamiltonian ready')
-H_pris = ham.Hamiltonian(Htot,tag='pris')
-H_pris.names()
-del Htot
-# Defected
-LG.info('Creating Defected Hamiltonian')
-LG.debug('Starting kinetic terms')
-Htot = ham.kinetic(base_dfct,hoppings)
-if np.linalg.norm(HP.lzee) != 0.0:
-   LG.info('Zeeman Term: %s'%(HP.lzee))
-   Htot.append( ham.zeeman(base_pris,HP.lzee) )
-if HP.lSO != 0.0:
-   LG.info('Spin-Orbit coupling: %s'%(HP.lSO))
-   Htot.append( ham.soc(base_dfct,HP.lSO) )
-if HP.lelec != 0.0:
-   #Htot.append( ham.pseudo_rashba(base_dfct,HP.lelec) )
-   Htot.append( ham.electric(base_dfct,HP.lelec) )
-LG.info('Hamiltonian ready')
-H_dfct = ham.Hamiltonian(Htot,tag='dfct')
-H_dfct.names()
-H_dfct.save_matrix(FP.ham)
-LG.info('Hamiltonians done')
-del Htot
+H_pris = ham.build_ham(base_pris,HP,'pris')
+H_dfct = ham.build_ham(base_dfct,HP,'dfct')
 print('     *** Hamiltonian:',time()-told)
 
 
@@ -143,8 +107,9 @@ import geometry as geo
 from random import uniform, choice
 #op = OP.orbital(base_dfct,'s')
 import algebra as alg
-op = OP.spin(base_pris)
-#op = alg.m2spin(OP.orbital(base_pris,'pz'))
+#op = OP.spin(base_pris)
+#op = OP.orbital(base_pris,'pz')
+op = OP.sublattice(base_pris)
 if CP.bands:
    if len(latt) != 0:
       Shw = False

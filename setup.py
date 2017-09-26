@@ -170,7 +170,8 @@ def setup(fname='SK1.ini'):
                break
             else: pass
       except AttributeError: pass
-   return FP,HP,CP,SP,atoms,hoppings
+   HP.hoppings = hoppings
+   return FP,HP,CP,SP,atoms #,hoppings
 
 import os
 def compile_fortran(fname):
