@@ -306,21 +306,21 @@ def build_ham(base,hp,tag):
 
 
 
-def dic2vec(d):
-   """
-     Given a dictionary with some Slater-Koster parameters:
-       {'Vpps': 7.48, 'Vsss': -7.76, 'Vsps': 8.16, 'Vppp': -3.59}
-     Returns a suitable vector for the Slater_Koster function:
-      [Vsss, Vsps, Vpps, Vppp, Vsds, Vpds, Vpdp, Vdds, Vddp, Vddd]
-   """
-   nam = ['Vsss', 'Vsps', 'Vpps', 'Vppp', 'Vsds', 'Vpds', 'Vpdp', 'Vdds',
-          'Vddp', 'Vddd']
-   vec = [0.0 for _ in nam]
-   for i in range(len(nam)):
-      n = nam[i]
-      try: vec[i] = d[n]
-      except KeyError: pass  #XXX check
-   return vec
+#def dic2vec(d):
+#   """
+#     Given a dictionary with some Slater-Koster parameters:
+#       {'Vpps': 7.48, 'Vsss': -7.76, 'Vsps': 8.16, 'Vppp': -3.59}
+#     Returns a suitable vector for the Slater_Koster function:
+#      [Vsss, Vsps, Vpps, Vppp, Vsds, Vpds, Vpdp, Vdds, Vddp, Vddd]
+#   """
+#   nam = ['Vsss', 'Vsps', 'Vpps', 'Vppp', 'Vsds', 'Vpds', 'Vpdp', 'Vdds',
+#          'Vddp', 'Vddd']
+#   vec = [0.0 for _ in nam]
+#   for i in range(len(nam)):
+#      n = nam[i]
+#      try: vec[i] = d[n]
+#      except KeyError: pass  #XXX check
+#   return vec
 
 
 
@@ -445,6 +445,14 @@ def soc(base,lso):
    #exit()
    aux = [[None for _ in base.elements] for _ in base.elements] # Size=num atoms
    base.DOspin = True
+   #SOC_s = np.matrix([[0,0],[0,0]])
+   #SOC_p = 0.5*np.matrix([[0, 0,-1j, 0, 0,-1],
+   #[0, 0, 0, 1j, 1, 0],
+   #[1j, 0, 0, 0, 0, 1j],
+   #[0, -1j, 0, 0, 1j, 0],
+   #[0, 1, 0, -1j, 0, 0],
+   #[-1, 0, -1j, 0, 0, 0]])
+   #l_orb = {'s':SOC_s,'p':SOC_p}
    l_orb = {'s':0,'p':1,'d':2}
    for i in range(len(base.elements)):
       E = base.elements[i]

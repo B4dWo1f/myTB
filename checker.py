@@ -9,14 +9,15 @@ import os
 
 inps = ['G2d1o.ini','G2d1o1v.ini','G2dbi1o.ini','G2dbi1o1ve0.ini',
         'G2dbi1o1ve0.2.ini',
-        'G2d4o.ini','G2d4o1a.ini','G2dbi4o.ini','G2dbi4o1ae0.ini',
-        'G2dbi4o1ae0.2.ini']
+        'G2d4o.ini','G2d4o_soc.ini',
+        'G2d4o1a.ini','G2dbi4o.ini','G2dbi4o1ae0.ini','G2dbi4o1ae0.2.ini']
 lab = ['Graphene 2D 1orbital',
        'Graphene 2D 1orbital 1 vacancy',
        'Graphene 2D bilayer 1orbital',
        'Graphene 2D bilayer 1orbital 1 vacancy elec = 0',
        'Graphene 2D bilayer 1orbital 1 vacancy elec = 0.2',
        'Graphene 2D 4orbital',
+       'Graphene 2D 4orbital w SOC',
        'Graphene 2D 4orbital 1 adatom',
        'Graphene 2D bilayer 4orbital',
        'Graphene 2D bilayer 4orbital 1 adatom elec = 0',
