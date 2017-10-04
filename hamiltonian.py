@@ -3,7 +3,7 @@
 
 import numpy as np
 from numpy import matrix, diag, zeros
-from scipy.sparse import coo_matrix, bmat,csc_matrix
+from scipy.sparse import coo_matrix, bmat,csr_matrix
 import bands
 import graphs
 import IO
@@ -52,7 +52,7 @@ class Hamiltonian(object):
                x = Hlist[i]
                if x.mat.shape[0] == md:
                   LG.info('spin doubling term: %s'%(x.name))
-                  x.mat = csc_matrix(alg.m2spin(x.mat))
+                  x.mat = csr_matrix(alg.m2spin(x.mat))
                   if x.mat.shape[0] != Md:
                      LG.critical('Error doubling spin in term %s'%(x.name))
       else:
@@ -100,12 +100,11 @@ class Hamiltonian(object):
    def get_N_states(self,Op=False,border=True,n=7,sigma=0,
                                                         folder='./',shw=False):
       from scipy.sparse.linalg import eigsh
-      from scipy.sparse import csc_matrix
       try: self.intra
       except: self.names()
       LG.info('In get_N_states')
-      if border: H = csc_matrix(self.intra)       # Island
-      else: H = csc_matrix( self.get_k(np.array((0,0,0))) )  # Peri bound cond
+      if border: H = csr_matrix(self.intra)       # Island
+      else: H = csr_matrix( self.get_k(np.array((0,0,0))) )  # Peri bound cond
       LG.info('H acquired')
       if Op:
          LG.info('Start Diagonalization')
@@ -402,7 +401,7 @@ def kinetic(base,hoppings,func=None,coup=1):
       JJ = np.append(JJ,auxJJ)
       DD = np.append(DD,auxDD)
       LG.info('  ...added %s term'%(nam))
-      H_aux = csc_matrix( (DD, (II, JJ)), shape=(ndim,ndim) )
+      H_aux = csr_matrix( (DD, (II, JJ)), shape=(ndim,ndim) )
       H_aux.eliminate_zeros()
       Htot.append( HTerm(H_aux,v,coup,name=nam) )
    return Htot
@@ -417,7 +416,7 @@ def mass(base,lmass):
       E = base.elements[i]
       f = sub_dic[E.sublattice]
       aux[i][i] = coo_matrix(f * np.identity(len(E.onsite)))
-   return HTerm(csc_matrix(bmat(aux)),v,lmass,name='mass')
+   return HTerm(csr_matrix(bmat(aux)),v,lmass,name='mass')
 
 
 def soc(base,lso):
@@ -467,7 +466,7 @@ def soc(base,lso):
       #   o = E.orbitals[j]
       #   auxx[j][j] = coo_matrix(soc_l(l_orb[o]))
       aux[i][i] = bmat(auxx)
-   return HTerm(csc_matrix(bmat(aux)),v,lso,name='soc')
+   return HTerm(csr_matrix(bmat(aux)),v,lso,name='soc')
 
 
 def zeeman(base,lzee):
@@ -494,7 +493,7 @@ def zeeman(base,lzee):
    N = len(base.ORBS)
    sig = pauli_matrix(N)
    M = lzee[0]*sig[0] + lzee[1]*sig[1] + lzee[2]*sig[2]
-   return HTerm(csc_matrix(M),v,coup,name='zeeman')
+   return HTerm(csr_matrix(M),v,coup,name='zeeman')
 
 
 @log_help.log2screen(LG)
@@ -508,11 +507,11 @@ def electric(base,lElec):
    ndim = len(base.INDS)
    II = list(range(len(base.LAYS)))
    JJ = list(range(len(base.LAYS)))
-   H_aux = csc_matrix( (base.LAYS, (II, JJ)), shape=(ndim,ndim) )
+   H_aux = csr_matrix( (base.LAYS, (II, JJ)), shape=(ndim,ndim) )
    H_aux.eliminate_zeros()
    LG.info('... added electric field')
    return HTerm(H_aux,v,lElec,name='electric')
-   #return HTerm(csc_matrix(bmat(aux)),v,lElec,name='electric')
+   #return HTerm(csr_matrix(bmat(aux)),v,lElec,name='electric')
 
 
 @log_help.log2screen(LG)
@@ -530,4 +529,4 @@ def pseudo_rashba(base,lElec):
          if (it=='s' and jt=='pz') or (it=='pz' and jt=='s'):
             M[i,j] = 1
    LG.info('... added Rashba term')
-   return HTerm(csc_matrix(M),v,lElec,name='rashba')
+   return HTerm(csr_matrix(M),v,lElec,name='rashba')

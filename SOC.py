@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import numpy as np
-from scipy.sparse import coo_matrix,csc_matrix
+from scipy.sparse import coo_matrix,csr_matrix
 import algebra as alg
 
 def ylm2xyz_l2():
@@ -78,7 +78,6 @@ def soc_l(l):
    sz = sz/2.
    ls = lx*sx + ly*sy + lz*sz  # SOC matrix
    #import scipy.linalg as lg
-   #from scipy.sparse import csc_matrix as csc
    ## rotate to cartesian orbitals
    # Choose rotation matrix
    if l==0: R = np.matrix([[0,0],[0,0]],dtype=complex)
@@ -86,4 +85,4 @@ def soc_l(l):
    elif l==2: R = ylm2xyz_l2()
    # Rotation
    ls = R.H * ls * R
-   return csc_matrix(ls)
+   return csr_matrix(ls)
