@@ -327,10 +327,10 @@ def plot_cell(pos,latt=[],tit=None):
    ax.grid()
    plt.show()
 
-def multilayer(pos,sub=[],N=2):
+def multilayer(pos,ats,sub=[],N=2,vec=np.array([1.4,0,1.4])):
    """ Generates the positions for a multilayer ABC... """
    new_ats, new_pos, new_sub = [], [], []
-   rs = [i*np.array((1.4,0,1.4)) for i in range(N)]
+   rs = [i*vec for i in range(N)]
    for r in rs:
       for j in range(len(pos)):
          new_ats.append(ats[j])
