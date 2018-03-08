@@ -443,26 +443,42 @@ def get_points(recip,N=3):
       ii+=1
    return points
 
-
 def recorrido(points,nk):
    """
-     Returns a list of points (nupy.arrays) with nk points between each pair of
-     points in the list points
+     Returns a list of points (np.array) with nk points between each pair of
+     points in the provided list of points.
+     This function is dimension independent.
+    points: list of points between which to interpolate
+    nk: may be an integer or a sequence of len(points)-1 integers
    """
+   ## clean nk
+   try: itr = iter(nk)
+   except TypeError: nk = [nk for _ in range(len(points)-1)]
+   else:
+      if len(nk) < len(points)-1:
+         msg = 'WARNING: incorrect number of points. '
+         msg += 'Using %s for every interval'%(nk[0])
+         LG.warning(msg)
+         nk = [nk[0] for _ in range(len(points)-1)]
+      elif len(nk) > len(points)-1: pass    # Report to log?
+      else: pass    # Report to log?
+
+   ## interpolate between points
    RECORRIDO = []
-   ret = (1,False)  # skip last point
+   ret = (1,False)   # don't skip last point
    lim = len(points)-1
    for ipunto in range(lim):
-      if ipunto == lim-1: ret = (0,True)
+      N = nk[ipunto]
+      if ipunto == lim-1: ret = (0,True)   # skip last point
       P1 = points[ipunto]
       P2 = points[ipunto+1]
-      x = np.linspace(P1[0],P2[0],nk+ret[0],endpoint=ret[1]) #+1)
-      y = np.linspace(P1[1],P2[1],nk+ret[0],endpoint=ret[1]) #+1)
-      z = np.linspace(P1[2],P2[2],nk+ret[0],endpoint=ret[1]) #+1)
-      for kx,ky,kz in zip(x,y,z):
-         P = np.array([kx,ky,kz])
-         RECORRIDO.append(P)
+      coors = []
+      for idim in range(len(P1)):
+         coors.append(np.linspace(P1[idim],P2[idim],N+ret[0],endpoint=ret[1]))
+      for p in zip(*coors):
+         RECORRIDO.append(np.array(p))
    return RECORRIDO
+
 
 from numpy import cos,sin
 def rotation(v,Q,u=np.array([0,0,1]),deg=True):
