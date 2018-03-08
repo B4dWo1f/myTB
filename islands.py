@@ -24,14 +24,14 @@ def ribbon_armc(Nx,Ny,a=1.4,buck=0.0,cent=True,show=False):
    ap = np.sqrt(3)/2.   # mathematical constant
    ## Positions of a benzene
    b = buck/2.
-   brick = [a*np.array([1.,0,b]),
-            a*np.array([1/2.0,ap,-b]),
+   brick = [a*np.array([1.,0.,b]),
+            a*np.array([1/2.,ap,-b]),
             a*np.array([-1/2.,ap,b]),
-            a*np.array([-1,0,-b])]
-   sublatt = ['A','B','A','B']  # XXX check order
+            a*np.array([-1.,0.,-b])]
+   sublatt = [1,-1,1,-1]  # XXX check order
    
    vectors = [a*np.array([3.,0.,0.]),
-              a*np.array([0,2.*ap,0])]  # to expand the unit cell
+              a*np.array([0.,2.*ap,0])]  # to expand the unit cell
               #a*np.array([0,3.*ap,0])]  # to expand the unit cell
    latt = [Nx*vectors[0]]
 
@@ -70,16 +70,16 @@ def armchair(N,a=1.4,buck=0.0,show=False):
    ap = np.sqrt(3)/2.   # mathematical constant
    ## Positions of a benzene
    b = buck/2.
-   brick = [a*np.array([1.,0,b]),
-            a*np.array([1/2.0,ap,-b]),
+   brick = [a*np.array([1.,0.,b]),
+            a*np.array([1/2.,ap,-b]),
             a*np.array([-1/2.,ap,b]),
-            a*np.array([-1,0,-b]),
+            a*np.array([-1.,0.,-b]),
             a*np.array([-1/2.,-ap,b]),
             a*np.array([1/2.,-ap,-b])]
-   sublatt = ['A','B','A','B','A','B']  # XXX check order
+   sublatt = [1,-1,1,-1,1,-1]  # XXX check order
    
-   vectors = [a*np.array([3/2.,3*ap,0]),
-              a*np.array([3,0,0])]
+   vectors = [a*np.array([3/2.,3.*ap,0.]),
+              a*np.array([3.,0.,0.])]
    latt = [(N+1)*vectors[0]+N*vectors[1],
            -N*vectors[0]+(2*N+1)*vectors[1]]
    
@@ -122,10 +122,10 @@ def zigzag(N,a=1.4,buck=0.0,show=False):
    ap = np.sqrt(3)/2.   # mathematical constant
    ## Positions of a benzene
    b = buck/2.
-   brick = [a*np.array([1.,0,b]),
-            a*np.array([1/2.0,ap,-b]),
+   brick = [a*np.array([1.,0.,b]),
+            a*np.array([1/2.,ap,-b]),
             a*np.array([-1/2.,ap,b]),
-            a*np.array([-1,0,-b]),
+            a*np.array([-1.,0.,-b]),
             a*np.array([-1/2.,-ap,b]),
             a*np.array([1/2.,-ap,-b])]
    
@@ -133,6 +133,7 @@ def zigzag(N,a=1.4,buck=0.0,show=False):
               a*np.array([3/2.,ap,0])]
    latt = [(N+1)*(vectors[0]+vectors[1]),
            (N+1)*(-vectors[0]+2*vectors[1])]
+   subs = [1,-1,1,-1,1,-1]
 
    ## Start combinations
    lista = range(-N,N+1)
@@ -147,10 +148,15 @@ def zigzag(N,a=1.4,buck=0.0,show=False):
          all_vecs.append(vec)
    pos,sub = [],[]   #TODO sublattice
    for v in all_vecs:
-      for r in brick:
+      for ir in range(len(brick)):
+         r = brick[ir]
+         s = subs[ir]
          w = r+v
          # Avoid repited atoms
-         if not vec_in_list(w,pos): pos.append(w)
+         if not vec_in_list(w,pos):
+            pos.append(w)
+            sub.append(s)
+   sub = np.array(sub)
    ### Plot
    if show: plot_cell(pos,latt,tit='ZigZag Cell (%s)'%(N))
    ats = ['C' for _ in pos]
@@ -180,7 +186,7 @@ def simple(N,a=1.4,buck=0.0,cent=True,show=False):
               a*np.array([3/2., ap,0.])]
    latt = [N*vectors[0],
            N*vectors[1]]
-   sublatt = ['A','B']
+   sublatt = [1,-1]
 
    pos,sub = [],[]
    for i in range(N):
@@ -206,14 +212,15 @@ def zigzag_triangle(N,a=1.4,buck=0.0,show=False):
    ap = np.sqrt(3)/2.   # mathematical constant
    ## Positions of a benzene
    b = buck/2.
-   brick = [a*np.array([1.,0,b]),
+   brick = [a*np.array([1.,0.,b]),
             a*np.array([1/2.0,ap,-b]),
             a*np.array([-1/2.,ap,b]),
-            a*np.array([-1,0,-b]),
+            a*np.array([-1.,0.,-b]),
             a*np.array([-1/2.,-ap,b]),
             a*np.array([1/2.,-ap,-b])]
-   vectors = [a*np.array([3/2.,-ap,0]),
-              a*np.array([3/2.,ap,0])]
+   vectors = [a*np.array([3/2.,-ap,0.]),
+              a*np.array([3/2.,ap,0.])]
+   subs = [1,-1,1,-1,1,-1]
    ## Start combinations
    lista = range(N+1)
    perms = [p for p in product(lista, repeat=2)]
@@ -225,18 +232,28 @@ def zigzag_triangle(N,a=1.4,buck=0.0,show=False):
          for i in range(len(p)):
             vec += p[i]*vectors[i]
          all_vecs.append(vec)
-   pos = []
+   pos,sub = [],[]
    for v in all_vecs:
-      for r in brick:
-         w = r+v
+      for ir in range(len(brick)):
+         w = brick[ir]+v
+         s = subs[ir]
          # Avoid repited atoms
-         if not vec_in_list(w,pos): pos.append(w)
+         if not vec_in_list(w,pos):
+            pos.append(w)
+            sub.append(s)
+   sub = np.array(sub)
    if show: plot_cell(pos,tit='Triangular Island (%s)'%(N))
    ats = ['C' for _ in pos]
-   return ats,pos,[]
+   return ats,pos,[],sub
 
 def mullen(Nx,Ny=4,pas=False):
+   ##XXX sublattice is wrong!!!!
    ats,pos,_,sub = ribbon_armc(Nx,Ny)
+   #print(len(ats))
+   #print('')
+   #for a,p,s in zip(ats,pos,sub):
+   #   print(a,p[0],p[1],p[2],s)
+   #exit()
    ## Remove extra atoms
    pos = np.array(pos)
    sub = np.array(sub)
@@ -252,10 +269,10 @@ def mullen(Nx,Ny=4,pas=False):
    pos = [np.array((x,y,z)) for x,y,z in zip(X,Y,Z)]
    #pos,latt,sub = mullen(Nx,Ny)
    ats = ['C' for _ in pos]
-   hs,subh = pasivate(pos,sub=sub)
-   pos += hs
-   ats += ['H' for _ in hs]
-   sub += subh
+   #hs,subh = pasivate(pos,sub=sub)
+   #pos += hs
+   #ats += ['H' for _ in hs]
+   #sub += subh
    return ats,pos,[],sub
 
 
@@ -304,7 +321,7 @@ def plot_cell(pos,latt=[],tit=None):
                              bbox={'facecolor':'white', 'alpha':0.7, 'pad':5})
          i+=1
       ## Extra cells  XXX Error for 1D
-      if len(latt) == 1: latt.append(np.array([0,0,0])) # XXX Shame on you!!!
+      if len(latt) == 1: latt.append(np.array([0.,0.,0.])) # XXX Shame on you!!!
       latt2 = []
       for v in latt:
          latt2.append(-v)
@@ -369,12 +386,11 @@ def pasivate(pos,sub=[],nneig=3):
    """ Return the position of the H atoms to pasivate the edges. """
    #TODO include consideration of lattice vectors for ribbons
    ## List all the atoms of a given kind with less than nneig neighbours
-   needH = []
    nn = num.count_neig(pos,pos)
    rows,cols = num.dists(pos,pos,nn)
-   rows -= 1
-   cols -= 1
-   aux_sub = []
+   rows -= 1   # because python starts counting at 0
+   cols -= 1   #
+   needH,aux_sub = [],[]
    for i in range(len(pos)):
       if len(cols[rows==i]) < nneig:
          needH.append( (i,cols[rows==i]) )
@@ -401,14 +417,27 @@ def pasivate(pos,sub=[],nneig=3):
       # position of the new atom
       v3 = r3 + pos[at]
       new_atoms.append(v3)
-      try: new_sub.append(sub[i])
-      except IndexError: pass
+      new_sub.append(-1*aux_sub[i])
+      #try: new_sub.append(-1*sub[i])
+      #except IndexError: pass
    return new_atoms,new_sub
 
 
 
 
 if __name__ == '__main__':
+   ats,pos,latt,subs = mullen(2)
+   hs,subh = pasivate(pos,sub=subs)
+   plot_cell(pos,latt)
+
+   print(len(ats)+len(hs))
+   print('')
+   for a,p,s in zip(ats,pos,subs):
+      print(a,p[0],p[1],p[2],s)
+   for p,s in zip(hs,subh):
+      print('H',p[0],p[1],p[2],s)
+
+   exit()
    ## Read island type, size and layers from standard input  (TODO argparse)
    # Usage: python islands.py armchair 20 2  ---> armchair island 20x20 bilayer
    import sys

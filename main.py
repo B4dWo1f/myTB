@@ -8,6 +8,7 @@ except IndexError: fini = 'SK1.ini'
 import setup
 #FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
 FP,HP,CP,SP,atoms = setup.setup(fini)
+SP.DOspin = True
 
 ############################### LOGGING #####################################
 import logging
@@ -77,6 +78,7 @@ base_dfct = base.copy()
 del base
 
 
+LG.info('Defects for the basis')
 if SP.vac.N > 0:
    IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
 else: IND_vac = []
@@ -99,6 +101,12 @@ import hamiltonian as ham
 H_pris = ham.build_ham(base_pris,HP,'pris')
 H_dfct = ham.build_ham(base_dfct,HP,'dfct')
 print('     *** Hamiltonian:',time()-told)
+
+
+LG.info('Check for spin')
+if SP.DOspin:
+   base_pris.dospin()
+   base_dfct.dospin()
 
 
 told = time()

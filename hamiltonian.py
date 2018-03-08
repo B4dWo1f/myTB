@@ -36,25 +36,22 @@ class HTerm(object):
 
 class Hamiltonian(object):
    @log_help.log2screen(LG)
-   def __init__(self, Hlist,tag=''):
+   def __init__(self, Hlist,dospin=False,tag=''):
       ## Check dimensionality
+      LG.info('Creating Hamiltonian: %s    (spin:%s)'%(tag,dospin))
       dims = [x.mat.shape[0] for x in Hlist]
-      if len(set(dims)) == 1:
+      if len(set(dims)) == 1 and not dospin:
          pass  # same dimension for every term
-      elif len(set(dims)) == 2:
-         if 2*min(dims) != max(dims):
-            LG.critical('Different dimensions for Hamiltonian terms')
-            exit()
-         else:
-            LG.info('Spin doubling')
-            md, Md = min(dims), max(dims)
-            for i in range(len(Hlist)):
-               x = Hlist[i]
-               if x.mat.shape[0] == md:
-                  LG.info('spin doubling term: %s'%(x.name))
-                  x.mat = csr_matrix(alg.m2spin(x.mat))
-                  if x.mat.shape[0] != Md:
-                     LG.critical('Error doubling spin in term %s'%(x.name))
+      elif len(set(dims)) == 2 or dospin:
+         LG.info('Spin doubling')
+         md, Md = min(dims), max(max(dims),2*min(dims))
+         for i in range(len(Hlist)):
+            x = Hlist[i]
+            if x.mat.shape[0] == md:
+               LG.info('spin doubling term: %s'%(x.name))
+               x.mat = alg.m2spin(x.mat)
+               if x.mat.shape[0] != Md:
+                  LG.critical('Error doubling spin in term %s'%(x.name))
       else:
          LG.critical('Different dimensions not coherent with spin')
          exit()
@@ -80,23 +77,6 @@ class Hamiltonian(object):
       """ Generate kdependent hamiltonian"""
       return hk_gen(self)
    def get_k(self,k): return Hamil(self.lista,k)
-   #def diag0D(self,Op=False,border=True):
-   #   """
-   #    border: if True ---> open bound condition
-   #            if False ---> closed bound condition
-   #   """
-   #   try: self.intra
-   #   except: self.names()
-   #   if border: H = self.intra
-   #   else: H = self.get_k((0,0,0))
-   #   if not Op:
-   #      Es = np.linalg.eigvalsh(H)
-   #      Z = []
-   #   else:
-   #      Es,Vs = np.linalg.eigh(H)
-   #      Vs = Vs.transpose()
-   #      Z = [np.matrix(z) for z in Vs]
-   #   return Es,Z
    def get_N_states(self,Op=False,border=True,n=7,sigma=0,
                                                         folder='./',shw=False):
       from scipy.sparse.linalg import eigsh
@@ -108,7 +88,16 @@ class Hamiltonian(object):
       LG.info('H acquired')
       if Op:
          LG.info('Start Diagonalization')
-         es,v = eigsh(H,k=n+1,sigma=sigma+0.000001,which='LM',return_eigenvectors=True)
+         kn = n+1
+         if not 1 < kn < H.shape[0]-1:
+         #if n+1 >= H.shape[0]:   #XXX check
+            print('FULL MATRIX')
+            print('-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+            LG.warning('Diagonalizing full matrix')
+            es,v = np.linalg.eigh(H.todense())
+         else:
+            es,v = eigsh(H,k=kn,sigma=sigma+0.000001,which='LM',
+                                                    return_eigenvectors=True)
          v = v.transpose()
          ind_ord = np.argsort(es)   #XXX check that this works as expected
          es=es[ind_ord]
@@ -281,12 +270,14 @@ def Hamil(Hlist,k,chk=True):
    #      sys.exit(1)
    return Hamiltoniano
 
-def build_ham(base,hp,tag):
-   LG.info('Creating %s Hamiltonian'%(tag))
+@log_help.disable2(LG)
+@log_help.log2screen(LG)
+def build_ham(base,hp,tag,dospin=False):
+   LG.info('Creating %s Hamiltonian (spin:%s)'%(tag,dospin))
    LG.debug('Starting kinetic terms')
    Htot = kinetic(base,hp.hoppings)
    if np.linalg.norm(hp.lzee) != 0.0:
-      LG.info('Zeeman Term: %s'%(hp.lzee))
+      LG.info('Zeeman Term: (%s,%s,%s)'%(hp.lzee[0],hp.lzee[1],hp.lzee[2]))
       Htot.append( zeeman(base,hp.lzee) )
    if hp.lmass != 0.0:
       LG.info('Mass Term: %s'%(hp.lmass))
@@ -298,7 +289,7 @@ def build_ham(base,hp,tag):
       LG.info('Electric field: %s'%(hp.lelec))
       Htot.append( electric(base,hp.lelec) )
    LG.info('Hamiltonian %s ready'%(tag))
-   H_pris = Hamiltonian(Htot,tag=tag)
+   H_pris = Hamiltonian(Htot,tag=tag,dospin=dospin)
    H_pris.names()
    del Htot
    return H_pris
@@ -414,7 +405,7 @@ def mass(base,lmass):
    aux = [[None for _ in base.elements] for _ in base.elements]
    for i in range(len(base.elements)):
       E = base.elements[i]
-      f = sub_dic[E.sublattice]
+      f = E.sublattice
       aux[i][i] = coo_matrix(f * np.identity(len(E.onsite)))
    return HTerm(csr_matrix(bmat(aux)),v,lmass,name='mass')
 
@@ -467,6 +458,33 @@ def soc(base,lso):
       #   auxx[j][j] = coo_matrix(soc_l(l_orb[o]))
       aux[i][i] = bmat(auxx)
    return HTerm(csr_matrix(bmat(aux)),v,lso,name='soc')
+
+
+def sparse_pauli_matrix(n,tp=complex):
+   """
+     Sparse definition of N-range Pauli matrices
+   """
+   c = [2*i+1 for i in range(n)]
+   r = [2*i for i in range(n)]
+   row = np.array(r+c)
+   col = np.array(c+r)
+   data = np.array([1 for _ in row])
+   Sx = coo_matrix((data, (row, col)), shape=(2*n, 2*n), dtype=tp)
+
+   c = [2*i+1 for i in range(n)]
+   r = [2*i for i in range(n)]
+   row = np.array(r+c)
+   col = np.array(c+r)
+   data = np.array([1j*(-1)**(i+1) for i in row])
+   Sy = coo_matrix((data, (row, col)), shape=(2*n, 2*n), dtype=tp)
+
+   c = [i for i in range(2*n)]
+   r = [i for i in range(2*n)]
+   row = np.array(r)
+   col = np.array(c)
+   data = np.array([(-1)**(i) for i in row])
+   Sz = coo_matrix((data, (row, col)), shape=(2*n, 2*n), dtype=tp)
+   return Sx,Sy,Sz
 
 
 def zeeman(base,lzee):

@@ -149,6 +149,18 @@ def layer(pos,dist=1.5,lim=100,eps=0.2):
 #   aux = np.array((intra.row,intra.col)).transpose()
 #   subs = num.sublattice(aux)
 #   exit()
+@log_help.log2screen(LG)
+def check_sublattice(intra,subs,dist=1.5,lim=100):
+   """
+    This function checks that the sublattice is well calculated (every A atom
+    has ONLY B neighbors)
+    intra has to be a coo_matrix containing the neighbors of the unit cell
+   """
+   r,c = intra.row, intra.col
+   for i in r:
+      aux = list(set([subs[j] for j in c[r==i]]))
+      if len(aux) > 1 or aux[0] == subs[i]: return False
+   return True
 
 @log_help.log2screen(LG)
 def sublattice(intra,dist=1.5,lim=100):
@@ -157,27 +169,35 @@ def sublattice(intra,dist=1.5,lim=100):
     intra has to be a coo_matrix containing the neighbors of the unit cell
    """
    subs = [10 for _ in range(intra.shape[0])]
-   subs[0] = 'A'
-   sub_dict = {'A':1,'B':-1}
-   tcid_bus = {1:'A',-1:'B'}
+   subs[0] = 1
    r,c = intra.row, intra.col
    for n in range(10000):
       for i in range(intra.shape[0]):
-         #print('Atom',i,'has neigs:',c[r==i])
+         #print('Atom',i,'with sub: ',subs[i],'has neigs:',c[r==i])
          for j in c[r==i]:   # neighbors of atom i
-            try: subs[j] = tcid_bus[-1*sub_dict[subs[i]]]
-            except KeyError:
+            if abs(-1*subs[i]) < 2: subs[j] = -1*subs[i]
+            else: 
                #print('   atom',i,'still has no sublattice')
                #print('        but its neighbor',j,'is sublatt:',subs[j])
-               #print('        so atom',i,'should be',-1*sub_dict[subs[j]])
-               try: subs[i] = tcid_bus[-1*sub_dict[subs[j]]]
-               except KeyError: pass
-      types = set([type(x) for x in subs])
-      if len(list(types)) == 1:
+               #print('        so atom',i,'should be',-1*subs[j])
+               if abs(-1*subs[j]) < 2: subs[i] = -1*subs[j]
+               else: pass
+            #try: subs[j] = -1*subs[i]
+            #except KeyError:
+            #   print('   atom',i,'still has no sublattice')
+            #   print('        but its neighbor',j,'is sublatt:',subs[j])
+            #   print('        so atom',i,'should be',-1*sub_dict[subs[j]])
+            #   try: subs[i] = -1*subs[j]
+            #   except KeyError: pass
+      #types = set([type(x) for x in subs])
+      N_missing = np.where(np.array(subs)>2)[0].shape[0]
+      if N_missing == 0: #len(list(types)) == 1:
          LG.info('Sublattice, %s iterations'%(n))
          return subs
       if n > 100:
-         if n%1000 == 0: LG.warning('Probably there\'s an error in Sublattice')
+         if n%1000 == 0:
+            LG.warning('Probably there\'s an error in Sublattice')
+            exit()
 #def sublattice_old(pos,dist=1.5,lim=100):
 #   """
 #     This function is in beta testing. I think it should work for any

@@ -3,10 +3,12 @@
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
+import logging
+import log_help
+LG = logging.getLogger(__name__)   # Logger for this module
 
 
-
-def m2spin(M,Delt=0.0): #,matin2=None):
+def m2spin(M,Delt=0.0):
    """
      Duplicate a matrix like this:
                 a+Delt   0    b+Delt   0
@@ -15,7 +17,8 @@ def m2spin(M,Delt=0.0): #,matin2=None):
                   0    c-Delt   0    d-Delt
      only for square matrices by now
    """
-   n,m = M.shape
+   try: n,m = M.shape
+   except: n,m = len(M),0
    if isinstance(M,coo_matrix):
       Rn,Cn,Dn = [],[],[]
       for r,c,d in zip(M.row,M.col,M.data):
@@ -26,20 +29,34 @@ def m2spin(M,Delt=0.0): #,matin2=None):
          Cn.append(2*c)
          Cn.append(2*c+1)
          ## Data
-         Dn.append(d-Delt)
-         Dn.append(d+Delt)
-      return csr_matrix((Dn, (Rn, Cn)), shape=(2*n, 2*m))
+         try:
+            Dn.append(d-Delt)
+            Dn.append(d+Delt)
+         except TypeError:    # In case of arrays of other type (str,...)
+            Dn.append(d)      #
+            Dn.append(d)      #
+      return csr_matrix((Dn, (Rn, Cn)), shape=(2*n, 2*m),dtype=M.dtype)
    elif isinstance(M,np.matrix):
-      print('WARNING!!! Dense!!!')
+      LG.warning('Using dense matrix in m2spin (mat: %s,%s)'%(n,m))
       keep_type = 0.0*M[0,0]  # Preserve type (int, float, complex...)
       matout = np.matrix([[keep_type for i in range(2*n)] for j in range(2*n)])
       matout = np.matrix(np.zeros(M.shape),dtype=M.dtype)
       for i in range(n):
          for j in range(n):
-            matout[2*i,2*j] = M[i,j]+Delt
-            matout[2*i+1,2*j+1] = M[i,j]-Delt
+            try:
+               matout[2*i+1,2*j+1] = M[i,j]-Delt
+               matout[2*i,2*j] = M[i,j]+Delt
+            except TypeError:
+               matout[2*i,2*j] = M[i,j]
+               matout[2*i+1,2*j+1] = M[i,j]
       return csr_matrix(matout)
-   else: m2spin(coo_matrix(M))
+   elif isinstance(M,list):
+      return np.repeat(M,2)
+   else:
+      if isinstance(M,np.ndarray): return np.repeat(M,2)  #XXX Warning
+         #if M.dtype == '<U2': return np.repeat(M,2)
+      LG.debug('Unkown matrix type in m2spin, trying to convert to coo_matrix')
+      return m2spin(coo_matrix(M),Delt=Delt)
 
 
 def isinb2een(x,a,b):
