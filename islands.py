@@ -10,6 +10,66 @@ import geometry as geo
 import logging
 LG = logging.getLogger(__name__)
 
+class UnitCell(object):
+   def __init__(self,ats,pos,latt,subs=[],pasivate=False):
+      self.ats = np.array(ats,str)
+      self.pos = np.array(pos)
+      self.sub = np.array(subs,int)
+      if self.check() and len(self.ats) > 0:
+         print('here')
+         self.get_geo_info()
+      else: pass
+      if pasivate: self.pasivate()
+   def get_geo_info(self):
+      """ Calculate geometric attributes """
+      if not self.check(): print('WARNING')   #TODO Log
+      self.center = np.mean(self.pos,axis=0)
+      lmin = np.min(self.pos,axis=0)
+      lmax = np.max(self.pos,axis=0)
+      self.lims = [lmin,lmax]
+   def pasivate(self):
+      latt = []
+      hs,subh = pasivate(self.pos,sub=self.sub)
+      self.ats = np.append(self.ats,['H' for _ in self.pos])
+      self.pos = np.append(self.pos,hs)
+      self.sub = np.append(self.sub,subh)
+   def multilayer(self,lN):
+      self.ats,self.pos,self.sub = multilayer(self.pos,self.sub,N=lN)
+      #self.center = np.mean(np.array(self.pos),axis=0)
+      self.get_geo_info()
+   def check(self):
+      if len(self.ats) == len(self.pos) == len(self.sub): return True
+      else: return False
+   def to_xyz(self,fname=None):
+      print(len(self.ats))
+      print('')
+      for a,r,s in zip(self.ats,self.pos,self.sub):
+         print('%s   %s   %s   %s   %s'%(a,r[0],r[1],r[2],s))
+      if fname != None:
+         f = open(fname,'w')
+         f.write(str(len(self.ats))+'\n\n')
+         for a,r,s in zip(self.ats,self.pos,self.sub):
+            f.write('%s   %s   %s   %s   %s\n'%(a,r[0],r[1],r[2],s))
+         f.close()
+   def from_xyz(self,fname,pasivate=False):
+      from IO import xyz
+      self.ats,self.pos,self.latt,self.sub = xyz(fname)
+      #self.center = np.mean(np.array(self.pos),axis=0)
+      self.get_geo_info()
+   def plot(self,fname=None):
+      plot_cell(self.pos,self.latt,fname=fname)
+   def __str__(self):
+      C = self.center
+      L = self.lims
+      names = ['X','Y','Z']
+      msg = 'Unit cell with %s atoms\n'%(len(self.ats))
+      msg += 'centered at: (%.2f,%.2f,%.2f) and with lims:\n'%(C[0],C[1],C[2])
+      for i in range(len(names)):
+         msg += names[i]+'   %.3f -- %.3f\n'%(L[0][i],L[1][i])
+      return msg
+
+
+
 
 def ribbon_armc(Nx,Ny,a=1.4,buck=0.0,cent=True,show=False):
    """
@@ -284,7 +344,7 @@ def vec_in_list(v,l,eps=0.000000001):
       if np.linalg.norm(x-v) < eps: return True
    return False
 
-def plot_cell(pos,latt=[],tit=None):
+def plot_cell(pos,latt=[],tit=None,fname=None,show=True):
    """
      Plots the unit cell, lattice vectors, and first neighbouring unit cells.
    """
@@ -342,7 +402,8 @@ def plot_cell(pos,latt=[],tit=None):
    if tit != None: ax.set_title(tit)
    ax.axis('equal')
    ax.grid()
-   plt.show()
+   if fname != None: fig.savefig(fname)
+   if show: plt.show()
 
 def multilayer(pos,ats,sub=[],N=2,vec=np.array([1.4,0,1.4])):
    """ Generates the positions for a multilayer ABC... """
@@ -426,16 +487,24 @@ def pasivate(pos,sub=[],nneig=3):
 
 
 if __name__ == '__main__':
-   ats,pos,latt,subs = mullen(2)
-   hs,subh = pasivate(pos,sub=subs)
-   plot_cell(pos,latt)
+   A = UnitCell([],[],[],[])
+   A.from_xyz('cells/ac_n1_l1.xyz') #'test.xyz')
+   A.get_geo_info()
+   print(A)
+   A.plot(fname='test.png')
 
-   print(len(ats)+len(hs))
-   print('')
-   for a,p,s in zip(ats,pos,subs):
-      print(a,p[0],p[1],p[2],s)
-   for p,s in zip(hs,subh):
-      print('H',p[0],p[1],p[2],s)
+   exit()
+   ats,pos,latt,subs = armchair(2)
+   A = UnitCell(ats,pos,latt,subs)
+   A.pasivate()
+   A.to_xyz('test.xyz')
+
+   #print(len(ats)+len(hs))
+   #print('')
+   #for a,p,s in zip(ats,pos,subs):
+   #   print(a,p[0],p[1],p[2],s)
+   #for p,s in zip(hs,subh):
+   #   print('H',p[0],p[1],p[2],s)
 
    exit()
    ## Read island type, size and layers from standard input  (TODO argparse)

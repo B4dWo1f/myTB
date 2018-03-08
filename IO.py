@@ -33,9 +33,10 @@ def xyz(archivo):
    atoms = np.loadtxt(archivo,skiprows=2,usecols=(0,),dtype=str)
    atoms = np.array([a.replace('b\'','') for a in atoms])
    atoms = np.array([a.replace('\'','') for a in atoms])
+   pos = np.loadtxt(archivo,skiprows=2,usecols=(1,2,3,4))
    try: 
       pos = np.loadtxt(archivo,skiprows=2,usecols=(1,2,3,4))
-      sub = pos[:,3]
+      sub = np.asarray(pos[:,-1],int)
       pos = pos[:,0:3]
    except:
       pos = np.loadtxt(archivo,skiprows=2,usecols=(1,2,3))
