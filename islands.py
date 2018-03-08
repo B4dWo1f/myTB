@@ -58,6 +58,13 @@ class UnitCell(object):
       self.get_geo_info()
    def plot(self,fname=None):
       plot_cell(self.pos,self.latt,fname=fname)
+   def plot_sublattice(self,fname=None):
+      X = self.pos[:,0]
+      Y = self.pos[:,1]
+      S = self.sub
+      fig, ax = plt.subplots()
+      ax.scatter(X,Y,c=S,s=100,edgecolors='none')
+      plt.show()
    def __str__(self):
       C = self.center
       L = self.lims
@@ -492,6 +499,7 @@ if __name__ == '__main__':
    A.get_geo_info()
    print(A)
    A.plot(fname='test.png')
+   A.plot_sublattice()
 
    exit()
    ats,pos,latt,subs = armchair(2)
