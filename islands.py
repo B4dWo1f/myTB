@@ -1,6 +1,18 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
+"""
+  All the cell-creating functions should return 4 items:
+             return ats, pos, latt, subs
+  ats: np.array, dtype=str. Contains the atomic elements of the unit cell
+  pos: np.array, dtype=float. Contains the atomic positions of the unit cell
+  latt: list containing N np.arrays(float). Contains the lattice vectors
+  subs: np.array, dtype=int. Contains the corresponding sublattice.
+  Extended XYZ format:
+    Natoms
+    [],[],[]  Lattice vectors
+    E   x   y   z sublatt
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
@@ -15,19 +27,21 @@ class UnitCell(object):
       self.ats = np.array(ats,str)
       self.pos = np.array(pos)
       self.sub = np.array(subs,int)
-      if self.check() and len(self.ats) > 0:
-         print('here')
-         self.get_geo_info()
+      if self.check() and len(self.ats) > 0: self.get_geo_info()
       else: pass
       if pasivate: self.pasivate()
    def get_geo_info(self):
       """ Calculate geometric attributes """
-      if not self.check(): print('WARNING')   #TODO Log
+      if not self.check():
+         LG.critical('Different number of atoms, positions and sublatties')
       self.center = np.mean(self.pos,axis=0)
       lmin = np.min(self.pos,axis=0)
       lmax = np.max(self.pos,axis=0)
       self.lims = [lmin,lmax]
    def pasivate(self):
+      """
+        Add Hidrogen atoms on the C3 missing positions
+      """
       latt = []
       hs,subh = pasivate(self.pos,sub=self.sub)
       self.ats = np.append(self.ats,['H' for _ in self.pos])
@@ -41,6 +55,9 @@ class UnitCell(object):
       if len(self.ats) == len(self.pos) == len(self.sub): return True
       else: return False
    def to_xyz(self,fname=None):
+      """
+        Save the info about the UCell to a file in extended xyz format
+      """
       print(len(self.ats))
       print('')
       for a,r,s in zip(self.ats,self.pos,self.sub):
@@ -52,6 +69,7 @@ class UnitCell(object):
             f.write('%s   %s   %s   %s   %s\n'%(a,r[0],r[1],r[2],s))
          f.close()
    def from_xyz(self,fname,pasivate=False):
+      """ Read Unit Cell information from extended xyz file """
       from IO import xyz
       self.ats,self.pos,self.latt,self.sub = xyz(fname)
       #self.center = np.mean(np.array(self.pos),axis=0)
@@ -66,6 +84,7 @@ class UnitCell(object):
       ax.scatter(X,Y,c=S,s=100,edgecolors='none')
       plt.show()
    def __str__(self):
+      """ Overload of the string method for pretty printing the class """
       C = self.center
       L = self.lims
       names = ['X','Y','Z']
@@ -74,7 +93,6 @@ class UnitCell(object):
       for i in range(len(names)):
          msg += names[i]+'   %.3f -- %.3f\n'%(L[0][i],L[1][i])
       return msg
-
 
 
 
@@ -121,8 +139,11 @@ def ribbon_armc(Nx,Ny,a=1.4,buck=0.0,cent=True,show=False):
       C = np.array( [np.mean(X),np.mean(Y),np.mean(Z)] )
       for i in range(len(pos)):
          pos[i] -= C
-   ats = ['C' for _ in pos]
+   ats = np.array(['C' for _ in pos])
+   pos = np.array(pos)
+   subs = np.array(subs)
    return ats,pos,latt,subs
+   #return UnitCell(ats,pos,latt,subs=[])
 
 def armchair(N,a=1.4,buck=0.0,show=False):
    """
@@ -171,9 +192,11 @@ def armchair(N,a=1.4,buck=0.0,show=False):
          pos.append(w)  # All the atomic positions
          sub.append(s)  # All the atomic positions
    ### Plot
-   if show: plot_cell(pos,latt,tit='Armchair Cell (%s)'%(N))
-   ats = ['C' for _ in pos]
+   ats = np.array(['C' for _ in pos])
+   pos = np.array(pos)
+   subs = np.array(subs)
    return ats,pos,latt,sub
+   #return UnitCell(ats,pos,latt,subs=[])
 
 
 def zigzag(N,a=1.4,buck=0.0,show=False):
@@ -223,11 +246,13 @@ def zigzag(N,a=1.4,buck=0.0,show=False):
          if not vec_in_list(w,pos):
             pos.append(w)
             sub.append(s)
-   sub = np.array(sub)
    ### Plot
    if show: plot_cell(pos,latt,tit='ZigZag Cell (%s)'%(N))
-   ats = ['C' for _ in pos]
+   ats = np.array(['C' for _ in pos])
+   pos = np.array(pos)
+   subs = np.array(subs)
    return ats,pos,latt,sub
+   #return UnitCell(ats,pos,latt,subs=[])
 
 
 def simple(N,a=1.4,buck=0.0,cent=True,show=False):
@@ -264,16 +289,17 @@ def simple(N,a=1.4,buck=0.0,cent=True,show=False):
             s = sublatt[ir]
             pos.append(p)
             sub.append(s)
-   pos = np.array(pos)
-   sub = np.array(sub)
    ## Re-Center the unit cell
    if cent:
       C = np.mean(pos,axis=0)
       for i in range(len(pos)):
          pos[i] -= C
    if show: plot_cell(pos,latt,tit='Simple Cell %sx%s'%(N,N))
-   ats = ['C' for _ in pos]
+   ats = np.array(['C' for _ in pos])
+   pos = np.array(pos)
+   subs = np.array(subs)
    return ats,pos,latt,sub
+   #return UnitCell(ats,pos,latt,subs=[])
 
 def zigzag_triangle(N,a=1.4,buck=0.0,show=False):
    ap = np.sqrt(3)/2.   # mathematical constant
@@ -308,10 +334,12 @@ def zigzag_triangle(N,a=1.4,buck=0.0,show=False):
          if not vec_in_list(w,pos):
             pos.append(w)
             sub.append(s)
-   sub = np.array(sub)
    if show: plot_cell(pos,tit='Triangular Island (%s)'%(N))
-   ats = ['C' for _ in pos]
+   ats = np.array(['C' for _ in pos])
+   pos = np.array(pos)
+   subs = np.array(subs)
    return ats,pos,[],sub
+   #return UnitCell(ats,pos,latt,subs=[])
 
 def mullen(Nx,Ny=4,pas=False):
    ##XXX sublattice is wrong!!!!
@@ -335,17 +363,20 @@ def mullen(Nx,Ny=4,pas=False):
    ## Sotre valid atoms
    pos = [np.array((x,y,z)) for x,y,z in zip(X,Y,Z)]
    #pos,latt,sub = mullen(Nx,Ny)
-   ats = ['C' for _ in pos]
    #hs,subh = pasivate(pos,sub=sub)
    #pos += hs
    #ats += ['H' for _ in hs]
    #sub += subh
+   ats = np.array(['C' for _ in pos])
+   pos = np.array(pos)
+   subs = np.array(subs)
    return ats,pos,[],sub
+   #return UnitCell(ats,pos,latt,subs=[])
 
 
 
 
-def vec_in_list(v,l,eps=0.000000001):
+def vec_in_list(v,l,eps=1e-9):
    """ Returns True if vector v is in the list of vectors l (also in util.py)"""
    for x in l:
       if np.linalg.norm(x-v) < eps: return True
@@ -424,30 +455,6 @@ def multilayer(pos,ats,sub=[],N=2,vec=np.array([1.4,0,1.4])):
          except: pass
    return new_ats, new_pos, new_sub
 
-def pos2xyz(pos,latt,at='C',sub=[],fname='lattice.xyz'):
-   """ at has to be a string or a list/array of strings """
-   LG = logging.getLogger('IO.pos2xyz')
-   if isinstance(at,str):
-      LG.info('Only one atom provided. Using %s for all the atoms'%(at))
-      at = [at for _ in pos]
-   with open(fname,'w') as f:
-      ## Write number of atoms
-      f.write(str(len(pos))+'\n')
-      LG.debug('Written the number of atoms')
-      ## Write lattice vectors
-      for v in latt:
-         f.write('[%s,%s,%s]'%(v[0],v[1],v[2]))
-      f.write('\n')
-      LG.debug('Written the lattice vectors')
-      ## Write atoms positions
-      for i in range(len(pos)):
-         a,r = at[i],pos[i]
-         try:
-            s = sub[i]
-            f.write(a+'   %s   %s   %s   %s\n'%(r[0],r[1],r[2],s))
-         except: f.write(a+'   %s   %s   %s\n'%(r[0],r[1],r[2]))
-      LG.debug('Written all the atomic positions')
-
 
 import numeric as num
 def pasivate(pos,sub=[],nneig=3):
@@ -501,73 +508,73 @@ if __name__ == '__main__':
    A.plot(fname='test.png')
    A.plot_sublattice()
 
-   exit()
-   ats,pos,latt,subs = armchair(2)
-   A = UnitCell(ats,pos,latt,subs)
-   A.pasivate()
-   A.to_xyz('test.xyz')
-
-   #print(len(ats)+len(hs))
-   #print('')
-   #for a,p,s in zip(ats,pos,subs):
-   #   print(a,p[0],p[1],p[2],s)
-   #for p,s in zip(hs,subh):
-   #   print('H',p[0],p[1],p[2],s)
-
-   exit()
-   ## Read island type, size and layers from standard input  (TODO argparse)
-   # Usage: python islands.py armchair 20 2  ---> armchair island 20x20 bilayer
-   import sys
-   pas = False
-   try: func = sys.argv[1]
-   except:
-      print('Type of unit cell not specified.')
-      print('Available unit cells:')
-      print('   - simple      - armchair')
-      print('   - zigzag      - zigzag_triangle')
-      print('   - Mullen')
-      print('\nExample of usage:')
-      print('python islands.py armchair 3 1')
-      exit()
-   try: N = int(sys.argv[2])
-   except IndexError:
-      print('WARNING: Supercell index not specified. Assumed 0')
-      N = 0
-   try: lN = int(sys.argv[3])
-   except IndexError:
-      print('WARNING: Multilayer index not specified. Assumed 1')
-      lN = 1
-
-   ##Setup the proper function
-   funcs = [armchair, zigzag, zigzag_triangle,simple,mullen]
-   funcs_names = [f.__name__ for f in funcs]
-   funcs = dict(zip(funcs_names,funcs))
-   acronym = {'armchair':'ac','zigzag':'zz','zigzag_triangle':'zzt', # islands
-              'simple':'simple', 'mullen':'mullen'}
-   try: func = funcs[func]
-   except KeyError:
-      print('Requested geometry (%s) not implemented'%(func))
-      exit()
-
-   ##Do the calculation
-   print('Using funcion',func.__name__,'with index',N)
-   ats,pos,latt,sub = func(N)
-
-   ## Pasivation
-   if pas:
-      hs,subh = pasivate(pos,sub=sub)
-      pos += hs
-      ats += ['H' for _ in hs]
-      sub += subh
-
-   ## Multilayer
-   if lN > 1:
-      ats,pos,sub = multilayer(pos,sub,N=lN)
-
-   if pas: nam = acronym[func.__name__]+'_n%s_l%s_H.xyz'%(N,lN)
-   else: nam = acronym[func.__name__]+'_n%s_l%s.xyz'%(N,lN)
-
-   C = np.mean(pos,axis=0)
-   for i in range(len(pos)):
-      pos[i] -= C
-   pos2xyz(pos,latt,at=ats,sub=sub,fname=nam)
+#   exit()
+#   ats,pos,latt,subs = armchair(2)
+#   A = UnitCell(ats,pos,latt,subs)
+#   A.pasivate()
+#   A.to_xyz('test.xyz')
+#
+#   #print(len(ats)+len(hs))
+#   #print('')
+#   #for a,p,s in zip(ats,pos,subs):
+#   #   print(a,p[0],p[1],p[2],s)
+#   #for p,s in zip(hs,subh):
+#   #   print('H',p[0],p[1],p[2],s)
+#
+#   exit()
+#   ## Read island type, size and layers from standard input  (TODO argparse)
+#   # Usage: python islands.py armchair 20 2  ---> armchair island 20x20 bilayer
+#   import sys
+#   pas = False
+#   try: func = sys.argv[1]
+#   except:
+#      print('Type of unit cell not specified.')
+#      print('Available unit cells:')
+#      print('   - simple      - armchair')
+#      print('   - zigzag      - zigzag_triangle')
+#      print('   - Mullen')
+#      print('\nExample of usage:')
+#      print('python islands.py armchair 3 1')
+#      exit()
+#   try: N = int(sys.argv[2])
+#   except IndexError:
+#      print('WARNING: Supercell index not specified. Assumed 0')
+#      N = 0
+#   try: lN = int(sys.argv[3])
+#   except IndexError:
+#      print('WARNING: Multilayer index not specified. Assumed 1')
+#      lN = 1
+#
+#   ##Setup the proper function
+#   funcs = [armchair, zigzag, zigzag_triangle,simple,mullen]
+#   funcs_names = [f.__name__ for f in funcs]
+#   funcs = dict(zip(funcs_names,funcs))
+#   acronym = {'armchair':'ac','zigzag':'zz','zigzag_triangle':'zzt', # islands
+#              'simple':'simple', 'mullen':'mullen'}
+#   try: func = funcs[func]
+#   except KeyError:
+#      print('Requested geometry (%s) not implemented'%(func))
+#      exit()
+#
+#   ##Do the calculation
+#   print('Using funcion',func.__name__,'with index',N)
+#   ats,pos,latt,sub = func(N)
+#
+#   ## Pasivation
+#   if pas:
+#      hs,subh = pasivate(pos,sub=sub)
+#      pos += hs
+#      ats += ['H' for _ in hs]
+#      sub += subh
+#
+#   ## Multilayer
+#   if lN > 1:
+#      ats,pos,sub = multilayer(pos,sub,N=lN)
+#
+#   if pas: nam = acronym[func.__name__]+'_n%s_l%s_H.xyz'%(N,lN)
+#   else: nam = acronym[func.__name__]+'_n%s_l%s.xyz'%(N,lN)
+#
+#   C = np.mean(pos,axis=0)
+#   for i in range(len(pos)):
+#      pos[i] -= C
+#   pos2xyz(pos,latt,at=ats,sub=sub,fname=nam)
