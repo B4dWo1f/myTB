@@ -10,19 +10,20 @@ LG = logging.getLogger(__name__)
 @log_help.log2screen(LG)
 def xyz(archivo):
    """
-     Reads the lattice information from an ENHANCED xyz file. The file is
+     Reads the lattice information from an extended xyz file. The file is
     assumed to have the following structure:
         N atoms
         [latt vec 1][latt vec 2]...   # eg: [1,0,0][0,1,0]
-        C   0   0   0   # atom   X   Y   Z
-     If the lattice vectors are not specified it will return a 0 vector, so
+        C   0   0   0   1/-1   # atom   X   Y   Z   sublattice
+     If the lattice vectors are not specified it will return an empty list, so
     the program will calculate the system considering it an island.
    """
-   #LG = logging.getLogger('IO.xyz')
+   ## Number of atoms
    lines = open(archivo,"r").readlines()
    nat = int(lines[0]) # number of atoms
    LG.debug('Expecting %s atoms'%(nat))
-   try:    ## try to get lattice vectors
+   ## Lattice vectors
+   try:
       lines[1] = lines[1].split('#')[0] # clean comments
       vecs = lines[1].replace(' ','').lstrip().rstrip().split('][')
       vecs = [v.replace('[','').replace(']','') for v in vecs]
@@ -30,15 +31,18 @@ def xyz(archivo):
    except:
       LG.warning('Unable to get lattice vectors. Empty list.')
       vecs = []
-   atoms = np.loadtxt(archivo,skiprows=2,usecols=(0,),dtype=str)
-   atoms = np.array([a.replace('b\'','') for a in atoms])
-   atoms = np.array([a.replace('\'','') for a in atoms])
-   pos = np.loadtxt(archivo,skiprows=2,usecols=(1,2,3))
+   ## Atoms, atomic postions and sublattice
+   # atoms
+   atoms = np.loadtxt(archivo,skiprows=2,usecols=(0,),dtype=bytes)
+   atoms = np.array([str(a,'utf-8') for a in atoms])
+   # positions & sublattice
    try: 
-      sub = np.loadtxt(archivo,skiprows=2,usecols=(4,),dtype=str)
-      sub = np.array([a.replace('b\'','') for a in sub])
-      sub = np.array([a.replace('\'','') for a in sub])
-   except: sub = np.array([])
+      pos = np.loadtxt(archivo,skiprows=2,usecols=(1,2,3,4))
+      sub = np.asarray(pos[:,-1],int)
+      pos = pos[:,0:3]
+   except:
+      pos = np.loadtxt(archivo,skiprows=2,usecols=(1,2,3))
+      sub = np.array([])
    if atoms.shape[0] != pos.shape[0]:
       LG.critical('Different number of atoms and positions')
    if pos.shape[0] != sub.shape[0]:
@@ -49,11 +53,12 @@ def xyz(archivo):
 
 def pos2xyz(pos,latt,at='C',sub=[],fname='lattice.xyz'):
    """
-     at has to be a string or a list/array
+     Write the unit cell information to a file. If "at" is a string, the same
+     string will be used for every atomic position.
    """
    #LG = logging.getLogger('IO.pos2xyz')
    if isinstance(at,str):
-      LG.info('Only one atom provided. Using %s for all the atoms'%(at))
+      LG.debug('Only one atom provided. Using %s for all the atoms'%(at))
       at = [at for _ in pos]
    with open(fname,'w') as f:
       ## Write number of atoms
@@ -72,6 +77,7 @@ def pos2xyz(pos,latt,at='C',sub=[],fname='lattice.xyz'):
          except: f.write('\n')
       LG.debug('Written all the atomic positions')
    f.close()
+
 
 def mat(fname,M,v=(0,0,0)):
    M = coo_matrix(M)    #XXX check type first

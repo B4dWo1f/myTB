@@ -85,13 +85,14 @@ class vacancy_param(object):
       return msg
 
 class sys_param(vacancy_param):
-   def __init__(self,xyz_file,pasivate,dists,vacancy_param,adatom_param):
+   def __init__(self,xyz_file,pasivate,dists,vacancy_param,adatom_param,DOspin):
       self.xyz_file = xyz_file
       self.pasivate = pasivate
       #self.defect = defect
       self.dists = dists
       self.ada = adatom_param
       self.vac = vacancy_param
+      self.DOspin = DOspin
    def __str__(self):
       msg = 'Physical system parameters\n'
       msg += '      Pasivate Unit Cell: %s\n'%(self.pasivate)
@@ -132,6 +133,7 @@ def setup(fname='SK1.ini'):
    xyz_file = config['system']['xyz_file']
    pasivate = eval(config['system']['pasivate'].capitalize())
    dist = eval(config['system']['dist'])
+   DOspin = eval(config['system']['DOspin'])
 
    N = int(config['vacancy']['N'])
    d = float(config['vacancy']['d'])
@@ -142,7 +144,7 @@ def setup(fname='SK1.ini'):
    ap = adatom_param(N)
 
    ## System parameters
-   SP = sys_param(xyz_file,pasivate,dist,vp,ap)
+   SP = sys_param(xyz_file,pasivate,dist,vp,ap,DOspin)
 
    keys,values = [],[]
    for key in config['atoms']:
@@ -170,7 +172,12 @@ def setup(fname='SK1.ini'):
                break
             else: pass
       except AttributeError: pass
-   return FP,HP,CP,SP,atoms,hoppings
+   HP.hoppings = hoppings
+   #### FIX the spin doubling if needed but not requested
+   if np.linalg.norm(HP.lzee)!= 0. or HP.lSO != 0.:
+      LG.warning('Need spin doubling but it wasn\'t requested')
+      SP.DOspin = True
+   return FP,HP,CP,SP,atoms #,hoppings
 
 import os
 def compile_fortran(fname):

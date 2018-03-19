@@ -87,7 +87,7 @@ def FBZ(recip,N=3,ax=None,tit=None,show=False):
    if show: plt.show()
 
 
-def vec_in_list(v,l,eps=0.000000001):
+def vec_in_list(v,l,eps=1e-9):
    """ Returns True if vector v is in the list of vectors l """
    for x in l:
       if np.linalg.norm(x-v) < eps: return True

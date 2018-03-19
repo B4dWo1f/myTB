@@ -2,65 +2,47 @@
 # -*- coding: UTF-8 -*-
 
 import numpy as np
-from scipy.sparse import coo_matrix,bmat
+import algebra as alg
+from scipy.sparse import coo_matrix,bmat,csr_matrix
 import logging
-
 LG = logging.getLogger(__name__) # Logger for this module
-### File Handler
-#LG = logging.getLogger('operators') # Logger for this module
-#fh = logging.FileHandler('operators.log',mode='w')
-#fmt = logging.Formatter('%(asctime)s %(name)s:%(levelname)s - %(message)s')
-#fh.setFormatter(fmt)
-#fh.setLevel(logging.DEBUG)
-#LG.addHandler(fh)
-#LG.setLevel(logging.DEBUG)
-### Screen Handler
-##sh = logging.StreamHandler()
-##fmt = logging.Formatter('%(name)s -%(levelname)s- %(message)s')
-##sh.setFormatter(fmt)
-##sh.setLevel(logging.WARNING)
-##LG.addHandler(sh)
 
 
 def spin(base,dire=(0,0,1)):
-   def pauli_matrix(n):
-      """
-        Builds 3 nxn matrices with the each of the Pauli Matrices in the
-        diagonal
-      """
-      Sx = np.matrix([[0,1],[1,0]],dtype=complex)
-      Sy = np.matrix([[0,-1j],[1j,0]],dtype=complex)
-      Sz = np.matrix([[1,0],[0,-1]],dtype=complex)
-      auxX = [[None for _ in range(n)] for _ in range(n)]
-      auxY = [[None for _ in range(n)] for _ in range(n)]
-      auxZ = [[None for _ in range(n)] for _ in range(n)]
-      for i in range(n):
-         auxX[i][i] = Sx
-         auxY[i][i] = Sy
-         auxZ[i][i] = Sz
-      return bmat(auxX), bmat(auxY), bmat(auxZ)
-   N = 0
-   for E in base:
-      N += len(E.onsite)
-   sig = pauli_matrix(N)
-   return dire[0]*sig[0] + dire[1]*sig[1] + dire[2]*sig[2]
+   N = 0                   #  shouldn't this be the ham dimension?
+   for E in base:          #
+      N += len(E.onsite)   #
+   c = [2*i+1 for i in range(N)]
+   r = [2*i for i in range(N)]
+   row = np.array(r+c)
+   col = np.array(c+r)
+   ## Sx
+   data = np.array([1 for _ in row])
+   Sx = coo_matrix((data, (row, col)), shape=(2*N, 2*N))
+   ## Sy
+   data = np.array([1j*(-1)**(i+1) for i in row])
+   Sy = coo_matrix((data, (row, col)), shape=(2*N, 2*N))
+   ## Sz
+   c = [i for i in range(2*N)]
+   r = [i for i in range(2*N)]
+   row = np.array(r)
+   col = np.array(c)
+   data = np.array([(-1)**(i) for i in row])
+   Sz = coo_matrix((data, (row, col)), shape=(2*N, 2*N))
+   return dire[0]*Sx + dire[1]*Sy + dire[2]*Sz
 
 
-def sublattice(base,Subs=['A']):
+def sublattice(base):   #,Subs=['A']):
    """
      This function returns a matrix with 1's in the sublattice "sublattice"
-   positions
+     positions
    """
-   if isinstance(Subs,str): Zorb = [Subs]
-   elif isinstance(Subs,list): pass
-   else: LG.error('Wrong input in sublattice operator')
-   aux = [[None for _ in base] for _ in base]
-   for E in base:
-      i = E.place
-      dim = len(E.onsite)
-      if E.sublattice in Subs: aux[i][i] = np.identity(dim,dtype=int)
-      else: aux[i][i] = np.zeros((dim,dim),dtype=int)
-   return bmat(aux)
+   n = base.ndim
+   row,dat = [],[]
+   for i in range(len(base.SUBS)):
+      row.append(i)
+      dat.append(base.SUBS[i])
+   return csr_matrix((dat,(row,row)),shape=(n,n))
 
 
 def orbital(base,Orbs=['pz']):
@@ -78,7 +60,8 @@ def orbital(base,Orbs=['pz']):
    diag = [0 for _ in diag_name]
    for i in range(len(diag_name)):
       if diag_name[i] in Orbs: diag[i] = 1
-   return coo_matrix(np.diag(diag))
+   if base.DOspin: return alg.m2spin(coo_matrix(np.diag(diag)))
+   else: return coo_matrix(np.diag(diag))
 
 
 def atom(base,Ats=[1]):
@@ -94,7 +77,8 @@ def atom(base,Ats=[1]):
       dim = len(E.onsite)
       if E.place in Ats: aux[E.place][E.place] = np.identity(dim,dtype=int)
       else: aux[E.place][E.place] = np.zeros((dim,dim),dtype=int)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)
 
 
 def layer(base):
@@ -106,7 +90,8 @@ def layer(base):
    for E in base:
       N = len(E.onsite)
       aux[E.place][E.place] = E.layer * np.identity(N)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)
 
 
 def dist(base,r0=np.array([0.,0.,0.])):
@@ -119,7 +104,8 @@ def dist(base,r0=np.array([0.,0.,0.])):
       r = np.linalg.norm( E.position - r0 )
       N = len(E.onsite)
       aux[E.place][E.place] = r * np.identity(N)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)
 
 
 def position(base,coor=2):
@@ -131,4 +117,5 @@ def position(base,coor=2):
       r = E.position
       N = len(E.onsite)
       aux[E.place][E.place] = r[coor] * np.identity(N)
-   return bmat(aux)
+   if base.DOspin: return alg.m2spin(bmat(aux))
+   else: return bmat(aux)

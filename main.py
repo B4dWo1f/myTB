@@ -6,7 +6,9 @@ import sys
 try: fini = sys.argv[1]
 except IndexError: fini = 'SK1.ini'
 import setup
-FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
+#FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
+FP,HP,CP,SP,atoms = setup.setup(fini)
+SP.DOspin = True
 
 ############################### LOGGING #####################################
 import logging
@@ -32,7 +34,7 @@ def compile_fortran(fname):
    def doit(fname):
       LG.debug('Backup file (.%s) not found'%(fname))
       LG.info('Compilando fortran con f2py')
-      os.system('f2py -c -m %s %s'%(root_fname,fname))
+      os.system('f2py3.5 -c -m %s %s'%(root_fname,fname))
       LG.info('   ...Compilado fortran con f2py')
       os.system('cp %s .%s'%(fname,fname))
       LG.warning('Hidden copy to avoid re-compiling')
@@ -76,6 +78,7 @@ base_dfct = base.copy()
 del base
 
 
+LG.info('Defects for the basis')
 if SP.vac.N > 0:
    IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha)
 else: IND_vac = []
@@ -94,44 +97,30 @@ print('            *** Base:',time()-told)
 
 
 told = time()
-## Create the Hamiltonians
 import hamiltonian as ham
-LG.info('Creating Pristine Hamiltonian')
-# Pristine
-LG.debug('Starting kinetic terms')
-Htot = ham.kinetic(base_pris,hoppings)
-if HP.lelec != 0.0:
-   LG.info('Electric field: %s'%(HP.lelec))
-   #Htot.append( ham.pseudo_rashba(base_pris,HP.lelec) )
-   Htot.append( ham.electric(base_pris,HP.lelec) )
-LG.info('Hamiltonian ready')
-H_pris = ham.Hamiltonian(Htot,tag='pris')
-H_pris.names()
-del Htot
-# Defected
-LG.info('Creating Defected Hamiltonian')
-LG.debug('Starting kinetic terms')
-Htot = ham.kinetic(base_dfct,hoppings)
-if HP.lelec != 0.0:
-   #Htot.append( ham.pseudo_rashba(base_dfct,HP.lelec) )
-   Htot.append( ham.electric(base_dfct,HP.lelec) )
-LG.info('Hamiltonian ready')
-H_dfct = ham.Hamiltonian(Htot,tag='dfct')
-H_dfct.names()
-H_dfct.save_matrix(FP.ham)
-LG.info('Hamiltonians done')
+H_pris = ham.build_ham(base_pris,HP,'pris')
+H_dfct = ham.build_ham(base_dfct,HP,'dfct')
 print('     *** Hamiltonian:',time()-told)
-del Htot
+
+
+LG.info('Check for spin')
+if SP.DOspin:
+   base_pris.dospin()
+   base_dfct.dospin()
 
 
 told = time()
 import operators as OP
 import geometry as geo
-#from random import uniform, choice
+from random import uniform, choice
 #op = OP.orbital(base_dfct,'s')
+import algebra as alg
+#op = OP.spin(base_pris)
+#op = OP.orbital(base_pris,'pz')
+#op = OP.sublattice(base_pris)
 if CP.bands:
    if len(latt) != 0:
-      Shw = False
+      Shw = True
       LG.info('Calculating bands')
       points = geo.get_points(base_pris.recip)
       points = [points[0],points[6],points[9], points[0]]
@@ -167,6 +156,7 @@ print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
 
+exit()
 print('='*80)
 print('='*80)
 

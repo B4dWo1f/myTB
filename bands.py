@@ -10,6 +10,7 @@ import logging
 import log_help
 LG = logging.getLogger(__name__)
 
+eps = 1e-5
 ###################################
 def Hamil(Hlist,k,chk=True):
    """

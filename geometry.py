@@ -149,6 +149,18 @@ def layer(pos,dist=1.5,lim=100,eps=0.2):
 #   aux = np.array((intra.row,intra.col)).transpose()
 #   subs = num.sublattice(aux)
 #   exit()
+@log_help.log2screen(LG)
+def check_sublattice(intra,subs,dist=1.5,lim=100):
+   """
+    This function checks that the sublattice is well calculated (every A atom
+    has ONLY B neighbors)
+    intra has to be a coo_matrix containing the neighbors of the unit cell
+   """
+   r,c = intra.row, intra.col
+   for i in r:
+      aux = list(set([subs[j] for j in c[r==i]]))
+      if len(aux) > 1 or aux[0] == subs[i]: return False
+   return True
 
 @log_help.log2screen(LG)
 def sublattice(intra,dist=1.5,lim=100):
@@ -157,27 +169,35 @@ def sublattice(intra,dist=1.5,lim=100):
     intra has to be a coo_matrix containing the neighbors of the unit cell
    """
    subs = [10 for _ in range(intra.shape[0])]
-   subs[0] = 'A'
-   sub_dict = {'A':1,'B':-1}
-   tcid_bus = {1:'A',-1:'B'}
+   subs[0] = 1
    r,c = intra.row, intra.col
    for n in range(10000):
       for i in range(intra.shape[0]):
-         #print('Atom',i,'has neigs:',c[r==i])
+         #print('Atom',i,'with sub: ',subs[i],'has neigs:',c[r==i])
          for j in c[r==i]:   # neighbors of atom i
-            try: subs[j] = tcid_bus[-1*sub_dict[subs[i]]]
-            except KeyError:
+            if abs(-1*subs[i]) < 2: subs[j] = -1*subs[i]
+            else: 
                #print('   atom',i,'still has no sublattice')
                #print('        but its neighbor',j,'is sublatt:',subs[j])
-               #print('        so atom',i,'should be',-1*sub_dict[subs[j]])
-               try: subs[i] = tcid_bus[-1*sub_dict[subs[j]]]
-               except KeyError: pass
-      types = set([type(x) for x in subs])
-      if len(list(types)) == 1:
+               #print('        so atom',i,'should be',-1*subs[j])
+               if abs(-1*subs[j]) < 2: subs[i] = -1*subs[j]
+               else: pass
+            #try: subs[j] = -1*subs[i]
+            #except KeyError:
+            #   print('   atom',i,'still has no sublattice')
+            #   print('        but its neighbor',j,'is sublatt:',subs[j])
+            #   print('        so atom',i,'should be',-1*sub_dict[subs[j]])
+            #   try: subs[i] = -1*subs[j]
+            #   except KeyError: pass
+      #types = set([type(x) for x in subs])
+      N_missing = np.where(np.array(subs)>2)[0].shape[0]
+      if N_missing == 0: #len(list(types)) == 1:
          LG.info('Sublattice, %s iterations'%(n))
          return subs
       if n > 100:
-         if n%1000 == 0: LG.warning('Probably there\'s an error in Sublattice')
+         if n%1000 == 0:
+            LG.warning('Probably there\'s an error in Sublattice')
+            exit()
 #def sublattice_old(pos,dist=1.5,lim=100):
 #   """
 #     This function is in beta testing. I think it should work for any
@@ -423,26 +443,42 @@ def get_points(recip,N=3):
       ii+=1
    return points
 
-
 def recorrido(points,nk):
    """
-     Returns a list of points (nupy.arrays) with nk points between each pair of
-     points in the list points
+     Returns a list of points (np.array) with nk points between each pair of
+     points in the provided list of points.
+     This function is dimension independent.
+    points: list of points between which to interpolate
+    nk: may be an integer or a sequence of len(points)-1 integers
    """
+   ## clean nk
+   try: itr = iter(nk)
+   except TypeError: nk = [nk for _ in range(len(points)-1)]
+   else:
+      if len(nk) < len(points)-1:
+         msg = 'WARNING: incorrect number of points. '
+         msg += 'Using %s for every interval'%(nk[0])
+         LG.warning(msg)
+         nk = [nk[0] for _ in range(len(points)-1)]
+      elif len(nk) > len(points)-1: pass    # Report to log?
+      else: pass    # Report to log?
+
+   ## interpolate between points
    RECORRIDO = []
-   ret = (1,False)  # skip last point
+   ret = (1,False)   # don't skip last point
    lim = len(points)-1
    for ipunto in range(lim):
-      if ipunto == lim-1: ret = (0,True)
+      N = nk[ipunto]
+      if ipunto == lim-1: ret = (0,True)   # skip last point
       P1 = points[ipunto]
       P2 = points[ipunto+1]
-      x = np.linspace(P1[0],P2[0],nk+ret[0],endpoint=ret[1]) #+1)
-      y = np.linspace(P1[1],P2[1],nk+ret[0],endpoint=ret[1]) #+1)
-      z = np.linspace(P1[2],P2[2],nk+ret[0],endpoint=ret[1]) #+1)
-      for kx,ky,kz in zip(x,y,z):
-         P = np.array([kx,ky,kz])
-         RECORRIDO.append(P)
+      coors = []
+      for idim in range(len(P1)):
+         coors.append(np.linspace(P1[idim],P2[idim],N+ret[0],endpoint=ret[1]))
+      for p in zip(*coors):
+         RECORRIDO.append(np.array(p))
    return RECORRIDO
+
 
 from numpy import cos,sin
 def rotation(v,Q,u=np.array([0,0,1]),deg=True):

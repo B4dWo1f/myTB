@@ -10,6 +10,7 @@ from scipy.sparse import coo_matrix
 from copy import deepcopy
 from os import listdir
 from os.path import isfile, join
+import algebra as alg
 ## LOG
 import logging
 import log_help
@@ -51,11 +52,12 @@ class Base_Element(object):
 
 
 class Base(object):
-   def __init__(self, elements=[],latt=[],atoms={},cent=True):
+   def __init__(self, elements=[],latt=[],atoms={},cent=True,dospin=False):
       """
         Capital letter attirbutes must have the dimension of the hamiltonian
         Lower letter attirbutes must have the dimension of the number of atoms
       """
+      self.DOspin = dospin
       self.elements = elements     # List of Base_Elements
       self.atoms = atoms           # Dictionary of on-site energies
       ## Lattice vectors
@@ -93,10 +95,11 @@ class Base(object):
       self.ats = ats
       # Number of orbitals
       self.ndim = len(ATS)  # Hamiltonian dimension
-      self.ATS = ATS
-      self.ORBS = orbs
-      self.INDS = inds          #[0,0,0,1,1,1,.... Nats, Nats]
-      self.AUX_INDS = aux_inds  #[0,1,2,...Norbs]
+      self.ATS = np.array(ATS)
+      self.ORBS = np.array(orbs)
+      self.INDS = np.array(inds)          #[0,0,0,1,1,1,.... Nats, Nats]
+      self.AUX_INDS = np.array(aux_inds)  #[0,1,2,...Norbs]
+      self.SPIN = np.array([1 for _ in self.ORBS])
       ## Positions of the atoms
       self.x = self.pos[:,0]
       self.y = self.pos[:,1]
@@ -141,21 +144,22 @@ class Base(object):
       LG.info('Calculating sublattice for each element')
       #subs = geo.fsublattice(self.bonds[0][0])
       if len(subs) == 0:
-         try: subs = [e.sublattice for e in self.elements]
-         except AttributeError: subs = geo.sublattice(self.bonds[0][0])
+         subs = geo.sublattice(self.bonds[0][0])
       else:
          if len(subs) != self.Natoms:
             LG.critical('Different number of atoms and sublattice')
             LG.info('Trying to calculate again the sublattice')
             subs = geo.sublattice(self.bonds[0][0])
-      for i in range(len(subs)):
-         self.elements[i].sublattice = subs[i]
-      self.sublattices = np.array(subs)
-      for i in range(len(self.sublattices)):
-         self.elements[i].sublattice = self.sublattices[i]
+      if not geo.check_sublattice(self.bonds[0][0],subs):
+         LG.warning('Sublattice was wrong. Calculated again')
+         subs = geo.sublattice(self.bonds[0][0])
+      self.subs = np.array(subs)
+      for i in range(len(self.subs)):
+         self.elements[i].sublattice = self.subs[i]
       self.SUBS = []
       for i in range(len(self.INDS)):
-         self.SUBS.append(self.sublattices[self.INDS[i]])
+         self.SUBS.append(self.subs[self.INDS[i]])
+      self.SUBS = np.array(self.SUBS)
    def get_layer(self):
       """
         This function adds a sublattice attribute to the base elements
@@ -203,14 +207,14 @@ class Base(object):
         ind: Not implemented
       """
       ## Get atoms in layer 1 and not connected in layer 0
-      #print(len(self.layers),len(self.sublattices),len(self.INDS))
+      #print(len(self.layers),len(self.subs),len(self.INDS))
       l = max(set(self.layers))
       LG.info('Vacancies introduced in layer: %s'%(l))
       aux = range(max(self.INDS)+1)   #+1 because python starts in 0
-      sub_atsA =np.where((self.layers==l)&(self.sublattices=='A'),aux,-1)
+      sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
       sub_atsA = sub_atsA[sub_atsA>0]
       lena = len(self.find_neig(sub_atsA[0]))
-      sub_atsB =np.where((self.layers==l)&(self.sublattices=='B'),aux,-1)
+      sub_atsB =np.where((self.layers==l)&(self.subs==-1),aux,-1) #B
       sub_atsB = sub_atsB[sub_atsB>0]
       lenb = len(self.find_neig(sub_atsB[0]))
 
@@ -231,8 +235,7 @@ class Base(object):
          la = self.elements[-1].layer  # TODO think + 1
          sub_dict = {'A':1,'B':-1}
          tcid_bus = {1:'A',-1:'B'}
-         su = -1 * sub_dict[self.elements[-1].sublattice]
-         su = tcid_bus[su]
+         su = -1 * self.elements[-1].sublattice
          if dummy:
             fake_atoms = deepcopy(self.atoms)
             for k,v in fake_atoms[at].items():
@@ -258,14 +261,14 @@ class Base(object):
         ind: Not implemented
       """
       ## Get atoms in layer 1 and not connected in layer 0
-      #print(len(self.layers),len(self.sublattices),len(self.INDS))
+      #print(len(self.layers),len(self.subs),len(self.INDS))
       l = max(set(self.layers))
       LG.info('Vacancies introduced in layer: %s'%(l))
       aux = range(max(self.INDS)+1)   #+1 because python starts in 0
-      sub_atsA =np.where((self.layers==l)&(self.sublattices=='A'),aux,-1)
+      sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
       sub_atsA = sub_atsA[sub_atsA>0]
       lena = len(self.find_neig(sub_atsA[0]))
-      sub_atsB =np.where((self.layers==l)&(self.sublattices=='B'),aux,-1)
+      sub_atsB =np.where((self.layers==l)&(self.subs==-1),aux,-1) #B
       sub_atsB = sub_atsB[sub_atsB>0]
       lenb = len(self.find_neig(sub_atsB[0]))
 
@@ -336,5 +339,25 @@ class Base(object):
       """ Save the base positions and lattice vector to a xyz file """
       pos = [E.position for E in self.elements]
       ats = [E.element for E in self.elements]
-      IO.pos2xyz(pos,self.latt,at=ats,sub=self.sublattices,fname=fname)
-
+      IO.pos2xyz(pos,self.latt,at=ats,sub=self.subs,fname=fname)
+   def dospin(self):
+      LG.info('Modifying basis for spin')
+      self.LAYS = alg.m2spin(self.LAYS)
+      self.ORBS = alg.m2spin(self.ORBS,Delt='')
+      self.SUBS = alg.m2spin(self.SUBS)
+      self.ATS = alg.m2spin(self.ATS)
+      self.AUX_INDS = alg.m2spin(self.AUX_INDS)
+      self.INDS = alg.m2spin(self.INDS)
+      self.SPIN = np.array([(-1)**i for i in range(len(self.ORBS))])
+      if len(self.LAYS) != len(self.ORBS) != len(self.SUBS) !=\
+         len(self.ATS) != len(self.AUX_INDS) != len(self.INDS):
+         LG.critical('Problem Spin-doubling')
+         print('Layers:', len(self.LAYS))
+         print('Orbitals:',len(self.ORBS))
+         print('Sublattice:',len(self.SUBS))
+         print('Atoms:',len(self.ATS))
+         print('Indices',len(self.INDS))
+         print('Aux Indices:',len(self.AUX_INDS))
+         exit()
+      self.ndim = len(self.ATS)  # Hamiltonian dimension
+      LG.info('New basis dimension: %s'%(self.ndim))

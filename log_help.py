@@ -44,12 +44,26 @@ def log2screen(lg):
 
 def disable(lg):
    """
-    Temporarily raise the log level to critical to avoid over logging
+    Temporarily raise the log level to CRITICAL to avoid over logging
    """
    def do_it(wrapped):
       def inner(*args, **kwargs):
          lv = lg.getEffectiveLevel()
          lg.setLevel(logging.CRITICAL)
+         ret = wrapped(*args, **kwargs)
+         lg.setLevel(lv)
+         return ret
+      return inner
+   return do_it
+
+def disable2(lg):
+   """
+    Temporarily raise the log level to INFO to avoid over logging
+   """
+   def do_it(wrapped):
+      def inner(*args, **kwargs):
+         lv = lg.getEffectiveLevel()
+         lg.setLevel(logging.INFO)
          ret = wrapped(*args, **kwargs)
          lg.setLevel(lv)
          return ret
