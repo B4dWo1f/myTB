@@ -70,13 +70,13 @@ class UnitCell(object):
          f.close()
    def from_xyz(self,fname,pasivate=False):
       """ Read Unit Cell information from extended xyz file """
-      from IO import xyz
+      from IO.read import xyz
       self.ats,self.pos,self.latt,self.sub = xyz(fname)
       #self.center = np.mean(np.array(self.pos),axis=0)
       self.get_geo_info()
    def plot(self,fname=None):
       plot_cell(self.pos,self.latt,fname=fname)
-   def plot_sublattice(self,fname=None):
+   def lot_sublattice(self,fname=None):
       X = self.pos[:,0]
       Y = self.pos[:,1]
       S = self.sub

@@ -339,7 +339,7 @@ class Base(object):
       """ Save the base positions and lattice vector to a xyz file """
       pos = [E.position for E in self.elements]
       ats = [E.element for E in self.elements]
-      IO.pos2xyz(pos,self.latt,at=ats,sub=self.subs,fname=fname)
+      IO.write.xyz(pos,self.latt,at=ats,sub=self.subs,fname=fname)
    def dospin(self):
       LG.info('Modifying basis for spin')
       self.LAYS = alg.m2spin(self.LAYS)

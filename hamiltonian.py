@@ -71,7 +71,7 @@ class Hamiltonian(object):
          M = H.mat
          v = H.exp
          LG.info('Saving matrix %s'%(H.name))
-         IO.mat(fname,M,v)
+         IO.write.mat(fname,M,v)
          LG.debug('  ...done')
    def get_hk_gen(self):
       """ Generate kdependent hamiltonian"""

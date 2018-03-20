@@ -6,20 +6,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def find_nearest(array,value): return (np.abs(array-value)).argmin()
+def find_nearest(array,value):
+   """
+     Returns the index of the element of an array closest to a certain value
+   """
+   return (np.abs(array-value)).argmin()
 
 ## Decide sign
 def get_sign(v,e):
+   """
+     Aux workaround to find the closest element with sign
+   """
    ind_p = find_nearest(v, e)
    ind_m = find_nearest(v,-e)
    if abs(v[ind_p]-e) < abs(v[ind_m]+e): return e
    else: return -e
 
 
-def mean_val(v,M): return np.sum(np.conj(v)*M*v)
+def mean_val(v,M):
+   """ Returns the expected value: <v|M|v> """
+   return np.sum(np.conj(v)*M*v)
 
 ## Get ExchangeS ########################################
 def get_ingap(E,Nv=2,vb=False):
+   """
+     Returns the indices of the in-gap states as well as the conduction and
+     valence energies
+   """
    absE = np.abs(E)
    ind_E = np.argsort(absE)
    ingap = [get_sign(E,e) for e in absE[ind_E[0:Nv]]]
@@ -33,6 +46,10 @@ def get_ingap(E,Nv=2,vb=False):
    return inds,cond,vale
 
 def get_geo_stuff(fol):
+   """
+     Scrap the log file for geometry information
+     TODO: Move the geometri info to an independent output file
+   """
    log = fol + 'main.log'
    ## Get Vacancies indices
    vacs = os.popen('grep " Changing onsite of atom:" %s'%(log)).readlines()
@@ -58,6 +75,9 @@ def get_geo_stuff(fol):
    return Nv, dis, ang, vacs
 
 def get_exchanges(vL,vR):
+   """
+     Compute all the effective exchange couplings
+   """
    JF, UL, UR, D, tLR, tRL = 0., 0., 0., 0., 0., 0.
    for iv in range(len(vL)):
       JF += ( np.conj(vL[iv])*vL[iv] ) * ( np.conj(vR[iv])*vR[iv] )
@@ -69,6 +89,7 @@ def get_exchanges(vL,vR):
    return UL, UR, 2*JF, D, tLR, tRL
 
 def get_lc(Ba,pos,v,r0,lim=0.9):
+   """ Calculate the confinement length """
    v = np.conj(v)*v
    v = v.real   # by  construction v is real
    vp = np.bincount(Ba.n, weights=v)
@@ -85,6 +106,9 @@ def get_lc(Ba,pos,v,r0,lim=0.9):
 
 ## Basis
 class basis(object):
+   """
+     Minimum dummy class to store indices of atom and orbital
+   """
    def __init__(self,fname='dfct.basis'):
       self.ind,self.n = np.loadtxt(fname,usecols=(0,1),unpack=True,dtype=int)
 
@@ -115,22 +139,11 @@ class Spectrum(object):
       M = np.load(dfct)
       self.E = M[:,0].real
       self.V = M[:,1:]
-      ## Position of atoms
-      pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3))
-      self.Nc = pos.shape[0]
-      sub = np.loadtxt(dfct_pos,skiprows=2,usecols=(4,),dtype=str)
-      sub = np.array([a.replace('b\'','') for a in sub])
-      sub = np.array([a.replace('\'','') for a in sub])
-      #sublatice to num
-      subdic = {'A':1,'B':-1}
-      aux = []
-      for i in range(len(sub)):
-         for _ in self.Ba.ind[self.Ba.n==i]:
-            aux.append(sub[i])
-      sub = np.array(aux)
-      self.sub = np.array([subdic[s] for s in sub])
+      ## Position of atoms    #XXX why not use IO.xyz??
+      self.pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3))
+      self.Nc = self.pos.shape[0]
+      self.sub = np.loadtxt(dfct_pos,skiprows=2,usecols=(4,))
       #position
-      self.pos = pos
       inds,cond,vale = get_ingap(self.E, Nv=self.Nv)
       self.inds = inds
       self.cond = cond
