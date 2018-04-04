@@ -251,7 +251,7 @@ class Base(object):
          self.get_sublattice()
       return indices
    @log_help.log2screen(LG)
-   def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1e6):
+   def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1e9):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings
@@ -328,11 +328,12 @@ class Base(object):
    def save(self,f_ind='base.basis',f_xyz='base.xyz'):
       #self.update_basis()
       f = open(f_ind,'w')
-      f.write('#ind   n_atom   atom   orb   sublatt   lay\n')
+      f.write('#ind   n_atom   atom   orb   spin   sublatt   lay\n')
       for i in range(len(self.INDS)):
          f.write(str(self.AUX_INDS[i])+'   '+str(self.INDS[i]))
          f.write('   '+str(self.ATS[i])+'   '+str(self.ORBS[i]))
-         f.write('   '+str(self.SUBS[i])+'   '+str(self.LAYS[i])+'\n')
+         f.write('   '+str(self.SPIN[i])+'   '+str(self.SUBS[i]))
+         f.write('   '+str(self.LAYS[i])+'\n')
       f.close()
       self.save_xyz(f_xyz)
    def save_xyz(self,fname='base.xyz'):
