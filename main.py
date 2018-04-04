@@ -54,7 +54,7 @@ compile_fortran('numeric.f95')
 print(' '*18,'-'*40,' '*20)
 
 import IO
-ats,pos,latt,sub = IO.xyz(SP.xyz_file)
+ats,pos,latt,sub = IO.read.xyz(SP.xyz_file)
 
 
 ## Base
