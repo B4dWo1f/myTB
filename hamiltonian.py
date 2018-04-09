@@ -198,6 +198,7 @@ class Hamiltonian(object):
    #   self.dim = self.lista[0].mat.shape[0]
    def names(self,d=2):
       """ Assumes the correct order 0,a1,a2,a1+a2,a1-a2 """
+      ## XXX WRONG!!!
       dd = 0
       zero = self.lista[0].mat * 0.0
       self.intra = zero  # initialize to zero
