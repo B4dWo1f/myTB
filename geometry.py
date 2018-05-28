@@ -121,13 +121,26 @@ def defects(pos,d,alpha=0.,retpoint=False):
    else: return [i0,i1]
 
 
+#@log_help.log2screen(LG)
+#def layer(pos,dist=1.5,lim=100,eps=0.2):
+#   Zs = pos[:,2]
+#   Z = np.sort(Zs)
+#   dZ = np.diff(Z)
+#   mean_dz,std_dz = np.mean(dZ),np.std(dZ)
+#   bi = len(dZ[dZ>mean_dz+2*std_dz]) +1
+#   hist, bin_edges = np.histogram(Zs,bins=bi-1)
+#   L = [x-bi//2 for x in range(bi+1)]
+#   lays = [ L[np.argmin(np.abs(bin_edges-z))] for z in Zs]
+#   print(lays)
+#   exit()
+#   return lays
+
 @log_help.log2screen(LG)
 def layer(pos,dist=1.5,lim=100,eps=0.2):
    """
     Determine the layer distribution of the atoms (so far only for Z direction)
    """
    LG.info('Guessing the layers')
-   #zs = list(set([r[2] for r in pos]))
    zs = list(set(pos[:,2]))
    lay = [i for i in range(len(zs))]
    aux = []

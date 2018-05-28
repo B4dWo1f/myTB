@@ -44,11 +44,16 @@ class UnitCell(object):
       """
       latt = []
       hs,subh = pasivate(self.pos,sub=self.sub)
-      self.ats = np.append(self.ats,['H' for _ in self.pos])
-      self.pos = np.append(self.pos,hs)
+      self.ats = np.append(self.ats,['H' for _ in hs])
+      aux = []
+      for i in range(pos.shape[0]):
+         aux.append(pos[i,:])
+      for i in range(len(hs)):
+         aux.append(hs[i])
+      self.pos = np.array(aux) #np.append(self.pos,np.array(hs))
       self.sub = np.append(self.sub,subh)
    def multilayer(self,lN):
-      self.ats,self.pos,self.sub = multilayer(self.pos,self.sub,N=lN)
+      self.ats,self.pos,self.sub = multilayer(self.pos,self.ats,self.sub,N=lN)
       #self.center = np.mean(np.array(self.pos),axis=0)
       self.get_geo_info()
    def check(self):
@@ -60,7 +65,11 @@ class UnitCell(object):
       """
       print(len(self.ats))
       print('')
-      for a,r,s in zip(self.ats,self.pos,self.sub):
+      for i in range(len(ats)):
+      #for a,r,s in zip(self.ats,self.pos,self.sub):
+         a = self.ats[i]
+         r = self.pos[i]
+         s = self.sub[i]
          print('%s   %s   %s   %s   %s'%(a,r[0],r[1],r[2],s))
       if fname != None:
          f = open(fname,'w')
@@ -194,7 +203,7 @@ def armchair(N,a=1.4,buck=0.0,show=False):
    ### Plot
    ats = np.array(['C' for _ in pos])
    pos = np.array(pos)
-   subs = np.array(subs)
+   sub = np.array(sub)
    return ats,pos,latt,sub
    #return UnitCell(ats,pos,latt,subs=[])
 
@@ -451,8 +460,9 @@ def multilayer(pos,ats,sub=[],N=2,vec=np.array([1.4,0,1.4])):
       for j in range(len(pos)):
          new_ats.append(ats[j])
          new_pos.append(pos[j]+r)
-         try: new_sub.append(sub[j])
-         except: pass
+         new_sub.append(sub[j])
+         #try: new_sub.append(sub[j])
+         #except: pass
    return new_ats, new_pos, new_sub
 
 
@@ -501,18 +511,19 @@ def pasivate(pos,sub=[],nneig=3):
 
 
 if __name__ == '__main__':
-   A = UnitCell([],[],[],[])
-   A.from_xyz('cells/ac_n1_l1.xyz') #'test.xyz')
-   A.get_geo_info()
-   print(A)
-   A.plot(fname='test.png')
-   A.plot_sublattice()
-
+#   A = UnitCell([],[],[],[])
+#   A.from_xyz('cells/ac_n1_l1.xyz') #'test.xyz')
+#   A.get_geo_info()
+#   print(A)
+#   A.plot(fname='test.png')
+#   A.plot_sublattice()
+#
 #   exit()
-#   ats,pos,latt,subs = armchair(2)
-#   A = UnitCell(ats,pos,latt,subs)
-#   A.pasivate()
-#   A.to_xyz('test.xyz')
+   ats,pos,latt,subs = armchair(3)
+   A = UnitCell(ats,pos,latt,subs)
+   A.pasivate()
+   A.multilayer(2)
+   A.to_xyz('test.xyz')
 #
 #   #print(len(ats)+len(hs))
 #   #print('')

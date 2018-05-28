@@ -4,3 +4,7 @@ SK1.ini
 done.out
 inputs.in
 analysis
+*.pdf
+*.svg
+*.vsz
+

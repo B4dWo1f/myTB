@@ -182,18 +182,12 @@ class Base(object):
       LG.info('Looking for neighbors')
       self.bonds = []
       for A in geo.fneig(self.pos,self.latt,fol=fol):
+         ## A:  (rows,cols),vector, name
          LG.info('Neighbor: %s'%(A[2]))
-         v0,v1 = A[0][0], A[0][1]
+         v0,v1 = A[0][0], A[0][1]   # rows,cols
          data = [1 for _ in range(len(v0))]
          a = coo_matrix( (data,(v0,v1)), shape=(self.Natoms,self.Natoms) )
-         self.bonds.append((a,A[1]))
-      # TODO check symmetic intra
-      #M = self.bonds[0][0].todense()
-      #if not np.allclose(M.transpose(), M):
-      #   msg = 'On site neighbouring matrix is not symmetric.'
-      #   msg += ' Try base.get_neig(nvec) with nvec bigger than %s'%(nvec)
-      #   LG.critical(msg)
-      #   exit('Aborted @ get_neig method')
+         self.bonds.append((a,A[1],A[2]))
       LG.info('Neighbors done')
       return self.bonds
    @log_help.log2screen(LG)
@@ -205,6 +199,9 @@ class Base(object):
         d: distance between vacancies
         alpha: angle (respect to X axis) of the vector between vacancies
         ind: Not implemented
+        dummy: The option dummy includes an infinite on-site energy for the
+               adatom. This option is useful for maintainig the dimension of
+               the Hamiltonian
       """
       ## Get atoms in layer 1 and not connected in layer 0
       #print(len(self.layers),len(self.subs),len(self.INDS))
@@ -233,10 +230,11 @@ class Base(object):
          r = self.pos[indices[0]] + np.array([0,0,1.4])
          LG.info('Adatom in position: %.3f, %.3f, %.3f'%(r[0],r[1],r[2]))
          la = self.elements[-1].layer  # TODO think + 1
-         sub_dict = {'A':1,'B':-1}
-         tcid_bus = {1:'A',-1:'B'}
+         #sub_dict = {'A':1,'B':-1}
+         #tcid_bus = {1:'A',-1:'B'}
          su = -1 * self.elements[-1].sublattice
          if dummy:
+            # Include an adatom with infinite on-site energy
             fake_atoms = deepcopy(self.atoms)
             for k,v in fake_atoms[at].items():
                fake_atoms[at][k] = inf
@@ -362,3 +360,20 @@ class Base(object):
          exit()
       self.ndim = len(self.ATS)  # Hamiltonian dimension
       LG.info('New basis dimension: %s'%(self.ndim))
+
+
+import IO
+def read_basis(fname):
+   fol = '/'.join( fname.split('/')[:-1])+'/'
+   name = fname.split('/')[-1]
+   print('hello')
+   print(fol)
+   print(name)
+   ATS,ORBS = np.loadtxt(fol+name,usecols=(2,3),unpack=True,dtype=bytes)
+   AUX_INDS,INDS,SPIN,SUBS,LAYS = np.loadtxt(fol+name,usecols=(0,1,4,5,6),
+                                                                  unpack=True)
+   xyz = fol+'base_'+name.replace('.basis','.xyz')
+   print(xyz)
+   ats,pos,latt,sublatt = IO.read.xyz(xyz)
+   #def __init__(self, elements=[],latt=[],atoms={},cent=True,dospin=False):
+
