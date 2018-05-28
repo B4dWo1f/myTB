@@ -6,87 +6,12 @@
  this will plot the  spectrum for different electric fields
 """
 
-
 import numpy as np
 import exchange as ex
+import matplotlib.pyplot as plt
 import os
 import sys
 here = os.path.dirname(os.path.realpath(__file__)) + '/'
-
-
-try: fol = sys.argv[1]
-except IndexError: 
-   print('No folder provided')
-   exit()
-
-
-folders = []
-for a in os.walk(fol):
-   folders.append( a[0]+'/' )
-folders = folders[1:]
-folders = sorted(folders,key=lambda x: float(x.split('/')[-2][1:]))
-
-print('Analyzing %s folders'%(len(folders)))
-
-#from scipy.constants import physical_constants
-#import pint
-#
-#U = pint.UnitRegistry()
-#
-#
-### Electron Charge
-#e = physical_constants['atomic unit of charge']
-#e = e[0] * U.parse_expression(e[1])
-#print('e =',e)
-#
-### Atomic stuff
-#rb = physical_constants['Bohr radius']
-#rb = rb[0] * U.parse_expression(rb[1])
-#z0 = 3*rb*0.620*U.angstrom/(0.529*U.angstrom)
-#print('z0 =',z0)
-#
-### Slater-Koster parameter
-#Vsps = 5.58*U.eV
-#print('Vsps =',Vsps)
-#
-### atomic SOC
-#xi = 6 * U.meV
-#print('xi =',xi)
-
-#xxx = (0.01*U.eV*3*Vsps)/(e*z0*xi)
-#print(xxx.to('V/nm'))
-#exit()
-
-X,hyper,gap,gapP = [],[],[],[]
-Xplt,Yplt,YPplt = [],[],[]
-#gapP,gapD,lc,E0 = [],[],[],[]
-for f in folders:
-   #A = ex.Spectrum(f,nv=1)
-   try: A = ex.Spectrum(f,nv=1)
-   except:
-      print('ERROR reading:',f)
-      continue
-   v = A.V_ingap[0,:]
-   vv = np.conj(v) * v
-   X.append(A.elec)
-   hyper.append( vv[-1]*1420)
-   print(A.elec, vv[-1]*1420)
-   gap.append(A.gap)
-   gapP.append(A.gapP)
-   for e,ep in zip(A.E,A.Ep):
-      Xplt.append(A.elec)
-      Yplt.append(e)
-      YPplt.append(ep)
-
-
-
-## Plot spectrums ##############################################################
-import matplotlib.pyplot as plt
-fig1, ax1 = plt.subplots()
-ax1.scatter(Xplt,Yplt,c='r',edgecolors='none')
-ax1.scatter(Xplt,YPplt,c='b',edgecolors='none',alpha=0.7)
-ax1.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
-ax1.set_ylabel('$E$ $(eV)$',fontsize=15)
 
 
 ## Plot hyperfine & gap ########################################################
@@ -128,24 +53,76 @@ def onpick_wrapper(plot):
       except IndexError: pass   #print('no data selected')
    return onpick
 
+################################################################################
+try: fol = sys.argv[1]
+except IndexError: 
+   print('No folder provided')
+   exit()
+
+folders = []
+for a in os.walk(fol):
+   folders.append( a[0]+'/' )
+folders = folders[1:]
+folders = sorted(folders,key=lambda x: float(x.split('/')[-2][1:]))
+
+print('Analyzing %s folders'%(len(folders)))
+
+X,hyper,gap,gapP = [],[],[],[]
+Xplt,Yplt,YPplt = [],[],[]
+#gapP,gapD,lc,E0 = [],[],[],[]
+for f in folders:
+   #A = ex.Spectrum(f,nv=1)
+   try: A = ex.Spectrum(f,nv=1)
+   except:
+      print('ERROR reading:',f)
+      continue
+   v = A.V_ingap[0,:]
+   vv = np.conj(v) * v
+   X.append(A.elec)
+   hyper.append( vv[-1]*1420)
+   print(A.elec, vv[-1]*1420)
+   gap.append(A.gap)
+   gapP.append(A.gapP)
+   for e,ep in zip(A.E,A.Ep):
+      Xplt.append(A.elec)
+      Yplt.append(e)
+      YPplt.append(ep)
+
+## Plot spectrums ##############################################################
 
 my_onpick = onpick_wrapper(plot_exchange)
 my_picker = picker_wrapper()
 
-fig, (ax,ax1) = plt.subplots(2,1,sharex=True)
-line, = ax.plot(X,hyper,'o-',picker=my_picker)
-ax.set_ylim([-1,50])
-ax.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
-ax.set_ylabel('$\mathcal{A}$ $(MHz)$',fontsize=15)
-ax.grid()
+#fig, (ax,ax1,ax2) = plt.subplots(3,1,sharex=True)
+import matplotlib.gridspec as gridspec
+fig = plt.figure()
+gs = gridspec.GridSpec(4, 1)
+ax = plt.subplot(gs[0:2, 0])
+ax1=plt.subplot(gs[2, 0])
+ax2=plt.subplot(gs[3, 0])
 
-#fig1, ax1 = plt.subplots()
-ax1.plot(X,gap,'ro-',picker=my_picker)
-ax1.plot(X,gapP,'k--')
-ax1.set_ylim(ymin=0)
-ax1.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
-ax1.set_ylabel('$\Delta$ $(eV)$',fontsize=15)
+ax.scatter(Xplt,Yplt,c='r',edgecolors='none')
+ax.scatter(Xplt,YPplt,c='b',edgecolors='none',alpha=0.7)
+#ax.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
+ax.set_ylabel('$E$ $(eV)$',fontsize=15)
+
+line, = ax1.plot(X,hyper,'o-',picker=my_picker)
+ax1.set_ylim([-1,65])
+#ax1.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
+ax1.set_ylabel('$\mathcal{A}$ $(MHz)$',fontsize=15)
+
+ax2.plot(X,gap,'ro-',picker=my_picker)
+ax2.plot(X,gapP,'k--')
+ax2.set_ylim(ymin=0)
+ax2.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
+ax2.set_ylabel('$\Delta$ $(eV)$',fontsize=15)
+
+ax.set_xlim([-0.2,0.2])
+ax1.set_xlim([-0.2,0.2])
+ax2.set_xlim([-0.2,0.2])
+ax.grid()
 ax1.grid()
+ax2.grid()
 
 #fig.subplots_adjust(hspace=0)
 fig.canvas.mpl_connect('pick_event', my_onpick)
