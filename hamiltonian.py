@@ -334,13 +334,13 @@ def kinetic(base,hoppings,func=None,coup=1):
    except AttributeError: bonds = base.get_neig()
    if np.linalg.norm(bonds[0][1]) != 0:
       LG.warning('Incorrect order of vectors (0, a1, a2, a1+a2..)')
-   names = ['intra','x','y','xmy','xy']  # XXX fix names!!!
+   #names = [b[-1] for b in bonds]
    iname = 0
    Htot = []
    for ib in range(len(bonds)):
-      nam = names[ib]
+      #nam = names[ib]
+      M,v,nam = bonds[ib]
       LG.info('Doing matrix: %s'%(nam))
-      M,v = bonds[ib]
       #II,JJ,DD = M.row,M.col,M.data
       if np.linalg.norm(v) == 0:  ## Add on-site energies
          II = list(range(len(diag_onsite)))

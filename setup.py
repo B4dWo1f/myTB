@@ -51,13 +51,15 @@ class ham_param(object):
       return msg
 
 class calc_param(object):
-   def __init__(self,bands=False,spectrum=False,nk=100):
+   def __init__(self,bands=False,spectrum=False,DOS=False,nk=100):
       self.bands = bands
       self.spectrum = spectrum
+      self.dos = DOS
       self.nk = nk
    def __str__(self):
       msg = 'Calculations\n'
       msg += '     Bands: %s\n'%(self.bands)
+      msg += '       DOS: %s\n'%(self.dos)
       msg += '  Spectrum: %s\n'%(self.spectrum)
       return msg
 
@@ -181,10 +183,20 @@ def setup(fname='SK1.ini'):
 
 import os
 def compile_fortran(fname):
+   def doit(fname):
+      LG.debug('Backup file (.%s) not found'%(fname))
+      LG.info('Compilando fortran con f2py')
+      os.system('f2py3.5 -c -m %s %s'%(root_fname,fname))
+      LG.info('   ...Compilado fortran con f2py')
+      os.system('cp %s .%s'%(fname,fname))
+      LG.warning('Hidden copy to avoid re-compiling')
    root_fname = '.'.join(fname.split('.')[0:-1])
-   LG.info('Compilando fortran con f2py')
-   os.system('f2py -c -m %s %s'%(root_fname,fname))
-   LG.info('   ...Compilado fortran con f2py')
-   os.system('cp %s .%s'%(fname,fname))
-   LG.warning('Hidden copy to avoid re-compiling')
-
+   if not os.path.exists('.%s'%(fname)): doit(fname)
+   else:
+      LG.debug('Backup file (.%s) is present'%(fname))
+      diff_for = os.popen('diff %s .%s'%(fname,fname)).read()
+      diff_for = diff_for.lstrip().rstrip()
+      diff_for.splitlines()
+      so = os.popen('ls %s.*so 2> /dev/null'%(root_fname)).read()
+      if len(diff_for) > 1 or len(so) == 0: doit(fname)
+      else: LG.info('%s is already compiled'%(fname))

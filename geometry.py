@@ -279,6 +279,7 @@ def vecfromcoef(coef,vecs):
      Return the real vector out of the coeficients(cn) of the vectors of a
      basis(an):   v = c1*a1 + c2*a2 + ... + cn*an
    """
+   if len(coef) != len(vecs): LG.error('Unable to form vector')
    aux = np.array([0.,0.,0.])
    for i in range(len(vecs)):
       aux += coef[i] * vecs[i]
@@ -415,13 +416,14 @@ def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4,force=False):
          LG.info('Read from file: %s'%(fol+names[i]+'.H'))
       except:
          LG.info('Failed. Calculating with fortran')
+         ## Necessary because of f2py problem with allocatable
          nn = num.count_neig(pos,pos+all_vecs[i])
          if nn == 0:
             LG.info('No neighbours in cell %s'%(names[i]))
             continue
          rows,cols = num.dists(pos,pos+all_vecs[i],nn)
-         rows -= 1   # XXX because python counts from 0
-         cols -= 1   #
+         rows -= 1   # because python counts from 0
+         cols -= 1   # because python counts from 0
          aux = np.column_stack((rows,cols))
          if fol != '': np.savetxt(fol+names[i]+'.H',aux,fmt='%d')
          #if fol != '': np.savetxt(fol+names[i]+'.H',(rows,cols),fmt='%d')

@@ -2,13 +2,18 @@
 # -*- coding: UTF-8 -*-
 
 
+## Input file ##################################################################
 import sys
 try: fini = sys.argv[1]
 except IndexError: fini = 'SK1.ini'
+
+## Setup #######################################################################
 import setup
 #FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
 FP,HP,CP,SP,atoms = setup.setup(fini)
-SP.DOspin = True
+#SP.DOspin = False
+#setup.compile_fortran('numeric.f95')
+
 
 ############################### LOGGING #####################################
 import logging
@@ -27,37 +32,15 @@ print(HP)
 print(CP)
 print(SP)
 
-
-## TODO thake this function somewhere else!!
-import os
-def compile_fortran(fname):
-   def doit(fname):
-      LG.debug('Backup file (.%s) not found'%(fname))
-      LG.info('Compilando fortran con f2py')
-      os.system('f2py3.5 -c -m %s %s'%(root_fname,fname))
-      LG.info('   ...Compilado fortran con f2py')
-      os.system('cp %s .%s'%(fname,fname))
-      LG.warning('Hidden copy to avoid re-compiling')
-   root_fname = '.'.join(fname.split('.')[0:-1])
-   if not os.path.exists('.%s'%(fname)): doit(fname)
-   else:
-      LG.debug('Backup file (.%s) is present'%(fname))
-      diff_for = os.popen('diff %s .%s'%(fname,fname)).read()
-      diff_for = diff_for.lstrip().rstrip()
-      diff_for.splitlines()
-      so = os.popen('ls %s.*so 2> /dev/null'%(root_fname)).read()
-      if len(diff_for) > 1 or len(so) == 0: doit(fname)
-      else: LG.info('%s is already compiled'%(fname))
-
-compile_fortran('numeric.f95')
-
 print(' '*18,'-'*40,' '*20)
 
 import IO
 ats,pos,latt,sub = IO.read.xyz(SP.xyz_file)
+latt =[]
 
 
 ## Base
+# TODO make function in base.py
 from basis import Base_Element,Base
 elems = []
 for i in range(len(pos)):
@@ -84,8 +67,8 @@ if SP.vac.N > 0:
 else: IND_vac = []
 
 if SP.ada.N >0:
-   IND_ada = base_dfct.adatom(N=SP.ada.N)
-   base_pris.adatom(N=SP.ada.N, dummy=True)
+   IND_ada = base_dfct.adatom(N=SP.ada.N,at='H1')
+   base_pris.adatom(N=SP.ada.N,at='H1', dummy=True)
 
 
 ## Save basis
@@ -105,6 +88,7 @@ print('     *** Hamiltonian:',time()-told)
 
 LG.info('Check for spin')
 if SP.DOspin:
+   LG.warning('SPIN DOUBLING?')
    base_pris.dospin()
    base_dfct.dospin()
 
@@ -155,6 +139,7 @@ if CP.spectrum:
 print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
+print('All done. Bye!')
 
 exit()
 print('='*80)
