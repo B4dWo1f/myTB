@@ -329,11 +329,14 @@ class Spectrum(object):
          Z = np.where(pos[:,2]>0,1,-1)
          V = v * np.conj(v)
          V = np.bincount(self.Ba.n, weights=V)
-         s = 100/np.sqrt(len(X))
+         s = 1000/np.sqrt(len(X))
          fig, ax = plt.subplots()
          ax.scatter(X,Y,c='k',s=s,edgecolors='none',alpha=0.3,zorder=0)
-         ax.scatter(X,Y,c=Z,s=9000*s*V,edgecolors='none',cmap='rainbow')
+         ax.scatter(X,Y,c=Z,s=900*s*V,edgecolors='none',cmap='rainbow')
+         ax.set_xlim([min(X)-1,max(X)+1])
+         ax.set_ylim([min(Y)-1,max(Y)+1])
          ax.set_aspect('equal')
+         fig.tight_layout()
          plt.show()
 
       def picker_wrapper(maxd=0.075):
@@ -373,16 +376,17 @@ class Spectrum(object):
 
       fig, ax = plt.subplots()
       Xplt = range(len(self.E))
-      ax.scatter(Xplt,self.Ep,c='k', s=150,edgecolors='none',alpha=0.5,
-                                                              label='Pristine')
+     # ax.scatter(Xplt,self.Ep,c='k', s=150,edgecolors='none',alpha=0.5,
+     #                                                         label='Pristine')
       line, = ax.plot(range(len(self.E)),self.E, 'o', picker=my_picker,
                                                               label='Defected')
       ax.scatter(self.inds, self.E_ingap,c='r',s=100,edgecolors='none')
       ax.set_xlim([-1,len(self.E)+1])
       ax.grid()
-      ax.legend(loc=2)
+      #ax.legend(loc=2)
 
       fig.canvas.mpl_connect('pick_event', my_onpick)
+      fig.tight_layout()
       plt.show()
 
    def plot_state(self,inds=[]):   #,ax=None):
@@ -449,5 +453,5 @@ if __name__ == '__main__':
    print(A)
    v = np.conj(A.V_ingap[0]) * A.V_ingap[0]
    v = v.real   # a is real by construction
-   #print('hyper:',A.elec,'',v[-1]*1420)    # elec   hyperfine (MHz)
+   print('hyper:',A.elec,'',v[-1]*1420)    # elec   hyperfine (MHz)
    A.plot_spectrum()
