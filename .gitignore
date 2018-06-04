@@ -1,6 +1,9 @@
 .*
 *.so
-SK1.ini
+*.ini
+*.in
+*.out
+!SK.template.ini
 done.out
 inputs.in
 analysis
