@@ -519,11 +519,13 @@ if __name__ == '__main__':
 #   A.plot_sublattice()
 #
 #   exit()
-   ats,pos,latt,subs = armchair(3)
+   n = 35
+   l = 2
+   ats,pos,latt,subs = armchair(n)
    A = UnitCell(ats,pos,latt,subs)
    A.pasivate()
-   A.multilayer(2)
-   A.to_xyz('test.xyz')
+   if l>1: A.multilayer(l)
+   A.to_xyz('cells/ac_n%s_l%s_H.xyz'%(n,l))
 #
 #   #print(len(ats)+len(hs))
 #   #print('')

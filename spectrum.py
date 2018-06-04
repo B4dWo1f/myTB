@@ -126,5 +126,5 @@ ax2.grid()
 
 #fig.subplots_adjust(hspace=0)
 fig.canvas.mpl_connect('pick_event', my_onpick)
-
+fig.tight_layout()
 plt.show()
