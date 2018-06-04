@@ -8,17 +8,18 @@ import numpy as np
 f_in = 'inputs.in'
 f_done = 'done.out'
 exe = 'main.py'
-f_tmp =  'SK1.template.ini'
-f_ini = 'SK1.ini'
+f_tmp =  'SK.template.ini'
+f_ini = 'SK.ini'
 STOP_file = 'STOP'
 
 
 def modify(template,inp,modified):
    # alpha, dist, elec
    #x,y,z = inp[0],inp[1],inp[2]
-   z = inp[0]
-   com = 'sed \'s/XXelecXX/%s/\' %s '%(z,template)
-   #com += ' | sed \'s/XXdXX/%s/\''%(y)
+   x = inp[0]
+   #y = inp[1]
+   com = 'sed \'s/XXelecXX/%s/g\' %s '%(x,template)
+   #com += ' | sed \'s/XXVspsXX/%s/\''%(y)
    #com += ' | sed \'s/XXalphaXX/%s/\''%(x)
    com += ' > %s'%(modified)
    print('-'*80)
@@ -44,3 +45,9 @@ while True:
       f.write('\n')
    f.close()
    if os.path.isfile(STOP_file): exit()
+
+
+#try:
+#   import mailator
+#   mailator.send_mail('Calculation done',subj='FINISHED')
+#except: pass
