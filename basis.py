@@ -191,7 +191,7 @@ class Base(object):
       LG.info('Neighbors done')
       return self.bonds
    @log_help.log2screen(LG)
-   def adatom(self,l=1,N=1,at='H',dummy=False,inf=1e6):
+   def adatom(self,l=1,N=1,at='H',dummy=False,inf=1e6,hollow=True):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings
@@ -216,8 +216,12 @@ class Base(object):
       lenb = len(self.find_neig(sub_atsB[0]))
 
       ## sub_ats contains the hollow atoms in layer 1
-      if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
-      else: sub_ats = sub_atsB  # indices of hollow atoms
+      if hollow:
+         if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
+         else: sub_ats = sub_atsB  # indices of hollow atoms
+      else:  #XXX check
+         if lena > lenb: sub_ats = sub_atsA  # indices of hollow atoms
+         else: sub_ats = sub_atsB  # indices of hollow atoms
 
       ## Select atoms for defects
       if N == 1: ## 1 defect
