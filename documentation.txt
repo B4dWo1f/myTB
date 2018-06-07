@@ -1,0 +1,23 @@
+This program calculates band structures (and eigenfunctions) of different physical systems at the Tight-Binding approximation. It also provides a number of tools to analyze the results.
+
+## Cells module
+The script islands.py provide a set of functions that return 4 elements:
+ - atoms: array of atomic elements of each site in the system.
+ - positions: array of positions of the atoms.
+ - lattice vectors: list of lattice vectors of the system. Empty list if the system is 0-dimensional.
+ - sublattice: array of the corresponding sublattice for each atom, in the case of bipartite systems. If the sublattice cannot be calculated, it will be an empty list.
+
+
+## Main
+This program considers two similar Hamiltonans for the same system, one which is prisitine, in the sense of being translationally invariant in the case of dimensions higher than 0, or just defect-free in the 0-D cases.
+
+This dual calculation allows the calculation of properties of single defects in infinite systems via the Green's function embedding technique.
+
+Steps:
+ - read the config file
+ - setup system need and folder structructure
+ - Build Basis
+ - Build Hamiltonian
+ - Perform calculations
+ - Store results
+ - (analyze results)

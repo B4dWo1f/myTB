@@ -6,7 +6,6 @@
 !SK.template.ini
 done.out
 inputs.in
-analysis
 *.pdf
 *.svg
 *.vsz
