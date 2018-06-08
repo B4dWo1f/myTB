@@ -181,10 +181,16 @@ def setup(fname='SK1.ini'):
 
 import os
 def compile_fortran(fname):
+   """
+     fname is the fortran file with extension, ie: numeric.f95
+   """
    root_fname = '.'.join(fname.split('.')[0:-1])
    LG.info('Compilando fortran con f2py')
-   os.system('f2py -c -m %s %s'%(root_fname,fname))
+   os.system('f2py3 -c -m %s %s'%(root_fname,fname))
    LG.info('   ...Compilado fortran con f2py')
    os.system('cp %s .%s'%(fname,fname))
    LG.warning('Hidden copy to avoid re-compiling')
 
+
+if __name__ == '__main__':
+   compile_fortran('numeric.f95')
