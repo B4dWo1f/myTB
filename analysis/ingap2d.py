@@ -7,14 +7,20 @@ from exchange import Spectrum
 
 #R = '../../Documents/data/space_parameters/bi/'
 #tail = 'OUTs/4orb/ac/n25_l2/nv0_na1/d0.0/alpha0.0/e0.0/'
-R = '../../Documents/data/space_parameters/mono/'
-tail = 'OUTs/4orb/ac/n25_l1/nv0_na1/d0.0/alpha0.0/e0.0/'
+R = '../../../Documents/data/space_parameters/bi/'
+R = '../../../Documents/data/space_parameters/e-0.2/'
+tail = 'OUTs/4orb/ac/n25_l2/nv0_na1/d0.0/alpha0.0/e-0.2/'
+
+fout = 'datos.dat'
+## Reset file
+f = open(fout,'w')
+f.close()
 
 fols = os.popen('ls %s'%(R)).read().splitlines()
 Vsss,Vsps,E0,A = [],[],[],[]
 for f in fols:
    s,p = map(float,f.split('_'))
-   if p>0.0: # and s>0.0:
+   if True: #p>0.0: # and s>0.0:
       #print(R + f)
       try: S = Spectrum(R + f + '/' + tail   )
       except FileNotFoundError: continue
@@ -28,6 +34,8 @@ for f in fols:
       hyper = v[-1] * 1420
       A.append(hyper)
       print(s,'',p,'',e,'',hyper)
+      with open(fout,'a') as f:
+         f.write(str(s)+'  '+str(p)+'  '+str(e)+'  '+str(hyper)+'\n')
 
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots()

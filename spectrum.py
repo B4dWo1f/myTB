@@ -107,7 +107,7 @@ ax.scatter(Xplt,YPplt,c='b',edgecolors='none',alpha=0.7)
 ax.set_ylabel('$E$ $(eV)$',fontsize=15)
 
 line, = ax1.plot(X,hyper,'o-',picker=my_picker)
-ax1.set_ylim([-1,65])
+ax1.set_ylim(ymin=0) #[-1,65])
 #ax1.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
 ax1.set_ylabel('$\mathcal{A}$ $(MHz)$',fontsize=15)
 
