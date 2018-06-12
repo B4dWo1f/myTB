@@ -105,10 +105,15 @@ ax = plt.subplot(gs[0:2, 0])
 ax1=plt.subplot(gs[2, 0])
 ax2=plt.subplot(gs[3, 0])
 
-ax.scatter(Xplt,Yplt,c='r',s=50,edgecolors='none')
-ax.scatter(Xplt,YPplt,c='b',s=20,edgecolors='none',alpha=0.7)
+ax.scatter(Xplt,Yplt,c='r',edgecolors='none')
+ax.scatter(Xplt,YPplt,c='b',edgecolors='none',alpha=0.7)
 #ax.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
 ax.set_ylabel('$E$ $(eV)$',fontsize=15)
+if 0.0 in X:
+   ind = X.index(0.0)
+   confinement = gapP[ind]
+   ll = confinement/2    # /2 ??
+   ax.axvspan(-ll,ll, alpha=0.3, color='black')
 
 line, = ax1.plot(X,hyper,'o-',picker=my_picker)
 ax1.set_ylim(ymin=0) #[-1,65])

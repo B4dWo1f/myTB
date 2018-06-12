@@ -286,14 +286,12 @@ def build_ham(base,hp,tag,dospin=False):
    if hp.lSO != 0.0:
       LG.info('Spin-Orbit coupling: %s'%(hp.lSO))
       Htot.append( soc(base,hp.lSO) )
-   if hp.lelec != 0.0:
+   if hp.lelec != 0.0: ########################## layer on-site
       LG.info('Electric field: %s'%(hp.lelec))
-      # layer on-site
       Htot.append( electric(base,hp.lelec) )
-      ## Rashba
-      #LG.info('initiate rashba')
-      #Htot.append( pseudo_rashba(base,hp.lrashba) )
-      #LG.info('Rashba done')
+   if  hp.lrashba != 0.0: ####################### Rashba
+      LG.info('Rashba coupling')
+      Htot.append( pseudo_rashba(base,hp.lrashba) )
    LG.info('Hamiltonian %s ready'%(tag))
    H_pris = Hamiltonian(Htot,tag=tag,dospin=dospin)
    H_pris.names()
@@ -540,23 +538,43 @@ def electric(base,lElec):
 
 @log_help.log2screen(LG)
 def pseudo_rashba(base,lElec):
-   ## TODO this creates a dense matrix. it WILL explode for big systems
-   # Replace the initialization with just rows,cols and data
+   ## TODO use array slices to select the indices rather than running through
+   # all the orbitals
    LG.info('Doing matrix for Rashba')
    v = np.array([0.,0.,0.])
    ndim = len(base.INDS)
    #M = np.matrix(np.zeros((ndim,ndim)))
+   inds = list(range(len(base.ats)))
    II,JJ = [],[]
-   for i in range(len(base.ORBS)):
-      it = base.ORBS[i]
-      for j in range(len(base.ORBS)):
-         jt = base.ORBS[j]
-         if (it=='s' and jt=='pz') or (it=='pz' and jt=='s'):
-            #M[i,j] = 1
-            II.append(i)
-            JJ.append(j)
+   for i_at in inds:   # Rashba is only intra-atomic
+      v_orbs = base.ORBS[base.INDS==i_at]
+      v_inds = base.AUX_INDS[base.INDS==i_at]
+      s = v_orbs=='s'
+      pz = v_orbs=='pz'
+      inds_s = v_inds[s]
+      inds_pz = v_inds[pz]
+      if len(inds_s) > 0 and len(inds_pz) > 0:
+         for i in inds_s:
+            for j in inds_pz:
+               II.append(i)
+               JJ.append(j)
+               II.append(j)
+               JJ.append(i)
    data = [1 for _ in II]
    H_aux = csr_matrix( (data,(II,JJ)), shape=(ndim,ndim))
-   LG.info('... added Rashba term')
+   #II,JJ = [],[]
+   #for i in range(len(base.ORBS)):
+   #   it = base.ORBS[i]
+   #   for j in range(len(base.ORBS)):
+   #      jt = base.ORBS[j]
+   #      if (it=='s' and jt=='pz') or (it=='pz' and jt=='s'):
+   #         #M[i,j] = 1
+   #         II.append(i)
+   #         JJ.append(j)
+   ##   print(i,'/',len(base.ORBS),'  (%s)'%(len(II)))
+   #data = [1 for _ in II]
+   #H_aux = csr_matrix( (data,(II,JJ)), shape=(ndim,ndim))
+   #LG.info('... added Rashba term')
+   ##print('--------------')
    return HTerm(H_aux,v,lElec,name='rashba')
 

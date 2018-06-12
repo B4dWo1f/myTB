@@ -36,13 +36,14 @@ class fol_param(object):
          os.system('mkdir -p %s'%(f))
 
 class ham_param(object):
-   def __init__(self,lzee=np.array((0,0,0)),lSO=0.,lmass=0.,lelec=0.):
+   def __init__(self,lzee=np.array((0,0,0)),lSO=0.,lmass=0.,lelec=0.,lrashba=0.):
       self.lzee = lzee
       self.lSO = lSO
       self.lmass = lmass
       self.lelec = lelec
-      self.lrashba = lelec * 1e-4 #XXX testing   #50V/300nm --> 0.011e-3 eV
-                                  # From Phys. Rev. B 74, 165310 (2006)
+      self.lrashba = lelec * lrashba #XXX testing
+                                     # From Phys. Rev. B 74, 165310 (2006)
+                                     #    50V/300nm --> 0.011e-3 eV
    def __str__(self):
       msg = 'Hamiltonian parameters\n'
       msg += '             Zeeman: '

@@ -4,6 +4,8 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['font.size'] = 15
 
 
 def find_nearest(array,value):
