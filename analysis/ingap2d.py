@@ -8,8 +8,8 @@ from exchange import Spectrum
 #R = '../../Documents/data/space_parameters/bi/'
 #tail = 'OUTs/4orb/ac/n25_l2/nv0_na1/d0.0/alpha0.0/e0.0/'
 R = '../../../Documents/data/space_parameters/bi/'
-R = '../../../Documents/data/space_parameters/e-0.2/'
-tail = 'OUTs/4orb/ac/n25_l2/nv0_na1/d0.0/alpha0.0/e-0.2/'
+R = '../../../Documents/data/space_parameters/e0.2/'
+tail = 'OUTs/4orb/ac/n25_l2/nv0_na1/d0.0/alpha0.0/e0.2/'
 
 fout = 'datos.dat'
 ## Reset file

@@ -9,10 +9,11 @@
 import numpy as np
 import exchange as ex
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import os
 import sys
 here = os.path.dirname(os.path.realpath(__file__)) + '/'
-
+mpl.rcParams['font.size'] = 15
 
 ## Plot hyperfine & gap ########################################################
 def plot_exchange(e):
@@ -69,6 +70,7 @@ print('Analyzing %s folders'%(len(folders)))
 
 X,hyper,gap,gapP = [],[],[],[]
 Xplt,Yplt,YPplt = [],[],[]
+SP,SL = [], []
 #gapP,gapD,lc,E0 = [],[],[],[]
 for f in folders:
    #A = ex.Spectrum(f,nv=1)
@@ -78,6 +80,8 @@ for f in folders:
       continue
    v = A.V_ingap[0,:]
    vv = np.conj(v) * v
+   SL.append(A.SL_eig[0])
+   SP.append(A.SP_eig[0])
    X.append(A.elec)
    hyper.append( vv[-1]*1420)
    print(A.elec, vv[-1]*1420)
@@ -101,8 +105,8 @@ ax = plt.subplot(gs[0:2, 0])
 ax1=plt.subplot(gs[2, 0])
 ax2=plt.subplot(gs[3, 0])
 
-ax.scatter(Xplt,Yplt,c='r',edgecolors='none')
-ax.scatter(Xplt,YPplt,c='b',edgecolors='none',alpha=0.7)
+ax.scatter(Xplt,Yplt,c='r',s=50,edgecolors='none')
+ax.scatter(Xplt,YPplt,c='b',s=20,edgecolors='none',alpha=0.7)
 #ax.set_xlabel('$\lambda_E$ $(eV)$',fontsize=15)
 ax.set_ylabel('$E$ $(eV)$',fontsize=15)
 
@@ -127,4 +131,14 @@ ax2.grid()
 #fig.subplots_adjust(hspace=0)
 fig.canvas.mpl_connect('pick_event', my_onpick)
 fig.tight_layout()
+
+
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(X,SL,label='layer')
+ax.plot(X,SP,label='sublatt')
+ax.set_ylim([-1,1])
+ax.grid()
+ax.legend()
+plt.show()
 plt.show()
