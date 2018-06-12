@@ -288,7 +288,12 @@ def build_ham(base,hp,tag,dospin=False):
       Htot.append( soc(base,hp.lSO) )
    if hp.lelec != 0.0:
       LG.info('Electric field: %s'%(hp.lelec))
+      # layer on-site
       Htot.append( electric(base,hp.lelec) )
+      ## Rashba
+      #LG.info('initiate rashba')
+      #Htot.append( pseudo_rashba(base,hp.lrashba) )
+      #LG.info('Rashba done')
    LG.info('Hamiltonian %s ready'%(tag))
    H_pris = Hamiltonian(Htot,tag=tag,dospin=dospin)
    H_pris.names()
@@ -538,14 +543,20 @@ def pseudo_rashba(base,lElec):
    ## TODO this creates a dense matrix. it WILL explode for big systems
    # Replace the initialization with just rows,cols and data
    LG.info('Doing matrix for Rashba')
-   ndim = base.ndim
    v = np.array([0.,0.,0.])
-   M = np.matrix(np.zeros((ndim,ndim)))
+   ndim = len(base.INDS)
+   #M = np.matrix(np.zeros((ndim,ndim)))
+   II,JJ = [],[]
    for i in range(len(base.ORBS)):
       it = base.ORBS[i]
       for j in range(len(base.ORBS)):
          jt = base.ORBS[j]
          if (it=='s' and jt=='pz') or (it=='pz' and jt=='s'):
-            M[i,j] = 1
+            #M[i,j] = 1
+            II.append(i)
+            JJ.append(j)
+   data = [1 for _ in II]
+   H_aux = csr_matrix( (data,(II,JJ)), shape=(ndim,ndim))
    LG.info('... added Rashba term')
-   return HTerm(csr_matrix(M),v,lElec,name='rashba')
+   return HTerm(H_aux,v,lElec,name='rashba')
+

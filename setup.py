@@ -41,6 +41,8 @@ class ham_param(object):
       self.lSO = lSO
       self.lmass = lmass
       self.lelec = lelec
+      self.lrashba = lelec * 1e-4 #XXX testing   #50V/300nm --> 0.011e-3 eV
+                                  # From Phys. Rev. B 74, 165310 (2006)
    def __str__(self):
       msg = 'Hamiltonian parameters\n'
       msg += '             Zeeman: '
