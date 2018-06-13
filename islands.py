@@ -63,6 +63,7 @@ class UnitCell(object):
       """
         Save the info about the UCell to a file in extended xyz format
       """
+      #TODO use IO.write.xyz
       print(len(self.ats))
       print('')
       for i in range(len(ats)):
@@ -73,7 +74,11 @@ class UnitCell(object):
          print('%s   %s   %s   %s   %s'%(a,r[0],r[1],r[2],s))
       if fname != None:
          f = open(fname,'w')
-         f.write(str(len(self.ats))+'\n\n')
+         f.write(str(len(self.ats))+'\n')
+         ## Write lattice vectors
+         for v in latt:
+            f.write('[%s,%s,%s]'%(v[0],v[1],v[2]))
+         f.write('\n')
          for a,r,s in zip(self.ats,self.pos,self.sub):
             f.write('%s   %s   %s   %s   %s\n'%(a,r[0],r[1],r[2],s))
          f.close()
@@ -263,6 +268,30 @@ def zigzag(N,a=1.4,buck=0.0,show=False):
    return ats,pos,latt,sub
    #return UnitCell(ats,pos,latt,subs=[])
 
+
+def kagome(N,a=1.4,buck=0.0,cent=True,show=False):
+   """
+   A Kagome lattice is not bipartite so no sublattice will be returned
+   """
+   if N != 1:
+      print('WARNING: N!=1 not implemented yet. Using N=1 instead')
+      N = 1
+   ap = np.sqrt(3)/2.   # mathematical constant
+   brick = [np.array([-a/2,0,0]),
+            np.array([ a/2,0,0]),
+            np.array([0,r3*a/2,0])]
+   e=1.
+   vectors = [e*np.array([2*a,0,0]),
+              e*np.array([a,r3*a,0])]
+   pos = []
+   for i in range(N):
+      for j in range(N):
+         for ir in range(len(brick)):
+            r = brick[ir]
+            p = r + i*vectors[0] + j*vectors[1]
+            pos.append(p)
+   ats = np.array(['C' for _ in pos])
+   return ats,pos,latt,None   # No sublattice
 
 def simple(N,a=1.4,buck=0.0,cent=True,show=False):
    """
@@ -511,83 +540,12 @@ def pasivate(pos,sub=[],nneig=3):
 
 
 if __name__ == '__main__':
-#   A = UnitCell([],[],[],[])
-#   A.from_xyz('cells/ac_n1_l1.xyz') #'test.xyz')
-#   A.get_geo_info()
-#   print(A)
-#   A.plot(fname='test.png')
-#   A.plot_sublattice()
-#
-#   exit()
    n = 35
    l = 2
-   ats,pos,latt,subs = armchair(n)
-   A = UnitCell(ats,pos,latt,subs)
-   A.pasivate()
-   if l>1: A.multilayer(l)
-   A.to_xyz('cells/ac_n%s_l%s_H.xyz'%(n,l))
-#
-#   #print(len(ats)+len(hs))
-#   #print('')
-#   #for a,p,s in zip(ats,pos,subs):
-#   #   print(a,p[0],p[1],p[2],s)
-#   #for p,s in zip(hs,subh):
-#   #   print('H',p[0],p[1],p[2],s)
-#
-#   exit()
-#   ## Read island type, size and layers from standard input  (TODO argparse)
-#   # Usage: python islands.py armchair 20 2  ---> armchair island 20x20 bilayer
-#   import sys
-#   pas = False
-#   try: func = sys.argv[1]
-#   except:
-#      print('Type of unit cell not specified.')
-#      print('Available unit cells:')
-#      print('   - simple      - armchair')
-#      print('   - zigzag      - zigzag_triangle')
-#      print('   - Mullen')
-#      print('\nExample of usage:')
-#      print('python islands.py armchair 3 1')
-#      exit()
-#   try: N = int(sys.argv[2])
-#   except IndexError:
-#      print('WARNING: Supercell index not specified. Assumed 0')
-#      N = 0
-#   try: lN = int(sys.argv[3])
-#   except IndexError:
-#      print('WARNING: Multilayer index not specified. Assumed 1')
-#      lN = 1
-#
-#   ##Setup the proper function
-#   funcs = [armchair, zigzag, zigzag_triangle,simple,mullen]
-#   funcs_names = [f.__name__ for f in funcs]
-#   funcs = dict(zip(funcs_names,funcs))
-#   acronym = {'armchair':'ac','zigzag':'zz','zigzag_triangle':'zzt', # islands
-#              'simple':'simple', 'mullen':'mullen'}
-#   try: func = funcs[func]
-#   except KeyError:
-#      print('Requested geometry (%s) not implemented'%(func))
-#      exit()
-#
-#   ##Do the calculation
-#   print('Using funcion',func.__name__,'with index',N)
-#   ats,pos,latt,sub = func(N)
-#
-#   ## Pasivation
-#   if pas:
-#      hs,subh = pasivate(pos,sub=sub)
-#      pos += hs
-#      ats += ['H' for _ in hs]
-#      sub += subh
-#
-#   ## Multilayer
-#   if lN > 1:
-#      ats,pos,sub = multilayer(pos,sub,N=lN)
-#
-#   if pas: nam = acronym[func.__name__]+'_n%s_l%s_H.xyz'%(N,lN)
-#   else: nam = acronym[func.__name__]+'_n%s_l%s.xyz'%(N,lN)
-#
-#   C = np.mean(pos,axis=0)
-#   for i in range(len(pos)):
-#      pos[i] -= C
-#   pos2xyz(pos,latt,at=ats,sub=sub,fname=nam)
+   for n in range(0,50):
+      for l in [2]:
+         ats,pos,latt,subs = armchair(n)
+         A = UnitCell(ats,pos,latt,subs)
+         #A.pasivate()
+         if l>1: A.multilayer(l)
+         A.to_xyz('cells/ac_n%s_l%s.xyz'%(n,l))
