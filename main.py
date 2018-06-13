@@ -36,7 +36,7 @@ print(' '*18,'-'*40,' '*20)
 
 import IO
 ats,pos,latt,sub = IO.read.xyz(SP.xyz_file)
-latt =[]
+#latt =[]
 
 
 ## Base
@@ -52,7 +52,6 @@ base = Base(elems,latt,atoms=atoms) #,cent=False)
 base.get_neig(fol=FP.ham)
 base.get_sublattice(sub)
 base.get_layer()
-
 
 
 LG.info('Duplicating basis')
@@ -109,9 +108,9 @@ if CP.bands:
       points = geo.get_points(base_pris.recip)
       points = [points[0],points[6],points[9], points[0]]
       path = geo.recorrido(points,CP.nk)
-      LG.debug('Bands Pristine')
-      I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
-      LG.info('Bands Pristine done')
+      #LG.debug('Bands Pristine')
+      #I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
+      #LG.info('Bands Pristine done')
       LG.debug('Bands Defected')
       H_dfct.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Defected done')

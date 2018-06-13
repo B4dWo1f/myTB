@@ -407,7 +407,7 @@ def mullen(Nx,Ny=4,pas=False):
    #sub += subh
    ats = np.array(['C' for _ in pos])
    pos = np.array(pos)
-   subs = np.array(subs)
+   sub = np.array(sub)
    return ats,pos,[],sub
    #return UnitCell(ats,pos,latt,subs=[])
 
