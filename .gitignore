@@ -9,4 +9,4 @@ inputs.in
 *.pdf
 *.svg
 *.vsz
-
+cells/*.xyz

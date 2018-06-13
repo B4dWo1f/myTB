@@ -11,44 +11,47 @@ import log_help
 LG = logging.getLogger(__name__)
 
 eps = 1e-5
-###################################
-def Hamil(Hlist,k,chk=True):
-   """
-     Hlist: list of HTerms (class) which contains the name of the element,
-            the coupling, the matrix and the exponential
-     k: np.array k point in which we want to evaluate the hamiltonian
-   *** Assumes only intra,x,y,xy terms are provided
-   """
-   Hamiltoniano = np.matrix(np.zeros(Hlist[0].mat.shape,dtype=complex))
-   for Hterm in Hlist:
-      l = Hterm.coup
-      M = Hterm.mat #.todense()   # XXX
-      v = Hterm.exp
-      if np.linalg.norm(v) != 0.:
-         Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
-         Hamiltoniano += l * M.H * np.exp(-1.j*np.dot(k,-v))
-      else: Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
-   if chk:      # Check for Hermiticity
-      A = Hamiltoniano-Hamiltoniano.H
-      if np.allclose(A,np.zeros(A.shape,dtype=complex)): pass
-      else:
-         msg = 'Hamiltonian is not hermitian H(%.2f,%.2f,%.2f)'%(k[0],k[1],k[2])
-         LG.critical(msg)
-         sys.exit(1)
-   return Hamiltoniano
-###################################
+####################################
+#def Hamil(Hlist,k,chk=True):
+#   """
+#     Hlist: list of HTerms (class) which contains the name of the element,
+#            the coupling, the matrix and the exponential
+#     k: np.array k point in which we want to evaluate the hamiltonian
+#   *** Assumes only intra,x,y,xy terms are provided
+#   """
+#   Hamiltoniano = np.matrix(np.zeros(Hlist[0].mat.shape,dtype=complex))
+#   for Hterm in Hlist:
+#      l = Hterm.coup
+#      M = Hterm.mat #.todense()   # XXX
+#      v = Hterm.exp
+#      if np.linalg.norm(v) != 0.:
+#         Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
+#         Hamiltoniano += l * M.H * np.exp(-1.j*np.dot(k,-v))
+#      else: Hamiltoniano += l * M * np.exp(-1.j*np.dot(k,v))
+#   if chk:      # Check for Hermiticity
+#      A = Hamiltoniano-Hamiltoniano.H
+#      if np.allclose(A,np.zeros(A.shape,dtype=complex)): pass
+#      else:
+#         msg = 'Hamiltonian is not hermitian H(%.2f,%.2f,%.2f)'%(k[0],k[1],k[2])
+#         LG.critical(msg)
+#         sys.exit(1)
+#   return Hamiltoniano
+####################################
 
-def diagon(Htot,K,Op,sigma=0,n=0):
-   """ Full diagonalization of the Hamiltonian for a given k """
-   kx,ky,kz = K
-   H = Hamil(Htot,[kx,ky,kz])
-   if Op : return np.linalg.eigh(H)
-   else: return np.linalg.eigvalsh(H)
+#def diagon(Htot,K,Op,sigma=0,n=0):
+#   """ Full diagonalization of the Hamiltonian for a given k """
+#   kx,ky,kz = K
+#   H = Hamil(Htot,[kx,ky,kz])
+#   if Op : return np.linalg.eigh(H)
+#   else: return np.linalg.eigvalsh(H)
 
-def diagon_window(Htot,K,Op,sigma=0,n=5):
-   """ Diagonalize the hamiltonian for a given k in a window of energy """
+def diagon_window(Hm,K,Op,sigma=0,n=5):
+   """ Diagonalize the hamiltonian for a given k in a window of energy
+   Hk is a function H(k)
+   """
    kx,ky,kz = K
-   H = Hamil(Htot,[kx,ky,kz])
+   #H = Hamil(Htot,[kx,ky,kz])
+   H = Hm.get_k(K)
    n = min([H.shape[0]-2,n])  # Protection for not enough eigvals
    if Op: return eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=True)
    else: return eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=False)
@@ -147,12 +150,15 @@ def bandsPP2D(RECORRIDO,Htot,ind=0,ncpus=None,eps=0.00001):
 
 
 
-def bands(RECORRIDO,Htot,Op=False):
+def bands(RECORRIDO,H,Op=False):
+   """
+      H is a Hamitlonian object
+   """
    X, Y, Z = [], [], []
    cont=0
    for k in RECORRIDO:
       if Op:
-        eig, eigvec = diagon(Htot,k,Op)
+        eig, eigvec = diagon(H,k,Op)
         eigvec = eigvec.transpose()
         for eigval,eigvec in zip(eig,eigvec):
            v1 = eigvec
@@ -161,7 +167,7 @@ def bands(RECORRIDO,Htot,Op=False):
            Y.append(eigval.real)
            Z.append(v1)
       else:
-        eig = diagon(Htot,k,Op)
+        eig = diagon_window(H,k,Op)
         for eigval in eig:
            X.append(cont)
            Y.append(eigval.real)
