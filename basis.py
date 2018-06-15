@@ -205,6 +205,7 @@ class Base(object):
       """
       ## Get atoms in layer 1 and not connected in layer 0
       #print(len(self.layers),len(self.subs),len(self.INDS))
+      # XXX WARNING this algorithm fails for some cells!!!!
       l = max(set(self.layers))
       LG.info('Vacancies introduced in layer: %s'%(l))
       aux = range(max(self.INDS)+1)   #+1 because python starts in 0
@@ -253,7 +254,7 @@ class Base(object):
          self.get_sublattice()
       return indices
    @log_help.log2screen(LG)
-   def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1e9):
+   def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1e9,hollow=True):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings
@@ -264,6 +265,7 @@ class Base(object):
       """
       ## Get atoms in layer 1 and not connected in layer 0
       #print(len(self.layers),len(self.subs),len(self.INDS))
+      # XXX WARNING this algorithm fails for some cells!!!!
       l = max(set(self.layers))
       LG.info('Vacancies introduced in layer: %s'%(l))
       aux = range(max(self.INDS)+1)   #+1 because python starts in 0
@@ -274,9 +276,16 @@ class Base(object):
       sub_atsB = sub_atsB[sub_atsB>0]
       lenb = len(self.find_neig(sub_atsB[0]))
 
-      ## sub_ats contains the hollow atoms in layer 1
-      if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
-      else: sub_ats = sub_atsB  # indices of hollow atoms
+      ### sub_ats contains the hollow atoms in layer 1
+      #if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
+      #else: sub_ats = sub_atsB  # indices of hollow atoms
+      if hollow:
+         if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
+         else: sub_ats = sub_atsB  # indices of hollow atoms
+      else:  #XXX check
+         if lena > lenb: sub_ats = sub_atsA  # indices of hollow atoms
+         else: sub_ats = sub_atsB  # indices of hollow atoms
+
 
       ## Select atoms for defects
       if N == 1: ## 1 defect

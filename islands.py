@@ -335,7 +335,7 @@ def simple(N,a=1.4,buck=0.0,cent=True,show=False):
    if show: plot_cell(pos,latt,tit='Simple Cell %sx%s'%(N,N))
    ats = np.array(['C' for _ in pos])
    pos = np.array(pos)
-   subs = np.array(subs)
+   sub = np.array(sub)
    return ats,pos,latt,sub
    #return UnitCell(ats,pos,latt,subs=[])
 

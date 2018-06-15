@@ -146,10 +146,10 @@ class Hamiltonian(object):
    def get_bands(self,path,Op=False,sigma=None,k=None,show=False,ncpus=4,
                                                                   folder='./'):
       if not isinstance(Op,bool):
-         LG.info('Bands without eigevectors')
+         LG.info('Bands with eigevectors')
          Opp=True
       else:
-         LG.info('Bands with eigevectors')
+         LG.info('Bands without eigevectors')
          Opp = Op
       #X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
       X,Y,Z = bands.bands(path,self,Op=Opp) #,sigma=sigma,n=k,ncpus=ncpus)

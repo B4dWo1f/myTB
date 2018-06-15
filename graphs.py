@@ -6,6 +6,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib import gridspec
 from itertools import product 
 import numpy as np
+import geometry as geo
 #import util as ut
 import logging
 LG = logging.getLogger(__name__)
@@ -114,7 +115,7 @@ def UCell(pos,latt=[],ax=None,tit=None,show=False):
    sy = 2* sx
    for i in range(len(pos)):
       r = pos[i]
-      ax.text(r[0]+sx,r[1]+sy, str(i)) #, fontsize=20,bbox={'facecolor':'white', 'alpha':0.7, 'pad':5})
+      #ax.text(r[0]+sx,r[1]+sy, str(i)) #, fontsize=20,bbox={'facecolor':'white', 'alpha':0.7, 'pad':5})
    ax.scatter(X,Y,c='k',s=100,edgecolors='none')
    LG.debug('Plotted %s atoms in the unitcell'%(len(pos)))
    ## Plot neighbouring cells
@@ -191,10 +192,11 @@ def bands(X,Y,Z,show=False):
    gs = gridspec.GridSpec(1, 1)
    fig.subplots_adjust(wspace=0.,hspace=0.0)   
    ax = plt.subplot(gs[0,0])  # Original plot
-   ax.scatter(X,Y,c=Z,s=20,cmap=my_cmap,edgecolors='none')
+   #ax.scatter(X,Y,c=Z,s=20,edgecolors='none')
+   ax.scatter(X,Y,s=20,edgecolors='none')
    ax.grid()
    ax.set_xlim([min(X),max(X)])
-   ax.set_ylim([-10,10])
+   #ax.set_ylim([-10,10])
    if show:
       plt.tight_layout()
       plt.show()
@@ -257,3 +259,20 @@ def spectrum(Es,Cs=[],ax=None,TOL=1e-5,Ef=0.0,y0=-10,y1=10,vb=False,show=False):
    ax.set_xticklabels([])
    ax.set_ylabel('$E$ $(eV)$',fontsize=20)
    if show: plt.show()
+
+if __name__ == '__main__':
+   import sys
+   try: fname = sys.argv[1]
+   except IndexError:
+      print('File not specified')
+      exit()
+   print('Your file:')
+   ext = fname.split('.')[-1]
+   import IO
+   if ext == 'xyz':
+      _,pos,latt,_ = IO.read.xyz(fname)
+      UCell(pos,latt,show=True)
+   elif ext == 'bands':
+      X,Y,Z = IO.read.bands(fname)
+      bands(X,Y,Z,show=True)
+

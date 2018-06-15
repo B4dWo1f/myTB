@@ -38,12 +38,13 @@ eps = 1e-5
 #   return Hamiltoniano
 ####################################
 
-#def diagon(Htot,K,Op,sigma=0,n=0):
-#   """ Full diagonalization of the Hamiltonian for a given k """
-#   kx,ky,kz = K
-#   H = Hamil(Htot,[kx,ky,kz])
-#   if Op : return np.linalg.eigh(H)
-#   else: return np.linalg.eigvalsh(H)
+def diagon(Hm,K,Op,sigma=0,n=0):
+   """ Full diagonalization of the Hamiltonian for a given k """
+   kx,ky,kz = K
+   #H = Hamil(Htot,[kx,ky,kz])
+   H = Hm.get_k(K).todense()
+   if Op : return np.linalg.eigh(H)
+   else: return np.linalg.eigvalsh(H)
 
 def diagon_window(Hm,K,Op,sigma=0,n=5):
    """ Diagonalize the hamiltonian for a given k in a window of energy
@@ -168,6 +169,7 @@ def bands(RECORRIDO,H,Op=False):
            Z.append(v1)
       else:
         eig = diagon_window(H,k,Op)
+        #eig = diagon(H,k,Op)
         for eigval in eig:
            X.append(cont)
            Y.append(eigval.real)

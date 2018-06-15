@@ -51,6 +51,9 @@ def xyz(archivo):
    LG.info('Read %s atoms, with %s lattice vectors'%(len(atoms),len(vecs)))
    return atoms,pos,vecs,sub
 
+def bands(fname):
+   X,Y,Z = np.loadtxt(fname,unpack=True)
+   return X,Y,Z
 
 def read_matv(fname):
    """
@@ -81,3 +84,4 @@ def json_read(fname):
       return eval(lines[0].lstrip().rstrip())
    else:
       sys.exit('ERROR while reading JSON file (%s)'%(fname))
+
