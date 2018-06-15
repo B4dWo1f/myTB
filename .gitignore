@@ -4,9 +4,11 @@
 *.in
 *.out
 !SK.template.ini
-done.out
-inputs.in
-*.pdf
-*.svg
-*.vsz
+**.ini
+**.out
+**.in
+**.pdf
+**.svg
+**.vsz
+**.bands
 cells/*.xyz
