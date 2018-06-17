@@ -207,7 +207,7 @@ class Base(object):
       #print(len(self.layers),len(self.subs),len(self.INDS))
       # XXX WARNING this algorithm fails for some cells!!!!
       l = max(set(self.layers))
-      LG.info('Vacancies introduced in layer: %s'%(l))
+      LG.info('Adatoms introduced in layer: %s'%(l))
       aux = range(max(self.INDS)+1)   #+1 because python starts in 0
       sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
       sub_atsA = sub_atsA[sub_atsA>0]
