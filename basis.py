@@ -271,24 +271,26 @@ class Base(object):
       aux = range(max(self.INDS)+1)   #+1 because python starts in 0
       sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
       sub_atsA = sub_atsA[sub_atsA>0]
-      lena = len(self.find_neig(sub_atsA[0]))
+      na = sub_atsA.shape[0]
+      #lena = len(self.find_neig(sub_atsA[0]))
       sub_atsB =np.where((self.layers==l)&(self.subs==-1),aux,-1) #B
       sub_atsB = sub_atsB[sub_atsB>0]
-      lenb = len(self.find_neig(sub_atsB[0]))
+      nb = sub_atsB.shape[0]
+      #lenb = len(self.find_neig(sub_atsB[0]))
 
-      ### sub_ats contains the hollow atoms in layer 1
-      #if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
-      #else: sub_ats = sub_atsB  # indices of hollow atoms
-      if hollow:
-         if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
-         else: sub_ats = sub_atsB  # indices of hollow atoms
-      else:  #XXX check
-         if lena > lenb: sub_ats = sub_atsA  # indices of hollow atoms
-         else: sub_ats = sub_atsB  # indices of hollow atoms
+      lena = np.mean([len(self.find_neig(sub_atsA[i])) for i in range(na)])
+      lenb = np.mean([len(self.find_neig(sub_atsB[i])) for i in range(nb)])
+
+      if hollow:      # indices of hollow atoms
+         if lena < lenb: sub_ats = sub_atsA
+         else:           sub_ats = sub_atsB
+      else:      # indices of connected atoms
+         if lena > lenb: sub_ats = sub_atsA
+         else:           sub_ats = sub_atsB
 
 
       ## Select atoms for defects
-      if N == 1: ## 1 defect
+      if N == 1:   ## 1 defect
          C = np.mean(self.pos[sub_ats],axis=0)
          ind = geo.snap(C,self.pos[sub_ats])
          indices = [sub_ats[ind]]
@@ -311,6 +313,14 @@ class Base(object):
          rd = np.linalg.norm(rd)
          LG.warning('Requested-dist/Real-dist: %s/%s'%(d,rd))
          LG.warning('Requested-angle/Real-angle: %s/%s'%(alpha,ra))
+      elif N == 3: ## 3 defects
+         LG.critical('Implemention not finished')
+         exit()
+      elif N > 3:  #XXX Check!!!!
+         LG.warning('Experimental implementation of N>3 defects')
+         indices = []
+         while len(indices) < N:
+            indices = indices + list(set(choice(self.INDS)))
       for i in indices:
          LG.info('Changing onsite of atom: %s'%(i))
          aux = deepcopy(self.elements[i].onsite)

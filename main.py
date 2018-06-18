@@ -3,19 +3,21 @@
 
 
 ## Input file ##################################################################
+## TODO maybe argparse this?
 import sys
 try: fini = sys.argv[1]
 except IndexError: fini = 'SK1.ini'
 
 ## Setup #######################################################################
-import setup
-#FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
-FP,HP,CP,SP,atoms = setup.setup(fini)
-#SP.DOspin = False
-#setup.compile_fortran('numeric.f95')
+#import setup
+import load
+##FP,HP,CP,SP,atoms,hoppings = setup.setup(fini)
+FP,HP,CP,SP,atoms = load.setup(fini)
+##SP.DOspin = False
+##setup.compile_fortran('numeric.f95')
 
 
-############################### LOGGING #####################################
+################################## LOGGING #####################################
 import logging
 import log_help
 logging.basicConfig(level=logging.DEBUG,
@@ -24,8 +26,7 @@ logging.basicConfig(level=logging.DEBUG,
                  filename=FP.out+'main.log', filemode='w')
 LG = logging.getLogger('main')
 log_help.screen_handler(LG)
-#############################################################################
-
+################################################################################
 
 print(FP)
 print(HP)
@@ -36,7 +37,9 @@ print(' '*18,'-'*40,' '*20)
 
 import IO
 ats,pos,latt,sub = IO.read.xyz(SP.xyz_file)
-#latt =[]
+if SP.force0D:
+   LG.info('Forcing 0-dimensional system')
+   latt =[]
 
 
 ## Base
@@ -70,7 +73,7 @@ if SP.ada.N >0:
    base_pris.adatom(N=SP.ada.N,at='H1', dummy=True)
 
 
-## Save basis
+### Save basis
 told = time()
 base_pris.save(FP.out+'pris.basis',FP.out+'base_pris.xyz')
 base_dfct.save(FP.out+'dfct.basis',FP.out+'base_dfct.xyz')
@@ -140,22 +143,21 @@ print('        *** Spectrum:',time()-told)
 LG.info('All done. Bye!')
 print('All done. Bye!')
 
-exit()
-print('='*80)
-print('='*80)
-
-
-from calculations import get_DOS
-E = E[(E>-50) & (E<50)]
-mE,ME = min(E),max(E)
-nE = int((ME-mE)/0.1)
-E,Dp,Dd = get_DOS(mE,ME, H_dfct.intra,H_pris, path_slf=FP.slf,nE=nE,fol=FP.out,delta=0.001)
-
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots()
-ax.plot(E,Dp,label='Pristine')
-ax.plot(E,Dd,label='Defected')
-ax.grid()
-ax.legend()
-fig.savefig('/home/ngarcia/ownCloud/AAAAAAAAZZ.png')
+#exit()
+#print('='*80)
+#print('='*80)
+#
+#
+#from calculations import get_DOS
+#E = E[(E>-50) & (E<50)]
+#mE,ME = min(E),max(E)
+#nE = int((ME-mE)/0.1)
+#E,Dp,Dd = get_DOS(mE,ME, H_dfct.intra,H_pris, path_slf=FP.slf,nE=nE,fol=FP.out,delta=0.001)
+#
+#import matplotlib.pyplot as plt
+#fig, ax = plt.subplots()
+#ax.plot(E,Dp,label='Pristine')
+#ax.plot(E,Dd,label='Defected')
+#ax.grid()
+#ax.legend()
 #plt.show()

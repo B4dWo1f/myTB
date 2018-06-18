@@ -26,6 +26,7 @@ class UnitCell(object):
    def __init__(self,ats,pos,latt,subs=[],pasivate=False):
       self.ats = np.array(ats,str)
       self.pos = np.array(pos)
+      self.latt = np.array(latt)
       self.sub = np.array(subs,int)
       if self.check() and len(self.ats) > 0: self.get_geo_info()
       else: pass
@@ -535,8 +536,6 @@ def pasivate(pos,sub=[],nneig=3):
       #try: new_sub.append(-1*sub[i])
       #except IndexError: pass
    return new_atoms,new_sub
-
-
 
 
 if __name__ == '__main__':
