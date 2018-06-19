@@ -106,14 +106,14 @@ import algebra as alg
 #op = OP.sublattice(base_pris)
 if CP.bands:
    if len(latt) != 0:
-      Shw = True
+      Shw = False
       LG.info('Calculating bands')
       points = geo.get_points(base_pris.recip)
       points = [points[0],points[6],points[9], points[0]]
       path = geo.recorrido(points,CP.nk)
-      #LG.debug('Bands Pristine')
-      #I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
-      #LG.info('Bands Pristine done')
+      LG.debug('Bands Pristine')
+      I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
+      LG.info('Bands Pristine done')
       LG.debug('Bands Defected')
       H_dfct.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Defected done')

@@ -145,7 +145,7 @@ def setup(fname='SK1.ini'):
    DOspin = eval(config['system']['DOspin'].capitalize())
 
    Nv = int(config['vacancy']['N'])
-   d = float(config['vacancy']['d'])
+   d = eval(config['vacancy']['d'])
    alpha = float(config['vacancy']['alpha'])
    vp = vacancy_param(Nv,d,alpha)
 
@@ -191,7 +191,7 @@ def setup(fname='SK1.ini'):
    try: tail += '%sorb/'%len(atoms['C'])
    except KeyError: pass
    tail += config['system']['sys'] + '/'
-   tail += 'n%s_l_%s/'%(config['system']['n'],config['system']['l'])
+   tail += 'n%s_l%s/'%(config['system']['n'],config['system']['l'])
    tail += 'nv%s_na%s/'%(Nv,Na)
    tail += 'd%s/'%(d)
    tail += 'alpha%s/'%(alpha)
