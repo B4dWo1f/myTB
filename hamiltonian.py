@@ -161,7 +161,7 @@ class Hamiltonian(object):
          f.write('%s   %s   %s\n'%(x,y,z))
       f.close()
       LG.info('Bands saved to: '+bname)
-      if show: graphs.bands(X,Y,Z,True)
+      if show: graphs.bands(X,Y,Z,show=True)
       return np.array(X),np.array(Y),np.array(Z)  #TODO check type compatib
    #DEPRECATED
    #def dospin(self):
