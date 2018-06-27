@@ -114,9 +114,11 @@ if CP.bands:
       LG.debug('Bands Pristine')
       I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Pristine done')
+      print('    ** Pris bands',time()-told)
       LG.debug('Bands Defected')
       H_dfct.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Defected done')
+      print('    ** Dfct bands',time()-told)
    else: LG.critical('No lattice vectors ==> No bands')
 
 if CP.spectrum:
