@@ -5,7 +5,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-com = 'find ../../Documents/data/artificial_lattices/graphene/OUTS/1orb/simple/n45_l2/nv3_na0/d126/alpha0.0/e*/dfct.bands'
+com = 'find ../../../Documents/data/artificial_lattices/graphene/OUTS/1orb/simple/n45_l2/nv3_na0/d126/alpha0.0/e*/dfct.bands'
 files = os.popen(com).read().splitlines()
 files = sorted(files,key= lambda x: float(x.split('/')[-2].replace('e','')))
 
