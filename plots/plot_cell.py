@@ -6,11 +6,18 @@ from mayavi import mlab
 from read import xyz
 import xcrysden
 
-fname = '../../cells/ac_n1_l1.xyz'
+#fname = '../../cells/ac_n1_l1.xyz'
+
+import sys
+try: fname = sys.argv[1]
+except IndexError:
+   print('File not specified')
+   exit()
+
 
 ats,pos,latt,sub = xyz(fname)
 
-def plot_crystal(ats,pos,latt):
+def plot_crystal(ats,pos,latt,special = []):
    sizefig=(800,540)
    mlab.figure(1, bgcolor=(1, 1, 1), fgcolor=(0, 0, 0), size=sizefig)
    mlab.clf()

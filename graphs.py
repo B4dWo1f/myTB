@@ -186,14 +186,16 @@ def UCell(pos,latt=[],ax=None,tit=None,show=False):
    if show: plt.show()
 
 
-def bands(X,Y,Z,show=False):
+def bands(X,Y,Z,ax=None,show=False,alpha=1.0):
    LG.debug('Plotting %s points'%(len(X)))
-   fig = plt.figure()
-   gs = gridspec.GridSpec(1, 1)
-   fig.subplots_adjust(wspace=0.,hspace=0.0)   
-   ax = plt.subplot(gs[0,0])  # Original plot
+   #fig = plt.figure()
+   #gs = gridspec.GridSpec(1, 1)
+   #fig.subplots_adjust(wspace=0.,hspace=0.0)   
+   #ax = plt.subplot(gs[0,0])  # Original plot
    #ax.scatter(X,Y,c=Z,s=20,edgecolors='none')
-   ax.scatter(X,Y,s=20,edgecolors='none')
+   if not ax:
+      fig, ax = plt.subplots()
+   ax.scatter(X,Y,s=20,edgecolors='none',alpha=alpha)
    ax.grid()
    ax.set_xlim([min(X),max(X)])
    #ax.set_ylim([-10,10])

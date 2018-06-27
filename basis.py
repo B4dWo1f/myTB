@@ -315,7 +315,12 @@ class Base(object):
          LG.warning('Requested-angle/Real-angle: %s/%s'%(alpha,ra))
       elif N == 3: ## 3 defects
          LG.critical('Implemention not finished')
-         exit()
+         ak = np.linalg.norm(self.latt[0])/2  # size of kagome lattice
+         r3 = np.sqrt(3)
+         ideal = [np.array([ r3*ak/4,  0 ,0]),
+                  np.array([-r3*ak/4,ak/2,0]),
+                  np.array([-r3*ak/4,-ak/2,0])]
+         indices = [geo.snap(p, self.pos[sub_ats] ) for p in ideal]
       elif N > 3:  #XXX Check!!!!
          LG.warning('Experimental implementation of N>3 defects')
          indices = []
