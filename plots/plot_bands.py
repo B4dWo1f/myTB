@@ -38,10 +38,9 @@ my_cmap = LinearSegmentedColormap('my_colormap',cdict,256)
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots()
 ## Bands
-ax.scatter(Xban,Yban,c=Zban,cmap=my_cmap,edgecolor='none')
+ax.scatter(Xban,Yban,c=Zban)#,cmap=my_cmap,edgecolor='none')
 #ax1.scatter(Xban,Yban,c=Zban,edgecolor='none')
 ax.set_xlim([min(Xban),max(Xban)])
-ax.set_ylim([-10,10])
 ax.set_xticks([])
 ax.set_xlabel('K-Path')
 ax.set_ylabel('$E$ $(eV)$',fontsize=17)

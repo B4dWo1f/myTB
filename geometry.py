@@ -82,12 +82,26 @@ def circle(x,d):
    return np.sqrt((d/2)**2 - x*x)
 
 
+def defects1(n,l,s=0):
+   """
+   Returns the vertices of a regular poligon with n sides of length l.
+   First vertex is placed at r*(cos(s),sin(s))
+   """
+   r = l/(2*np.sin(np.pi/n))
+   points = []
+   for i in range(n):
+      theta = s+ i*2*np.pi/n
+      points.append( (r*np.cos(theta),r*np.sin(theta)) )
+   return points
+
 @log_help.log2screen(LG)
-def defects(pos,d,alpha=0.,retpoint=False):
+def defects(pos,d=None,alpha=0.,hollow=True,retpoint=False):
+#def defects(pos,sub,lay,bonds=None,d=None,alpha=0.,hollow=True,retpoint=False):
    """
      Returns pais of atoms at an approximate distance of d from the list pos
      retpoint: if true return the index and the point itself
                if false return only the index
+     bonds = Matrix of bonds for intra cell
      ** Assumes the points are centered in 0
      * also assumes unit cell like:
                    -----
@@ -95,6 +109,74 @@ def defects(pos,d,alpha=0.,retpoint=False):
                   \     /
                    -----
    """
+   #def find_neig(M,ind):
+   #   """ returns the index of the neighbouring atoms of atom ind """
+   #   ret = []
+   #   for i in ind:
+   #      r,c = M.row,M.col
+   #      ret.append( c[r==i] )
+   #   return ret
+   ### Select sublattice   ---   Hollow Vs Connected
+   #l = np.max(lay)
+   #LG.info('Vacancies introduced in layer: %s'%(l))
+   #aux = list(range(len(lay)))
+   ##aux = range(max(self.INDS)+1)   #+1 because python starts in 0
+   #sub_atsA =np.where((lay==l)&(sub==1),aux,-1)  #A
+   #sub_atsA = sub_atsA[sub_atsA>0]
+   #na = sub_atsA.shape[0]
+   ##lena = len(self.find_neig(sub_atsA[0]))
+   #sub_atsB =np.where((lay==l)&(sub==-1),aux,-1) #B
+   #sub_atsB = sub_atsB[sub_atsB>0]
+   #nb = sub_atsB.shape[0]
+   ##lenb = len(self.find_neig(sub_atsB[0]))
+   #
+   #lena = np.mean([len(find_neig(sub_atsA[i])) for i in range(na)])
+   #lenb = np.mean([len(find_neig(sub_atsB[i])) for i in range(nb)])
+
+   #if hollow:      # indices of hollow atoms
+   #   if lena < lenb: sub_ats = sub_atsA
+   #   else:           sub_ats = sub_atsB
+   #else:      # indices of connected atoms
+   #   if lena > lenb: sub_ats = sub_atsA
+   #   else:           sub_ats = sub_atsB
+
+   ### Select atoms for defects
+   #if N == 1:   ## 1 defect
+   #   C = np.mean(self.pos[sub_ats],axis=0)
+   #   ind = geo.snap(C,self.pos[sub_ats])
+   #   indices = [sub_ats[ind]]
+   #elif N == 2: ## 2 defects
+   #   if d == None: d = np.sqrt(3)*(np.max(self.x)-np.min(self.x))/12
+   #   #if d == None: d = latt[0]/np.sqrt(3)
+   #   msg  = 'Including two vacancies %s Ansg apart'%(d)
+   #   msg += ' with an angle %s'%(alpha)
+   #   LG.info(msg)
+   #   # returns indices referred to subset
+   #   inds = geo.defects(self.pos[sub_ats],d=d,alpha=alpha)
+   #   indices = [sub_ats[i] for i in inds]
+   #   msg = 'Vacancies placed at'
+   #   for i in indices:
+   #      msg += ' %s'%(i)
+   #   LG.info(msg)
+   #   rd = self.pos[indices[0]] - self.pos[indices[1]]
+   #   ra = np.degrees(np.arctan2(rd[1],rd[0]))
+   #   rd = np.linalg.norm(rd)
+   #   LG.warning('Requested-dist/Real-dist: %s/%s'%(d,rd))
+   #   LG.warning('Requested-angle/Real-angle: %s/%s'%(alpha,ra))
+   #elif N == 3: ## 3 defects
+   #   LG.critical('Implemention not finished')
+   #   ak = np.linalg.norm(self.latt[0])/2  # size of kagome lattice
+   #   r3 = np.sqrt(3)
+   #   ideal = [np.array([ r3*ak/4,  0 ,0]),
+   #            np.array([-r3*ak/4,ak/2,0]),
+   #            np.array([-r3*ak/4,-ak/2,0])]
+   #   indices = [geo.snap(p, self.pos[sub_ats] ) for p in ideal]
+   #elif N > 3:  #XXX Check!!!!
+   #   LG.warning('Experimental implementation of N>3 defects')
+   #   indices = []
+   #   while len(indices) < N:
+   #      indices = indices + list(set(choice(self.INDS)))
+
    X = pos[:,0]
    Y = pos[:,1]
    Z = pos[:,2]
