@@ -252,6 +252,7 @@ class Base(object):
          self.get_neig(fol='')   #TODO Fix to read from file?
          self.get_layer()
          self.get_sublattice()
+      self.defects = indices
       return indices
    @log_help.log2screen(LG)
    def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1e9,hollow=True):
@@ -337,6 +338,7 @@ class Base(object):
          for o in E.orbitals:
             ID = (E.place,E.element,o)
             self.basis.append(ID)
+      self.defects = indices
       return indices
    def find_neig(self,ind):
       """ returns the index of the neighbouring atoms of atom ind """
@@ -365,7 +367,12 @@ class Base(object):
    def save_xyz(self,fname='base.xyz'):
       """ Save the base positions and lattice vector to a xyz file """
       pos = [E.position for E in self.elements]
-      ats = [E.element for E in self.elements]
+      if hasattr(self, 'defects'):
+         ats = []
+         for E in self.elements:
+            if E.place in self.defects: ats.append('U')
+            else: ats.append(E.element)
+      else: ats = [E.element for E in self.elements]
       IO.write.xyz(pos,self.latt,at=ats,sub=self.subs,fname=fname)
    def dospin(self):
       LG.info('Modifying basis for spin')

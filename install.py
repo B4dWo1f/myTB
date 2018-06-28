@@ -109,3 +109,7 @@ except ImportError:
    LG.critical('Parallel-Python was not installed')
    exit()
 
+try: import tqdm
+except ImportError:
+   LG.critical('tqdm was not installed')
+   exit()
