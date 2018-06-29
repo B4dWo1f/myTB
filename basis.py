@@ -203,41 +203,72 @@ class Base(object):
                adatom. This option is useful for maintainig the dimension of
                the Hamiltonian
       """
-      ## Get atoms in layer 1 and not connected in layer 0
-      #print(len(self.layers),len(self.subs),len(self.INDS))
-      # XXX WARNING this algorithm fails for some cells!!!!
-      l = max(set(self.layers))
-      LG.info('Adatoms introduced in layer: %s'%(l))
-      aux = range(max(self.INDS)+1)   #+1 because python starts in 0
-      sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
-      sub_atsA = sub_atsA[sub_atsA>0]
-      lena = len(self.find_neig(sub_atsA[0]))
-      sub_atsB =np.where((self.layers==l)&(self.subs==-1),aux,-1) #B
-      sub_atsB = sub_atsB[sub_atsB>0]
-      lenb = len(self.find_neig(sub_atsB[0]))
+      # TODO Check this changed in branch geometry and NOT TESTED
+      if d == None:
+         if N == 2: d = np.linalg.norm(self.latt[0])/np.sqrt(3)
+         elif N==3: d = np.linalg.norm(self.latt[0])/2     # check
+         else: d = np.linalg.norm(self.latt[0])/2   # maybe??
 
-      ## sub_ats contains the hollow atoms in layer 1
-      if hollow:
-         if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
-         else: sub_ats = sub_atsB  # indices of hollow atoms
-      else:  #XXX check
-         if lena > lenb: sub_ats = sub_atsA  # indices of hollow atoms
-         else: sub_ats = sub_atsB  # indices of hollow atoms
+      b = self.bonds[0][0]
+      indices = geo.defects(N,self.pos,self.subs,self.layers,
+                            bonds=b,d=d,alpha=alpha,hollow=True)
+      ### Get atoms in layer 1 and not connected in layer 0
+      ##print(len(self.layers),len(self.subs),len(self.INDS))
+      ## XXX WARNING this algorithm fails for some cells!!!!
+      #l = max(set(self.layers))
+      #LG.info('Adatoms introduced in layer: %s'%(l))
+      #aux = range(max(self.INDS)+1)   #+1 because python starts in 0
+      #sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
+      #sub_atsA = sub_atsA[sub_atsA>0]
+      #lena = len(self.find_neig(sub_atsA[0]))
+      #sub_atsB =np.where((self.layers==l)&(self.subs==-1),aux,-1) #B
+      #sub_atsB = sub_atsB[sub_atsB>0]
+      #lenb = len(self.find_neig(sub_atsB[0]))
+
+      ### sub_ats contains the hollow atoms in layer 1
+      #if hollow:
+      #   if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
+      #   else: sub_ats = sub_atsB  # indices of hollow atoms
+      #else:  #XXX check
+      #   if lena > lenb: sub_ats = sub_atsA  # indices of hollow atoms
+      #   else: sub_ats = sub_atsB  # indices of hollow atoms
 
       ## Select atoms for defects
-      if N == 1: ## 1 defect
-         C = np.mean(self.pos[sub_ats],axis=0)
-         ind = geo.snap(C,self.pos[sub_ats])
-         indices = [sub_ats[ind]]
-         LG.info('Changing onsite of atom: %s'%(indices[0])) #XXX XXX XXX
+      #if N == 1: ## 1 defect
+      #   C = np.mean(self.pos[sub_ats],axis=0)
+      #   ind = geo.snap(C,self.pos[sub_ats])
+      #   indices = [sub_ats[ind]]
+      #   LG.info('Changing onsite of atom: %s'%(indices[0])) #XXX XXX XXX
+      #   ## TODO generalize for list of adatoms
+      #   pl = self.elements[-1].place + 1
+      #   r = self.pos[indices[0]] + np.array([0,0,1.4])
+      #   LG.info('Adatom in position: %.3f, %.3f, %.3f'%(r[0],r[1],r[2]))
+      #   la = self.elements[-1].layer  # TODO think + 1
+      #   #sub_dict = {'A':1,'B':-1}
+      #   #tcid_bus = {1:'A',-1:'B'}
+      #   su = -1 * self.elements[-1].sublattice
+      #   if dummy:
+      #      # Include an adatom with infinite on-site energy
+      #      fake_atoms = deepcopy(self.atoms)
+      #      for k,v in fake_atoms[at].items():
+      #         fake_atoms[at][k] = inf
+      #      self.elements.append( Base_Element(pl,at,fake_atoms,r) )
+      #   else: self.elements.append( Base_Element(pl,at,self.atoms,r) )
+      #   self.elements[-1].layer = la  #TODO fix
+      #   self.elements[-1].sublattice = su  #TODO fix
+      #   ## Update basis attributes
+      #   self.evaluate()
+      #   self.get_neig(fol='')   #TODO Fix to read from file?
+      #   self.get_layer()
+      #   self.get_sublattice()
+      for ind in indices:
+         LG.info('Changing onsite of atom: %s'%(ind)) #XXX XXX XXX
          ## TODO generalize for list of adatoms
          pl = self.elements[-1].place + 1
-         r = self.pos[indices[0]] + np.array([0,0,1.4])
+         r = self.pos[ind] + np.array([0,0,1.4])
          LG.info('Adatom in position: %.3f, %.3f, %.3f'%(r[0],r[1],r[2]))
          la = self.elements[-1].layer  # TODO think + 1
-         #sub_dict = {'A':1,'B':-1}
-         #tcid_bus = {1:'A',-1:'B'}
-         su = -1 * self.elements[-1].sublattice
+         su = -1 * self.elements[ind].sublattice
          if dummy:
             # Include an adatom with infinite on-site energy
             fake_atoms = deepcopy(self.atoms)
@@ -247,11 +278,11 @@ class Base(object):
          else: self.elements.append( Base_Element(pl,at,self.atoms,r) )
          self.elements[-1].layer = la  #TODO fix
          self.elements[-1].sublattice = su  #TODO fix
-         ## Update basis attributes
-         self.evaluate()
-         self.get_neig(fol='')   #TODO Fix to read from file?
-         self.get_layer()
-         self.get_sublattice()
+      ## Update basis attributes
+      self.evaluate()
+      self.get_neig(fol='')   #TODO Fix to read from file?
+      self.get_layer()
+      self.get_sublattice()
       self.defects = indices
       return indices
    @log_help.log2screen(LG)
@@ -264,69 +295,15 @@ class Base(object):
         alpha: angle (respect to X axis) of the vector between vacancies
         ind: Not implemented
       """
-      ## Get atoms in layer 1 and not connected in layer 0
-      #print(len(self.layers),len(self.subs),len(self.INDS))
-      # XXX WARNING this algorithm fails for some cells!!!!
-      l = max(set(self.layers))
-      LG.info('Vacancies introduced in layer: %s'%(l))
-      aux = range(max(self.INDS)+1)   #+1 because python starts in 0
-      sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
-      sub_atsA = sub_atsA[sub_atsA>0]
-      na = sub_atsA.shape[0]
-      #lena = len(self.find_neig(sub_atsA[0]))
-      sub_atsB =np.where((self.layers==l)&(self.subs==-1),aux,-1) #B
-      sub_atsB = sub_atsB[sub_atsB>0]
-      nb = sub_atsB.shape[0]
-      #lenb = len(self.find_neig(sub_atsB[0]))
+      if d == None:
+         if N == 2: d = np.linalg.norm(self.latt[0])/np.sqrt(3)
+         elif N==3: d = np.linalg.norm(self.latt[0])/2     # check
+         else: d = np.linalg.norm(self.latt[0])/2   # maybe??
 
-      lena = np.mean([len(self.find_neig(sub_atsA[i])) for i in range(na)])
-      lenb = np.mean([len(self.find_neig(sub_atsB[i])) for i in range(nb)])
-
-      if hollow:      # indices of hollow atoms
-         if lena < lenb: sub_ats = sub_atsA
-         else:           sub_ats = sub_atsB
-      else:      # indices of connected atoms
-         if lena > lenb: sub_ats = sub_atsA
-         else:           sub_ats = sub_atsB
-
-
-      ## Select atoms for defects
-      if N == 1:   ## 1 defect
-         C = np.mean(self.pos[sub_ats],axis=0)
-         ind = geo.snap(C,self.pos[sub_ats])
-         indices = [sub_ats[ind]]
-         LG.warning('Requested-dist/Real-dist: 0.0/0.0')
-         LG.warning('Requested-angle/Real-angle: 0.0/0.0')
-      elif N == 2: ## 2 defects
-         if d == None: d = np.sqrt(3)*(np.max(self.x)-np.min(self.x))/12
-         msg  = 'Including two vacancies %s Ansg apart'%(d)
-         msg += ' with an angle %s'%(alpha)
-         LG.info(msg)
-         # returns indices referred to subset
-         inds = geo.defects(self.pos[sub_ats],d=d,alpha=alpha)
-         indices = [sub_ats[i] for i in inds]
-         msg = 'Vacancies placed at'
-         for i in indices:
-            msg += ' %s'%(i)
-         LG.info(msg)
-         rd = self.pos[indices[0]] - self.pos[indices[1]]
-         ra = np.degrees(np.arctan2(rd[1],rd[0]))
-         rd = np.linalg.norm(rd)
-         LG.warning('Requested-dist/Real-dist: %s/%s'%(d,rd))
-         LG.warning('Requested-angle/Real-angle: %s/%s'%(alpha,ra))
-      elif N == 3: ## 3 defects
-         LG.critical('Implemention not finished')
-         ak = np.linalg.norm(self.latt[0])/2  # size of kagome lattice
-         r3 = np.sqrt(3)
-         ideal = [np.array([ r3*ak/4,  0 ,0]),
-                  np.array([-r3*ak/4,ak/2,0]),
-                  np.array([-r3*ak/4,-ak/2,0])]
-         indices = [geo.snap(p, self.pos[sub_ats] ) for p in ideal]
-      elif N > 3:  #XXX Check!!!!
-         LG.warning('Experimental implementation of N>3 defects')
-         indices = []
-         while len(indices) < N:
-            indices = indices + list(set(choice(self.INDS)))
+      b = self.bonds[0][0]
+      indices = geo.defects(N,self.pos,self.subs,self.layers,
+                            bonds=b,d=d,alpha=alpha,hollow=True)
+      ## Add Vacancies
       for i in indices:
          LG.info('Changing onsite of atom: %s'%(i))
          aux = deepcopy(self.elements[i].onsite)
