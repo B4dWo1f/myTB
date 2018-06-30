@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import numpy as np
-from scipy.sparse import coo_matrix,csr_matrix
+from scipy.sparse import coo_matrix,csc_matrix
 import algebra as alg
 
 def ylm2xyz_l2():
@@ -85,4 +85,4 @@ def soc_l(l):
    elif l==2: R = ylm2xyz_l2()
    # Rotation
    ls = R.H * ls * R
-   return csr_matrix(ls)
+   return csc_matrix(ls)

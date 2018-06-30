@@ -3,7 +3,7 @@
 
 import numpy as np
 import algebra as alg
-from scipy.sparse import coo_matrix,bmat,csr_matrix
+from scipy.sparse import coo_matrix,bmat,csc_matrix
 import logging
 LG = logging.getLogger(__name__) # Logger for this module
 
@@ -42,7 +42,7 @@ def sublattice(base):   #,Subs=['A']):
    for i in range(len(base.SUBS)):
       row.append(i)
       dat.append(base.SUBS[i])
-   return csr_matrix((dat,(row,row)),shape=(n,n))
+   return csc_matrix((dat,(row,row)),shape=(n,n))
 
 
 def orbital(base,Orbs=['pz']):

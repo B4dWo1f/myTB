@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix
+from scipy.sparse import coo_matrix, csc_matrix
 import logging
 import log_help
 LG = logging.getLogger(__name__)   # Logger for this module
@@ -35,7 +35,7 @@ def m2spin(M,Delt=0.0):
          except TypeError:    # In case of arrays of other type (str,...)
             Dn.append(d)      #
             Dn.append(d)      #
-      return csr_matrix((Dn, (Rn, Cn)), shape=(2*n, 2*m),dtype=M.dtype)
+      return csc_matrix((Dn, (Rn, Cn)), shape=(2*n, 2*m),dtype=M.dtype)
    elif isinstance(M,np.matrix):
       LG.warning('Using dense matrix in m2spin (mat: %s,%s)'%(n,m))
       keep_type = 0.0*M[0,0]  # Preserve type (int, float, complex...)
@@ -49,7 +49,7 @@ def m2spin(M,Delt=0.0):
             except TypeError:
                matout[2*i,2*j] = M[i,j]
                matout[2*i+1,2*j+1] = M[i,j]
-      return csr_matrix(matout)
+      return csc_matrix(matout)
    elif isinstance(M,list):
       return np.repeat(M,2)
    else:
