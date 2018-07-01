@@ -113,3 +113,8 @@ try: import tqdm
 except ImportError:
    LG.critical('tqdm was not installed')
    exit()
+
+try: import mayavi
+except ImportError:
+   LG.critical('Mayavi was not installed')
+   exit()

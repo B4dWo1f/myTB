@@ -53,6 +53,38 @@ do i = 1,nx
 end do
 END SUBROUTINE count_neig
 
+! ==========================================
+!    Calculate the local densiy of states
+! ==========================================
+SUBROUTINE lDOS(nx,ny,nc, X, Y, centers,heights,c,Z)
+implicit none
+   INTEGER:: nx, ny, nc
+   REAL*8,DIMENSION(nx,ny),intent(in):: X,Y
+   REAL*8,intent(in):: c
+   REAL*8,DIMENSION(nc,2),intent(in):: centers
+   REAL*8,DIMENSION(nc),intent(in):: heights
+   REAL*8,DIMENSION(nx,ny),intent(out):: Z
+   REAL*8,DIMENSION(nx,ny):: zg
+   INTEGER:: k
+Z=X*0.0
+do k=1,nc
+   call gauss(nx,ny,X,Y,centers(k,:),heights(k),c,zg)
+   Z = Z + zg
+end do
+END SUBROUTINE lDOS
+
+SUBROUTINE gauss(nx,ny,x,y,r0,a,c,z)
+implicit none
+   INTEGER:: nx,ny
+   REAL*8,DIMENSION(nx,ny),intent(in)::x,y
+   REAL*8,intent(in)::a,c
+   REAL*8,DIMENSION(3),intent(in):: r0
+   REAL*8,DIMENSION(nx,ny),intent(out)::z
+   REAL*8,DIMENSION(nx,ny):: r
+   r = SQRT( (x-r0(1))**2 + (y-r0(2))**2 )
+   z = a*EXP(-(r*r/(2*c*c)))
+END SUBROUTINE gauss
+
 
 
 !! =======================

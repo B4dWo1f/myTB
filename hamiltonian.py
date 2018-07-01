@@ -156,10 +156,13 @@ class Hamiltonian(object):
       if Opp: Z = [(v * Op * v.H)[0,0].real for v in Z]
       bname = folder+'%s.bands'%(self.tag)
       LG.debug('Writing bands to: '+bname)
-      f = open(bname,'w')
-      for x,y,z in zip(X,Y,Z):
-         f.write('%s   %s   %s\n'%(x,y,z))
-      f.close()
+      #f = open(bname,'w')
+      ##for x,y,z in zip(X,Y,Z):
+      #for i in tqdm(range(len(X))):
+      #   x,y,z = X[i], Y[i], Z[i]
+      #   f.write('%s   %s   %s\n'%(x,y,z))
+      #f.close()
+      np.save(bname, np.column_stack([X,Y,Z]))
       LG.info('Bands saved to: '+bname)
       if show: graphs.bands(X,Y,Z,show=True)
       return np.array(X),np.array(Y),np.array(Z)  #TODO check type compatib

@@ -3,7 +3,6 @@
 
 import sys
 import numpy as np
-from read import xyz
 import matplotlib.pyplot as plt
 
 

@@ -65,7 +65,7 @@ del base
 
 LG.info('Defects for the basis')
 if SP.vac.N > 0:
-   IND_vac = base_dfct.vacancy(N=SP.vac.N,d=None,alpha=SP.vac.alpha) #,hollow=False)
+   IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha) #,hollow=False)
    #IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha) #,hollow=False)
 else: IND_vac = []
 
