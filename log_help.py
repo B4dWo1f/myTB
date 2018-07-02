@@ -72,14 +72,17 @@ def disable2(lg):
 
 ## Timer Decorator
 from time import time
-def timer(wrapped):
+
+def timer(lg):
    """
-   Logs the execution time of a certain funcion
+   Logs the execution time of a certain funcion to the provided logger
    """
-   def inner(*args, **kwargs):
-      t = time()
-      ret = wrapped(*args, **kwargs)
-      LG.info(wrapped.__name__+' in %s'%(time()-t))
-      return ret
-   return inner
+   def real_timer(wrapped):
+      def inner(*args, **kwargs):
+         t = time()
+         ret = wrapped(*args, **kwargs)
+         lg.info('Time for'+wrapped.__name__+': %ss'%(time()-t))
+         return ret
+      return inner
+   return real_timer
 

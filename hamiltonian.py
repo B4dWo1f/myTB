@@ -274,8 +274,9 @@ def Hamil(Hlist,k,chk=True):
    #      sys.exit(1)
    return Hamiltoniano
 
-@log_help.disable2(LG)
+#@log_help.disable2(LG)
 @log_help.log2screen(LG)
+@log_help.timer(LG)
 def build_ham(base,hp,tag,dospin=False):
    LG.info('Creating %s Hamiltonian (spin:%s)'%(tag,dospin))
    LG.debug('Starting kinetic terms')

@@ -50,7 +50,6 @@ for i in range(len(pos)):
    a,r = ats[i],pos[i]
    elems.append( Base_Element(i,a,atoms,r) )
 
-from time import time
 base = Base(elems,latt,atoms=atoms) #,cent=False)
 base.get_neig(fol=FP.ham)
 base.get_sublattice(sub)
@@ -75,18 +74,14 @@ if SP.ada.N >0:
 
 
 ### Save basis
-told = time()
 base_pris.save(FP.out+'pris.basis',FP.out+'pris.xyz')
 base_dfct.save(FP.out+'dfct.basis',FP.out+'dfct.xyz')
 LG.info('Base created')
-print('            *** Base:',time()-told)
 
 
-told = time()
 import hamiltonian as ham
 H_pris = ham.build_ham(base_pris,HP,'pris')
 H_dfct = ham.build_ham(base_dfct,HP,'dfct')
-print('     *** Hamiltonian:',time()-told)
 
 
 LG.info('Check for spin')
@@ -96,7 +91,6 @@ if SP.DOspin:
    base_dfct.dospin()
 
 
-told = time()
 import operators as OP
 import geometry as geo
 from random import uniform, choice
@@ -115,11 +109,9 @@ if CP.bands:
       LG.debug('Calculating bands for Pristine')
       I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Pristine done')
-      print('    ** Pris bands',time()-told)
       LG.debug('Calculating bands for Defected')
       H_dfct.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Defected done')
-      print('    ** Dfct bands',time()-told)
    else: LG.critical('No lattice vectors ==> No bands')
 
 if CP.spectrum:
@@ -141,7 +133,6 @@ if CP.spectrum:
    print('  ---- Defected ----')
    for e in es:
       print(e)
-print('        *** Spectrum:',time()-told)
 
 LG.info('All done. Bye!')
 print('All done. Bye!')

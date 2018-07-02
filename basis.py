@@ -178,6 +178,8 @@ class Base(object):
       self.LAYS = []
       for i in range(len(self.INDS)):
          self.LAYS.append(self.layers[self.INDS[i]])
+   @log_help.log2screen(LG)
+   @log_help.timer(LG)
    def get_neig(self,nvec=5,fol='./'):
       LG.info('Looking for neighbors')
       self.bonds = []
