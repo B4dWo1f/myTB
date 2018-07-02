@@ -131,8 +131,9 @@ def setup(fname='SK1.ini'):
 
    bands = eval(config['calculations']['bands'].capitalize())
    spectrum = eval(config['calculations']['spectrum'].capitalize())
+   DOS = eval(config['calculations']['dos'].capitalize())
    nk = int(config['calculations']['nk'])
-   CP = calc_param(bands,spectrum,nk)
+   CP = calc_param(bands=bands,spectrum=spectrum,DOS=DOS,nk=nk)
 
    sys = config['system']['sys']
    n = int(config['system']['n'])

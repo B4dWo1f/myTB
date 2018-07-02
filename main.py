@@ -76,8 +76,8 @@ if SP.ada.N >0:
 
 ### Save basis
 told = time()
-base_pris.save(FP.out+'pris.basis',FP.out+'base_pris.xyz')
-base_dfct.save(FP.out+'dfct.basis',FP.out+'base_dfct.xyz')
+base_pris.save(FP.out+'pris.basis',FP.out+'pris.xyz')
+base_dfct.save(FP.out+'dfct.basis',FP.out+'dfct.xyz')
 LG.info('Base created')
 print('            *** Base:',time()-told)
 
@@ -112,11 +112,11 @@ if CP.bands:
       points = geo.get_points(base_pris.recip)
       points = [points[0],points[6],points[9], points[0]]
       path = geo.recorrido(points,CP.nk)
-      LG.debug('Bands Pristine')
+      LG.debug('Calculating bands for Pristine')
       I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Pristine done')
       print('    ** Pris bands',time()-told)
-      LG.debug('Bands Defected')
+      LG.debug('Calculating bands for Defected')
       H_dfct.get_bands(path,folder=FP.out,show=Shw)
       LG.info('Bands Defected done')
       print('    ** Dfct bands',time()-told)

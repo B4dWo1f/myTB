@@ -186,21 +186,16 @@ def UCell(pos,latt=[],ax=None,tit=None,show=False):
    if show: plt.show()
 
 
-def bands(X,Y,Z,ax=None,show=False,alpha=1.0):
-   LG.debug('Plotting %s points'%(len(X)))
-   #fig = plt.figure()
-   #gs = gridspec.GridSpec(1, 1)
-   #fig.subplots_adjust(wspace=0.,hspace=0.0)   
-   #ax = plt.subplot(gs[0,0])  # Original plot
-   #ax.scatter(X,Y,c=Z,s=20,edgecolors='none')
-   if not ax:
-      fig, ax = plt.subplots()
-   ax.scatter(X,Y,s=20,edgecolors='none',alpha=alpha)
-   ax.grid()
+def bands(X,Y,Z=[],ax=None,show=False,alpha=1.0):
+   if not ax: fig, ax = plt.subplots()
+   # Plots
+   if len(Z) > 0: ax.scatter(X,Y,c=Z,alpha=alpha)
+   else:          ax.scatter(X,Y,alpha=alpha)
+   # Settings
    ax.set_xlim([min(X),max(X)])
    #ax.set_ylim([-10,10])
    if show:
-      plt.tight_layout()
+      fig.tight_layout()
       plt.show()
 
 from matplotlib import cm
@@ -209,10 +204,14 @@ def get_color(x,color_map='rainbow'):
    cmap = cm.get_cmap(color_map)
    return cmap(x)  # rgba tuple
 
-def spectrum(Es,Cs=[],ax=None,TOL=1e-5,Ef=0.0,y0=-10,y1=10,vb=False,show=False):
+def spectrum(Es,Cs=[],shift=0,ax=None,TOL=1e-5,Ef=0.0,y0=-10,y1=10,vb=False,\
+                                                                   show=False):
    """
     Plot the spectrum (as horizontal lines) with width proportional to the
     degeneracy of each state.
+      shift: In order to plot side by side different spectrums an shift
+             argument can be provided so the following spectrums are plotted
+             along the X axis
       TOL: energies that differ less than TOL are considered degenerate
       Ef: is used to plot a dashed line
       vb: verbose, to see states and degeneracy
@@ -237,7 +236,8 @@ def spectrum(Es,Cs=[],ax=None,TOL=1e-5,Ef=0.0,y0=-10,y1=10,vb=False,show=False):
       bins.append(len(states))
 
    ## Plot
-   x0,x1 = 0,1   # X limits (dummy)
+   c = 0 + shift
+   x0,x1 = c-0.4, c+0.4   # X limits (dummy)
    dx = abs(x0-x1)
    s=0.05*dx   # horizontal spacer between degenerated states
    dy = 0.1 * abs(y0 - y1)
@@ -253,11 +253,11 @@ def spectrum(Es,Cs=[],ax=None,TOL=1e-5,Ef=0.0,y0=-10,y1=10,vb=False,show=False):
          ax.plot([x0+j*(dxp+s),x0+(j+1)*dxp+j*s],[e,e],c=c,lw=2)
          cont += 1
    ax.axhline(Ef,color='k',ls='--',lw=1.5,alpha=0.2)
-   ax.fill_between([x0-2*dx,x1+2*dx], Ef, -1000,facecolor='yellow',alpha=0.1)
+   #ax.fill_between([x0-2*dx,x1+2*dx], Ef, -1000,facecolor='yellow',alpha=0.1)
 
-   ax.set_xlim([x0-dx,x1+dx])
-   ax.set_ylim([y0-dy,y1+dy])
-   ax.set_ylim([-2,2])
+   #ax.set_xlim([x0-dx,x1+dx])
+   ax.set_ylim([min(Es),max(Es)]) #y0-dy,y1+dy])
+   #ax.set_ylim([-2,2])
    ax.set_xticklabels([])
    ax.set_ylabel('$E$ $(eV)$',fontsize=20)
    if show: plt.show()

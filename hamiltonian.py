@@ -106,7 +106,7 @@ class Hamiltonian(object):
          LG.info('Start Diagonalization')
          es = eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=False)
          v = [0 for _ in es]
-      bname = folder+'%s_spectrum'%(self.tag)
+      bname = folder+'%s.spectrum'%(self.tag)
       LG.debug('Writing spectrum to: '+bname)
       np.save(bname,np.column_stack((es,v)))
       if shw: graphs.spectrum(es,show=True)

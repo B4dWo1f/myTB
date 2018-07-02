@@ -158,7 +158,7 @@ def bands(RECORRIDO,H,Op=False):
    X, Y, Z = [], [], []
    cont=0
    from tqdm import tqdm
-   for k in tqdm(RECORRIDO, unit='k points'):
+   for k in tqdm(RECORRIDO, unit='K-points'):
       if Op:
         eig, eigvec = diagon(H,k,Op)
         eigvec = eigvec.transpose()
