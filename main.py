@@ -6,7 +6,7 @@
 ## TODO maybe argparse this?
 import sys
 try: fini = sys.argv[1]
-except IndexError: fini = 'SK1.ini'
+except IndexError: fini = 'SK.ini'
 
 ## Setup #######################################################################
 #import setup
