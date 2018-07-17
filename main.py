@@ -115,24 +115,20 @@ if CP.bands:
    else: LG.critical('No lattice vectors ==> No bands')
 
 if CP.spectrum:
+   def aux(H):
+      """
+        Dummy auxiliary function to calculate the spectrum in parallel
+      """
+      LG.info('Spectrum: %s'%(H.tag))
+      es,v = H.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw)
+      print('  ---- %s ----'%(H.tag))
+      for e in es:
+         print(e)
    Shw = False
-   LG.info('Spectrum: Pristine')
-   import numpy as np
    n_es = min([int(H_pris.dim//2),8])
-   #es,v = H_pris.get_N_states(Op=True,folder=FP.out,border=False,n=n_es)
-   es,v = H_pris.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw)
-   #es,v = H_pris.get_spectrum(Op=True,folder=FP.out,border=False,shw=Shw)
-   print('  ---- Pristine ----')
-   for e in es:
-      print(e)
-   LG.info('Spectrum: Defected')
-   n_es = min([int(H_dfct.dim//2),8])
-   #es,v = H_dfct.get_N_states(Op=True,folder=FP.out,border=False,n=n_es)
-   es,v = H_dfct.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw)
-   #es,v = H_dfct.get_spectrum(Op=True,folder=FP.out,border=False,shw=Shw)
-   print('  ---- Defected ----')
-   for e in es:
-      print(e)
+   import multiprocessing as sub
+   pool = sub.Pool(2)
+   foo = pool.map(aux,[H_pris, H_dfct])
 
 LG.info('All done. Bye!')
 print('All done. Bye!')
