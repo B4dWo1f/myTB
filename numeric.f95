@@ -1,10 +1,11 @@
 ! =================================
 !    Calculate all the distances
 ! =================================
-SUBROUTINE dists(nx,ny,XYZ1,XYZ2,cont,X,Y)
+SUBROUTINE dists(nx,ny,XYZ1,XYZ2,cont,dist,X,Y)
 implicit none
  INTEGER:: nx, ny,icont
  INTEGER,intent(in):: cont
+ REAL*8,intent(in):: dist
  REAL*8,DIMENSION(nx,ny),intent(in):: XYZ1,XYZ2
  INTEGER,DIMENSION(cont),intent(out):: X,Y
  REAL*8,DIMENSION(3):: posi, posj, aux
@@ -18,7 +19,7 @@ do i = 1,nx
       posj = XYZ2(j,:)
       aux = posi-posj
       d = sqrt(dot_product(aux, aux))
-      if (d > 0. .and. d < 1.5) then
+      if (d > 0. .and. d < dist) then
          icont = icont + 1
          X(icont) = i
          Y(icont) = j
@@ -30,9 +31,10 @@ END SUBROUTINE dists
 ! =====================
 !    Count neighbors
 ! =====================
-SUBROUTINE count_neig(nx,ny,XYZ1,XYZ2,cont)
+SUBROUTINE count_neig(nx,ny,XYZ1,XYZ2,dist,cont)
 implicit none
  INTEGER:: nx, ny
+ REAL*8,intent(in):: dist
  REAL*8,DIMENSION(nx,ny),intent(in):: XYZ1,XYZ2
  INTEGER,intent(out)::cont
  REAL*8,DIMENSION(3):: posi, posj, aux
@@ -46,7 +48,7 @@ do i = 1,nx
       posj = XYZ2(j,:)
       aux = posi-posj
       d = sqrt(dot_product(aux, aux))
-      if (d > 0. .and. d < 1.5) then
+      if (d > 0. .and. d < dist) then
          cont = cont + 1
       end if
     end do

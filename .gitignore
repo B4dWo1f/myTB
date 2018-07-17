@@ -6,6 +6,7 @@
 !SK.template.ini
 **.ini
 **.out
+**.dat
 **.in
 **.pdf
 **.svg

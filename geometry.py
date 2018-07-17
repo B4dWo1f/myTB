@@ -55,7 +55,7 @@ def analyze(atoms,points,pairs=[],maxneigh=5,fname='cell.info'):
             if s > 0.1: break
             relevant_mean.append(m)
          if len(relevant_mean) > 0: means.append(np.nanmean(relevant_mean))
-      LG.debug('%s %s atoms have some %s neighbor'%(len(means),at1,at2))
+      LG.info('%s %s atoms have some %s neighbor'%(len(means),at1,at2))
       M,S = np.nanmean(means),np.nanstd(means)
       keys.append(bond)
       values.append((M,S))
@@ -507,32 +507,35 @@ def fneig(pos,latt,fol='./',dist=1.5,nvec=5,ncpus=4,force=False):
    all_vecs = [ vecfromcoef(p,latt) for p in perms]
    neigs = []
    for i in range(len(all_vecs)):
-      LG.info('Calculating distances in cell %s'%(names[i]))
+      LG.info('Looking for neighbors in cell %s'%(names[i]))
       try:
-         LG.info('Trying to read "%s" matrix'%(names[i]))
          if force: raise
-         #rows,cols = np.loadtxt(fol+names[i]+'.H',dtype=int,unpack=True)
-         M = np.matrix(np.loadtxt(fol+names[i]+'.H',dtype=int))
-         r = np.array(M[:,0])
-         c = np.array(M[:,1])
-         rows = np.reshape(r,(max((r.shape)),))
-         cols = np.reshape(c,(max((c.shape)),))
-         LG.info('Read from file: %s'%(fol+names[i]+'.H'))
+         if os.stat(fol+names[i]+'.bond').st_size==0:  # empty file
+            LG.info('No neighbouts for %s'%(names[i]))
+            rows = []
+            cols = []
+         else:
+            M = np.matrix(np.loadtxt(fol+names[i]+'.bond',dtype=int))
+            r = np.array(M[:,0])
+            c = np.array(M[:,1])
+            rows = np.reshape(r,(max((r.shape)),))
+            cols = np.reshape(c,(max((c.shape)),))
+         LG.info('Read from file: %s'%(fol+names[i]+'.bond'))
       except:
          LG.info('Failed. Calculating with fortran')
          ## Necessary because of f2py problem with allocatable
-         nn = num.count_neig(pos,pos+all_vecs[i])
+         nn = num.count_neig(pos,pos+all_vecs[i],dist)
          if nn == 0:
             LG.info('No neighbours in cell %s'%(names[i]))
+            if fol != '': np.savetxt(fol+names[i]+'.bond',[],fmt='%d')
             continue
-         rows,cols = num.dists(pos,pos+all_vecs[i],nn)
+         rows,cols = num.dists(pos,pos+all_vecs[i],nn,dist)
          rows -= 1   # because python counts from 0
          cols -= 1   # because python counts from 0
          aux = np.column_stack((rows,cols))
-         if fol != '': np.savetxt(fol+names[i]+'.H',aux,fmt='%d')
+         if fol != '': np.savetxt(fol+names[i]+'.bond',aux,fmt='%d')
          #if fol != '': np.savetxt(fol+names[i]+'.H',(rows,cols),fmt='%d')
       neigs.append( ((rows,cols),all_vecs[i],names[i]) )
-   LG.info('Neighbors calculated using Fortran')
    return neigs
 
 def get_points(recip,N=3):
@@ -606,3 +609,17 @@ def rotation(v,Q,u=np.array([0,0,1]),deg=True):
    vec = np.dot(R, v)
    return vec
 
+
+if __name__ == '__main__':
+   import IO
+   import sys
+   try: fname = sys.argv[1]
+   except IndexError:
+      print('File not specified')
+      exit()
+   
+   atoms,points,_,_ = IO.read.xyz(fname)
+   A = analyze(atoms,points,pairs=[],maxneigh=5,fname='cell.info')
+   print('Atomic distances:')
+   for k,v in A.items():
+      print('  *%s: %.4f +-%.4f'%(k,v[0],v[1]))

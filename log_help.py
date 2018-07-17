@@ -81,7 +81,7 @@ def timer(lg):
       def inner(*args, **kwargs):
          t = time()
          ret = wrapped(*args, **kwargs)
-         lg.info('Time for'+wrapped.__name__+': %ss'%(time()-t))
+         lg.info('Time for '+wrapped.__name__+': %ss'%(time()-t))
          return ret
       return inner
    return real_timer
