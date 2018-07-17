@@ -5,18 +5,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-mpl.rcParams['font.size'] = 15
 
 
-
-
-## Basis
-class basis(object):
-   """
-     Minimum dummy class to store indices of atom and orbital
-   """
-   def __init__(self,fname='dfct.basis'):
-      self.ind,self.n = np.loadtxt(fname,usecols=(0,1),unpack=True,dtype=int)
 
 def plot_spectrum(E,V,pos,Ba=[]): #inds=[]):   #,ax=None):
    def state_space(v,pos,base,S=100):
@@ -87,6 +77,89 @@ def plot_spectrum(E,V,pos,Ba=[]): #inds=[]):   #,ax=None):
    plt.show()
 
 
+def get_geo_stuff(fol):
+   """
+     Scrap the log file for geometry information
+     TODO: Move the geometri info to an independent output file
+   """
+   log = fol + 'main.log'
+   ## Get Vacancies indices
+   vacs = os.popen('grep " Changing onsite of atom:" %s'%(log)).readlines()
+   vacs = [v.split(':')[-1] for v in vacs]
+   vacs = list(set([int(v.lstrip().rstrip()) for v in vacs]))
+   Nv = len(vacs)
+   ## Get distance
+   try:
+      com = 'grep " Requested-dist/Real-dist: " %s'%(log)
+      dis = os.popen(com).read().split()[-1].split('/')[-1]
+   except IndexError:
+      #print('Distance not found')
+      dis = 0.0
+   dis = float(dis)
+   ## Get angle
+   try:
+      com = 'grep " Requested-angle/Real-angle: " %s'%(log)
+      ang = os.popen(com).read().split()[-1].split('/')[-1]
+   except IndexError:
+      #print('Angle not found')
+      ang = 0.0
+   ang = float(ang)
+   return Nv, dis, ang, vacs
+
+class InGap(Exception):
+   def __init__(self, value):
+      self.value = value
+   def __str__(self):
+      return repr(self.value)
+
+def get_ingap(E,V,Ba,pos,vacs,cond,vale):
+   # Check in-gap
+   v = E[E>vale]
+   v= v[v<cond]
+   if v.shape[0] == len(vacs):
+      inds = np.array([np.where(E==iv)[0][0] for iv in v])
+      return inds,False
+   else:
+      inds = []
+      for r0 in pos[vacs]:
+         ls = []
+         for i in range(V.shape[0]):
+            v = V[i,:]
+            l = get_lc(Ba,pos,v,r0)
+            ls.append(l)
+         inds.append( np.argmin(ls) )
+      return inds, True
+
+def get_cond_vale(E,Ep):
+   """
+     In the pristine case, vale is the last occupied (E<0) state and
+     cond is the first empty state (E>0).
+     In the defective case cond and vale are the states closest to the
+     pristine case
+   """
+   condP = np.min(Ep[Ep>0])
+   valeP = np.max(Ep[Ep<0])
+   cond = E[np.argmin(np.abs(E-condP))]
+   vale = E[np.argmin(np.abs(E-valeP))]
+   cond = E[np.argmin(np.abs(E-condP))]
+   return condP,valeP, cond, vale
+
+def get_lc(Ba,pos,v,r0,lim=0.9):
+   """ Calculate the confinement length """
+   v = np.conj(v)*v
+   v = v.real   # by  construction v is real
+   vp = np.bincount(Ba.n, weights=v)
+   dist_aux = np.array([np.linalg.norm(r-r0) for r in pos])
+   inds_dist = np.argsort(dist_aux)
+   v_sorted = vp[inds_dist]  #np.conj(v[inds_dist]) * v[inds_dist]
+   dist_aux = dist_aux[inds_dist]
+   aux = 0.0
+   for i in range(len(v_sorted)):
+      aux += v_sorted[i]
+      if aux >= lim: return dist_aux[i]
+   return dist_aux[i]
+
+
 def get_exchanges(vL,vR,U=2.7):
    """
      Compute all the effective exchange couplings
@@ -103,8 +176,18 @@ def get_exchanges(vL,vR,U=2.7):
    return UL, UR, 2*JF, D, tLR, tRL
 
 
+
+## Basis
+class basis(object):
+   """
+     Minimum dummy class to store indices of atom and orbital
+   """
+   def __init__(self,fname='dfct.basis'):
+      self.ind,self.n = np.loadtxt(fname,usecols=(0,1),unpack=True,dtype=int)
+
+
 class Spectrum(object):
-   def __init__(self,fname):
+   def __init__(self,fname,nv=None):
       """
         fname is the folder containing the output of the calculations.
         It must containthe following files:
@@ -112,12 +195,13 @@ class Spectrum(object):
          - base_pris.xyz               - base_dfct.xyz
          - pris.basis (optional)       - dfct.basis
       """
+      if fname[-1] != '/': fname += '/'
       # Useful files
       self.f = fname
-      pris = fname + 'pris_spectrum.npy'
-      dfct = fname + 'dfct_spectrum.npy'
-      pris_pos = fname + 'base_pris.xyz'
-      dfct_pos = fname + 'base_dfct.xyz'
+      pris = fname + 'pris.spectrum.npy'
+      dfct = fname + 'dfct.spectrum.npy'
+      pris_pos = fname + 'pris.xyz'
+      dfct_pos = fname + 'dfct.xyz'
       dfct_basis = fname + 'dfct.basis'
       log = fname + 'main.log'
 
@@ -126,13 +210,26 @@ class Spectrum(object):
       except:
          print('No basis')
          self.Ba = []
-      #Spectrum
+
+      self.elec = float(fname.split('/')[-2][1:]) # TODO Fix this!!!
+
+      # Spectrum
       M = np.load(pris)
-      Ep = M[:,0].real
+      self.Ep = M[:,0].real
       M = np.load(dfct)
       self.E = M[:,0].real
       self.V = M[:,1:]
+      self.condP,self.valeP, self.cond,self.vale = get_cond_vale(self.E,self.Ep)
+      self.gapP = self.condP - self.valeP
+      self.gap = self.cond - self.vale
+
       self.pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3))
+      # Geo stuff
+      if nv == None:
+         self.Nv, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
+      else:
+         _, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
+         self.Nv = nv
    def plot(self):
       plot_spectrum(self.E, self.V, self.pos, self.Ba)
    def select_ingap(self):
@@ -141,24 +238,71 @@ class Spectrum(object):
       f = open(tmp,'w')
       f.close()
       plot_spectrum(self.E, self.V, self.pos, self.Ba)
-      self.inds = np.loadtxt(tmp,dtype=int)
+      self.inds = np.unique(np.sort(np.loadtxt(tmp,dtype=int)))
       f = open(tmp,'w')
       f.close()
    def analyze_ingap(self):
       try: self.inds
-      except AttributeError: self.select_ingap()
-      inds = self.inds
-      print('Analyzing states',self.inds)
+      except AttributeError:
+         inds,warn = get_ingap(self.E,self.V,self.Ba,self.pos,self.vacs,
+                                                          self.cond,self.vale)
+         #try: inds = get_ingap(self.E,self.V,self.Ba,self.pos,self.vacs,
+         #                                                 self.cond,self.vale)
+         #except InGap:
+         #   #print('raised and addressed')
+         #   #inds =  self.select_ingap()
+         #   inds = get_ingap(self.E,self.V,self.Ba,self.pos,self.vacs,
+         #                                                 self.cond,self.vale)
+         if warn: self.warning = True
+      self.inds = inds
+      #inds = self.inds
+      #print('Analyzing states',self.inds)
       self.E_ingap = self.E[inds]
       self.V_ingap = self.V[inds]
    def get_blue_parameters(self):
       UL, UR, JF, D, tLR, tRL = get_exchanges(*self.V_ingap)
       e1,e2 = self.E_ingap
-      print(JF,D,tRL,tLR,UR,UL,e1,e2)
-      H = blue(JF,D,tRL,tLR,UR,UL,e1,e2)
-      es,v = np.linalg.eigh(H)
-      v = v.transpose()
-      return es,v
+      return JF,D,tRL,tLR,UR,UL,e1,e2
+   def __str__(self):
+      msg = 'Analysis of the system: %s\n'%(self.f)
+      msg += 'Nc: %s'%(self.pos.shape[0])
+      msg += '   Nv: %s'%(self.Nv)
+      msg += '   elec: %s\n'%(self.elec)
+      msg += 'Gap:\n'
+      msg += '  -Pris: %s\n'%(self.gapP)
+      msg += '  -Dfct: %s\n'%(self.gap)
+      if self.Nv == 2: msg += 'dist: %s   alpha: %s\n'%(self.dist,self.alpha)
+      msg += 'Geometry:\n'
+      msg += 'Hexagon  ->  a: %s  ;  a\': %s\n'%(self.a, self.ap)
+      msg += 'Confinement Length:'
+      if self.Nv == 1:
+         msg +='\n   lc: %.4f\n'%(self.lc[0])
+      elif self.Nv == 2:
+         msg +='\n   Left: %.4f   Right: %4f\n'%(self.lc[0],self.lc[1])
+         aux = np.abs(self.E_ingap[1]-self.E_ingap[0])
+         msg += '\nIn-gap splitting: %s (eV)\n'%(aux)
+         fac = 1000   #XXX meV!!!
+         msg += 'Effective Exchange couplings (meV)\n'
+         msg += '  UL: %s    ;    UR: %s\n'%(self.UL*fac, self.UR*fac)
+         msg += '  J_f: %s    ;    D: %s\n'%(self.J_f*fac,self.D*fac)
+         msg += '  tLR: %s    ;    tRL: %s\n'%(self.tLR*fac, self.tRL*fac)
+         msg += '  J_af: %s\n'%(self.J_af*fac)
+      msg += '\n ------ Pristine ------           ------ Defected ------\n'
+      ic = 0 # In-gap counter
+      for i in range(len(self.Ep)):
+         ep = self.Ep[i]
+         ed = self.E[i]
+         space = '                '
+         if ep in [self.valeP, self.condP]: msg += '    * %+.7f'%(ep)
+         else: msg += '      %+.7f'%(ep)
+         msg += space
+         if ed in [self.vale, self.cond]: msg += '  * %+.7f\n'%(ed)
+         elif ed in self.E_ingap:
+               msg += ' -> %+.7f'%(ed)
+               msg +='   SP:%.4f  SL: %.4f\n'%(self.SP_eig[ic],self.SL_eig[ic])
+               ic += 1
+         else: msg += '    %+.7f\n'%(ed)
+      return msg
 
 
 def blue(J,D,tRL,tLR,UR,UL,e1,e2):
@@ -185,9 +329,14 @@ if __name__ == '__main__':
    fol = sys.argv[1]
    print(fol)
    A = Spectrum(fol)
-   #A.select_ingap()
-   A.analyze_ingap()
-   es,v = A.get_blue_parameters()
+   print(A)
+   A.select_ingap()
+   #A.analyze_ingap()
+   JF,D,tRL,tLR,UR,UL,e1,e2 = A.get_blue_parameters()
+   H = blue(JF,D,tRL,tLR,UR,UL,e1,e2)
+   es,v = np.linalg.eigh(H)
+   v = v.transpose()
+
    for i in range(len(es)):
       print(i,es[i],np.round(v[i,:],4))
    import matplotlib.pyplot as plt

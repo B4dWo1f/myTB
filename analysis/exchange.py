@@ -8,21 +8,21 @@ import matplotlib as mpl
 mpl.rcParams['font.size'] = 15
 
 
-def find_nearest(array,value):
-   """
-     Returns the index of the element of an array closest to a certain value
-   """
-   return (np.abs(array-value)).argmin()
-
-## Decide sign
-def get_sign(v,e):
-   """
-     Aux workaround to find the closest element with sign
-   """
-   ind_p = find_nearest(v, e)
-   ind_m = find_nearest(v,-e)
-   if abs(v[ind_p]-e) < abs(v[ind_m]+e): return e
-   else: return -e
+#def find_nearest(array,value):
+#   """
+#     Returns the index of the element of an array closest to a certain value
+#   """
+#   return (np.abs(array-value)).argmin()
+#
+### Decide sign
+#def get_sign(v,e):
+#   """
+#     Aux workaround to find the closest element with sign
+#   """
+#   ind_p = find_nearest(v, e)
+#   ind_m = find_nearest(v,-e)
+#   if abs(v[ind_p]-e) < abs(v[ind_m]+e): return e
+#   else: return -e
 
 
 def mean_val(v,M):
@@ -50,7 +50,8 @@ def get_ingap1(E,V,Ba,pos,vacs,cond,vale):
    v = E[E>vale]
    v= v[v<cond]
    if v.shape[0] == len(vacs):
-      inds = np.where(E==v)[0]
+      inds = np.array([np.where(E==iv)[0][0] for iv in v])
+      #inds = np.where(E==v)[0]
       return inds
    else:
       print('WARNING, In-gap out of the gap!!!')
@@ -160,10 +161,10 @@ class Spectrum(object):
       """
       # Useful files
       self.f = fname
-      pris = fname + 'pris_spectrum.npy'
-      dfct = fname + 'dfct_spectrum.npy'
-      pris_pos = fname + 'base_pris.xyz'
-      dfct_pos = fname + 'base_dfct.xyz'
+      pris = fname + 'pris.spectrum.npy'
+      dfct = fname + 'dfct.spectrum.npy'
+      pris_pos = fname + 'pris.xyz'
+      dfct_pos = fname + 'dfct.xyz'
       dfct_basis = fname + 'dfct.basis'
       log = fname + 'main.log'
 
