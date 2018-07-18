@@ -123,30 +123,30 @@ def defects(N,pos,sub,lay,bonds=None,d=None,alpha=0.,hollow=True,retpoint=False)
    ## Select sublattice   ---   Hollow Vs Connected
    l = np.max(lay)
    LG.info('Vacancies introduced in layer: %s'%(l))
-   aux = list(range(len(lay)))
-   #aux = range(max(self.INDS)+1)   #+1 because python starts in 0
-   sub_atsA =np.where((lay==l)&(sub==1),aux,-1)  #A
-   sub_atsA = sub_atsA[sub_atsA>0]
+   auxX = np.array(range(len(lay)))  # original index in pos
+   ## Index of atoms sublattice A
+   sub_atsA = np.where((lay==l)&(sub==1))[0]
    na = sub_atsA.shape[0]
-   #lena = len(self.find_neig(sub_atsA[0]))
-   sub_atsB =np.where((lay==l)&(sub==-1),aux,-1) #B
-   sub_atsB = sub_atsB[sub_atsB>0]
+   ## Index of atoms sublattice B
+   sub_atsB = np.where((lay==l)&(sub==-1))[0]
    nb = sub_atsB.shape[0]
-   #lenb = len(self.find_neig(sub_atsB[0]))
    
    lena = np.mean([len(find_neig(bonds,sub_atsA[i])) for i in range(na)])
    lenb = np.mean([len(find_neig(bonds,sub_atsB[i])) for i in range(nb)])
 
-   if hollow:      # indices of hollow atoms
+   if hollow: ###### indices of hollow atoms
       if lena < lenb: sub_ats = sub_atsA
       else:           sub_ats = sub_atsB
-   else:      # indices of connected atoms
+   else: ########### indices of connected atoms
       if lena > lenb: sub_ats = sub_atsA
       else:           sub_ats = sub_atsB
-
    ideal = regular_polygon(N,d,s=alpha,z=l)
    ideal = [r-center for r in ideal]   # TODO check
-   indices = [snap(p, pos ) for p in ideal]
+   #indices = [snap(p, pos ) for p in ideal]
+   # index referred to the subset A/B
+   indices = [snap(p, pos[sub_ats] ) for p in ideal]
+   # indices referred to the full list of atomic positions
+   indices = [auxX[sub_ats][x] for x in indices]
    return indices
    #### Select atoms for defects
    ##if N == 1:   ## 1 defect
