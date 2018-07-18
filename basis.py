@@ -349,7 +349,7 @@ class Base(object):
       if hasattr(self, 'defects'):
          ats = []
          for E in self.elements:
-            if E.place in self.defects: ats.append('U')
+            if E.place in self.defects: ats.append('X')
             else: ats.append(E.element)
       else: ats = [E.element for E in self.elements]
       IO.write.xyz(pos,self.latt,at=ats,sub=self.subs,fname=fname)
