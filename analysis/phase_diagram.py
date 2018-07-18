@@ -69,6 +69,10 @@ C = ax.scatter(X,Y,c=Z,cmap=cmap,vmin=np.min(Z),vmax=np.max(Z),zorder=10)
 fig.colorbar(C) #, ticks=[-1, 0, 1])
 ax.set_xlabel('$\mathcal{E}$ $(eV)$')
 ax.set_ylabel('$d$ $(\AA)$')
+
+ax.set_xlim([-0.2,0.2])
+ax.set_ylim([1,105])
+
 import datetime as dt
 now = dt.datetime.now()
 name = now.strftime('%Y%m%d_%H%M%S.png')

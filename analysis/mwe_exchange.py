@@ -8,7 +8,7 @@ import matplotlib as mpl
 
 
 
-def plot_spectrum(E,V,pos,Ba=[]): #inds=[]):   #,ax=None):
+def plot_spectrum(E,V,pos,Ba=[],Ep=[],inds=[],title=''):   #,ax=None):
    def state_space(v,pos,base,S=100):
       """
       Plot real space distribution of a given wave-function
@@ -67,11 +67,15 @@ def plot_spectrum(E,V,pos,Ba=[]): #inds=[]):   #,ax=None):
    my_onpick = onpick_wrapper(E,V,pos,Ba,state_space)
    my_picker = picker_wrapper()
 
+   inds = np.array(inds)
+   X = np.array(range(len(E)))
    fig, ax = plt.subplots()
-   X = range(len(E))
-   line, = ax.plot(X,E, 'o', picker=my_picker)
+   line, = ax.plot(X,E, 'o', picker=my_picker,label='dfct')
+   if len(Ep) != 0: ax.plot(X+0.1,Ep, 'o',label='pris')
+   if len(inds) != 0: ax.scatter(X[inds],E[inds],c='r',s=100,zorder=0)
    ax.set_xlim([-1,len(X)+1])
-   ax.grid()
+   ax.legend(loc=2)
+   if len(title) != 0: ax.set_title(title)
 
    fig.canvas.mpl_connect('pick_event', my_onpick)
    plt.show()
@@ -187,13 +191,15 @@ class basis(object):
 
 
 class Spectrum(object):
-   def __init__(self,fname,nv=None):
+   def __init__(self,fname,nv=None,slct=False):
       """
         fname is the folder containing the output of the calculations.
         It must containthe following files:
          - pris_spectrum.npy           - dfct_spectrum.npy
          - base_pris.xyz               - base_dfct.xyz
          - pris.basis (optional)       - dfct.basis
+        slct: In case of non-clear in-gap states, display the spectrum to
+              manually select the in-gap states
       """
       if fname[-1] != '/': fname += '/'
       # Useful files
@@ -224,24 +230,34 @@ class Spectrum(object):
       self.gap = self.cond - self.vale
 
       self.pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3))
+      # Requires hexagon with 1 side parallel to X or Y
+      X = self.pos[:,0]
+      Y = self.pos[:,1]
+      Z = self.pos[:,2]
+      lx = np.max(X) - np.min(X)   # diameter
+      ly = np.max(Y) - np.min(Y)
+      self.a = min((lx/2.,ly/2.))
+      self.ap = self.a * np.sqrt(3)/2.
+
       # Geo stuff
       if nv == None:
          self.Nv, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
       else:
          _, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
          self.Nv = nv
+      self.analyze_ingap(slct)
    def plot(self):
-      plot_spectrum(self.E, self.V, self.pos, self.Ba)
+      plot_spectrum(self.E, self.V, self.pos, self.Ba, self.Ep,self.inds)
    def select_ingap(self):
       # Workaround to select states
       tmp = '/tmp/ingap.txt'
       f = open(tmp,'w')
       f.close()
-      plot_spectrum(self.E, self.V, self.pos, self.Ba)
+      plot_spectrum(self.E, self.V, self.pos, self.Ba, self.Ep,title='Select in-gap')
       self.inds = np.unique(np.sort(np.loadtxt(tmp,dtype=int)))
       f = open(tmp,'w')
       f.close()
-   def analyze_ingap(self):
+   def analyze_ingap(self,select=False):
       try: self.inds
       except AttributeError:
          inds,warn = get_ingap(self.E,self.V,self.Ba,self.pos,self.vacs,
@@ -253,7 +269,9 @@ class Spectrum(object):
          #   #inds =  self.select_ingap()
          #   inds = get_ingap(self.E,self.V,self.Ba,self.pos,self.vacs,
          #                                                 self.cond,self.vale)
-         if warn: self.warning = True
+         if warn:
+            self.warning = True
+            if select: self.select_ingap()
       self.inds = inds
       #inds = self.inds
       #print('Analyzing states',self.inds)
@@ -328,8 +346,10 @@ if __name__ == '__main__':
    import sys
    fol = sys.argv[1]
    print(fol)
-   A = Spectrum(fol)
+   A = Spectrum(fol,slct=True)
+   A.plot()
    print(A)
+   exit()
    A.select_ingap()
    #A.analyze_ingap()
    JF,D,tRL,tLR,UR,UL,e1,e2 = A.get_blue_parameters()
