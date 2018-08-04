@@ -409,12 +409,17 @@ def kinetic(base,hoppings,func=None,coup=1):
 def mass(base,lmass):
    """ Assumes sublattice attribute already calculated """
    v = np.array([0.,0.,0.])
-   sub_dic = {'A':1,'B':-1}
    aux = [[None for _ in base.elements] for _ in base.elements]
    for i in range(len(base.elements)):
       E = base.elements[i]
       f = E.sublattice
       aux[i][i] = coo_matrix(f * np.identity(len(E.onsite)))
+   ## XXX shouldn't this work?
+   #rows = np.array(range(len(base.SUBS)))
+   #cols = rows
+   #data = base.SUBS
+   #H_aux = csc_matrix( (data,(rows,cols)), shape=(ndim,ndim))
+   #return HTerm(H_aux, v, lmass, name='mass')
    return HTerm(csc_matrix(bmat(aux)),v,lmass,name='mass')
 
 

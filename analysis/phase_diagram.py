@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mwe_exchange as ex
 
-fname = 'datos.dat'
+fname = 'datos_grid_30.dat'
 
 d,e,JF,D,tRL,tLR,UR,UL,E1,E2 = np.loadtxt(fname,unpack=True)
 
@@ -19,10 +19,12 @@ for i in range(len(d)):
    Eb = np.std(es[1:4])
    #Z.append(JF[i])
    Z.append(Ea-Eb)
+   #if Ea-Eb >= 0: Z.append( es[0]-es[1] )
+   #elif Ea-Eb < 0: Z.append( es[3]-es[2] )
 
 X = np.array(X)
 Y = np.array(Y)
-Z = np.array(Z)
+Z = np.array(Z)  #*1000
 
 def re_size(x):
    inds_p = np.where(x>=0)[0]
@@ -45,7 +47,7 @@ def re_size(x):
          im += 1
    return np.array(X)
 
-#Z = re_size(Z)
+Z = re_size(Z)
 #Z = np.where(Z>=0,1,-1)
 
 

@@ -91,7 +91,7 @@ def regular_polygon(n,l,s=0.,z=0.):
    r = l/(2*np.sin(np.pi/n))
    points = []
    for i in range(n):
-      theta = s+ i*2*np.pi/n
+      theta = np.radians(s) + i*2*np.pi/n
       points.append( (r*np.cos(theta),r*np.sin(theta),z) )  # XXX Z component?
    return points
 
