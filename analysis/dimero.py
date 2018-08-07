@@ -7,11 +7,6 @@ import numpy as np
 import os
 
 
-fol = '../../../Documents/data/artificial_lattices/dimer/OUTS/1orb/ac/n50_l2/nv2_na0/d*/alpha0.0/e*'
-
-fol = '../../../Documents/data/artificial_lattices/dimer/OUTS/1orb/ac/n50_l2/nv2_na0/d58.0/alpha0.0/e-0.2/'
-f = '../../../Documents/data/artificial_lattices/dimer/OUTS/1orb/ac/n50_l2/nv2_na0'
-
 def get_d_e(f):
    if f[-1] != '/': f += '/'
    ff = f.split('/')
@@ -19,19 +14,28 @@ def get_d_e(f):
    e = float(ff[-2].replace('e',''))
    return d,e
 
+fs = ['../../../Documents/data/artificial_lattices/dimer/OUTS/1orb/ac/n50_l2/nv2_na0', '../../../Documents/data/artificial_lattices/dimer_random/OUTS/1orb/ac/n50_l2/nv2_na0']
+fs = ['../../../Documents/data/artificial_lattices/dimer/OUTS/1orb/ac/n50_l2/nv2_na0']
+fout = 'datos_grid_30.dat'
+
 fols = []
-for root, dirs, files in os.walk(f):
-   if len(files) > 1: fols.append(root)
+for f in fs:
+   for root, dirs, files in os.walk(f):
+      if len(files) > 1:
+         if "alpha30.0" in root: fols.append(root)
 
 
 X,Y = [],[]
 JF,D,tRL,tLR,UR,UL,E1,E2 = [],[],[],[],[],[],[],[]
-f_out = open('datos.dat','w')
+f_out = open(fout,'w')
 f_out.write('#d   e   JF   D   tRL   tLR   UR   UL   E1   E2\n')
 for fol in tqdm(fols):
-   S = ex.Spectrum(fol)
+   try: S = ex.Spectrum(fol)
+   except FileNotFoundError: continue
    S.analyze_ingap()
-   if hasattr(S, 'warning'): continue
+   if hasattr(S, 'warning'):
+      print(fol)
+      continue
    d,e = get_d_e(fol)
    X.append(e)
    Y.append(d)
@@ -53,6 +57,8 @@ f_out.close()
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots()
 ax.scatter(X,Y,c=JF)
+ax.set_ylim([2,100])
+ax.set_xlim([-0.2,0.2])
 plt.show()
 
 #H = ex.blue(JF,D,tRL,tLR,UR,UL,e1,e2)
