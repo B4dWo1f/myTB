@@ -88,7 +88,8 @@ def regular_polygon(n,l,s=0.,z=0.):
    Returns the vertices of a regular poligon with n sides of length l.
    First vertex is placed at r*(cos(s),sin(s))
    """
-   r = l/(2*np.sin(np.pi/n))
+   if n>1: r = l/(2*np.sin(np.pi/n))
+   else: r = 0.
    points = []
    for i in range(n):
       theta = np.radians(s) + i*2*np.pi/n
