@@ -67,11 +67,42 @@ def plot_spectrum(E,V,pos,Ba=[],Ep=[],inds=[],title=''):   #,ax=None):
    my_onpick = onpick_wrapper(E,V,pos,Ba,state_space)
    my_picker = picker_wrapper()
 
+   def sync_spectrums(Ep,Ed):
+      """
+        Unfinished attempt to align in the X axis the pristine and defected
+        spectrum
+      """
+      Pcond = np.max(Ep[Ep<0])
+      Pvale = np.min(Ep[Ep>0])
+
+      Dcond = Ed[np.argmin(np.abs(Ed-Pcond))]
+      Dvale = Ed[np.argmin(np.abs(Ed-Pvale))]
+      InGap = Ed[Ed>Dcond]
+      InGap = InGap[InGap<Dvale]
+      Ng = len(InGap)
+
+      Xd = np.array(range(len(Ed)))
+      indp, = np.where(Ep == Pcond)
+      indd, = np.where(Ed == Dcond)
+      if indp == indd:
+         print('extra state in E>0')
+         Xp = []
+         for i in range(len(Ed)):
+            if Ep[i] <= Pcond: Xp.append(i)
+            else: Xp.append(i+Ng)
+      else:
+         print('extra state in E<0')
+         Xp = []
+         for i in range(len(Ed)):
+            if Ep[i] <= Pcond: Xp.append(i-Ng+1)
+            else: Xp.append(i+Ng-1)
+      return np.array(Xp), Xd
+
+   Xp,X = sync_spectrums(Ep,E)
    inds = np.array(inds)
-   X = np.array(range(len(E)))
    fig, ax = plt.subplots()
    line, = ax.plot(X,E, 'o', picker=my_picker,label='dfct')
-   if len(Ep) != 0: ax.plot(X+0.1,Ep, 'o',label='pris')
+   if len(Ep) != 0: ax.plot(Xp+0.1,Ep, 'o',label='pris')
    if len(inds) != 0: ax.scatter(X[inds],E[inds],c='r',s=100,zorder=0)
    ax.set_xlim([-1,len(X)+1])
    ax.legend(loc=2)
@@ -180,6 +211,10 @@ def get_exchanges(vL,vR,U=2.7):
    return UL, UR, 2*JF, D, tLR, tRL
 
 
+def mean_val(v,M):
+   """ Returns the expected value: <v|M|v> """
+   return np.sum(np.conj(v)*M*v)
+
 
 ## Basis
 class basis(object):
@@ -229,11 +264,12 @@ class Spectrum(object):
       self.gapP = self.condP - self.valeP
       self.gap = self.cond - self.vale
 
-      self.pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3))
+      self.pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3,4))
       # Requires hexagon with 1 side parallel to X or Y
       X = self.pos[:,0]
       Y = self.pos[:,1]
       Z = self.pos[:,2]
+      self.sub = self.pos[:,3]
       lx = np.max(X) - np.min(X)   # diameter
       ly = np.max(Y) - np.min(Y)
       self.a = min((lx/2.,ly/2.))
@@ -277,6 +313,10 @@ class Spectrum(object):
       #print('Analyzing states',self.inds)
       self.E_ingap = self.E[inds]
       self.V_ingap = self.V[inds]
+      SUB = self.sub[self.Ba.n]
+      self.SP = [mean_val(v,SUB) for v in self.V_ingap]
+      LAY = np.where(self.pos[:,2]>0,1,-1)[self.Ba.n]
+      self.SL = [mean_val(v,LAY) for v in self.V_ingap]
    def get_blue_parameters(self):
       UL, UR, JF, D, tLR, tRL = get_exchanges(*self.V_ingap)
       e1,e2 = self.E_ingap
