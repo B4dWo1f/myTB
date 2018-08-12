@@ -6,50 +6,42 @@ import numpy as np
 
 def H0(e0,t1):
    """ Intra-cell """
-   return np.matrix([[e0,t1,t1],\
-                     [t1,e0,t1],\
-                     [t1,t1,e0]])
+   return np.matrix([[e0,t1],\
+                     [t1,e0]])
 
-def H1(t1,t2,t3,t4=0,t5=0):
-   """ Hopping with cell at a1 """
-   return np.matrix([[t3,t2,t1],\
-                     [t4,t3,t2],\
-                     [t5,t4,t3]])
+def H1(t1,t2):
+   """ Intra-cell """
+   return np.matrix([[t2,0],\
+                     [t1,t2]])
 
-def H2(t1,t2,t3,t4=0,t5=0):
-   """ Hopping with cell at a2 """
-   return np.matrix([[t3,t4,t2],\
-                     [t2,t3,t1],\
-                     [t4,t5,t3]])
+def H2(t1,t2):
+   """ Intra-cell """
+   return np.matrix([[t2,0],\
+                     [t1,t2]])
 
-def H1m2(t1,t2,t3,t4=0,t5=0):
-   """ Hopping with cell at a1-a2 """
-   return np.matrix([[t3,t1,t2],\
-                     [t5,t3,t4],\
-                     [t4,t2,t3]])
+def H12(t3):
+   """ Intra-cell """
+   return np.matrix([[0,0],\
+                     [t3,0]])
+def H1m2(t2,t3):
+   """ Intra-cell """
+   return np.matrix([[t2,t3],\
+                     [t3,t2]])
 
-def H12(t4=0,t5=0):
-   """ Hopping with cell at a1-a2 """
-   return np.matrix([[0,0,t4],\
-                     [0,0,t5],\
-                     [0,0,0]])
-
-
-def hamil(k,e0,t1,t2,t3,latt,t4=0,t5=0):
+def hamil(k,e0,t1,t2,t3,latt):
    """ k-dependent hamiltonian """
    a1,a2 = latt
    h0 = H0(e0,t1)
-   h1 = H1(t1,t2,t3,t4,t5)
-   h2 = H2(t1,t2,t3,t4,t5)
-   h1m2 = H1m2(t1,t2,t3,t4,t5)
-   #h12 = H1m2(t4,t5)
+   h1 = H1(t1,t2)
+   h2 = H2(t1,t2)
+   h12 = H12(t3)
+   h1m2 = H1m2(t2,t3)
    # ** There is no hopping to cell a1+a2
    return h0 +\
           np.exp(-1j*np.dot(k,a1))*h1 + np.exp(1j*np.dot(k,a1))*h1.H+\
           np.exp(-1j*np.dot(k,a2))*h2 + np.exp(1j*np.dot(k,a2))*h2.H+\
+          np.exp(-1j*np.dot(k,a1+a2))*h12 + np.exp(1j*np.dot(k,a1+a2))*h12.H+\
           np.exp(-1j*np.dot(k,a1-a2))*h1m2 + np.exp(1j*np.dot(k,a1-a2))*h1m2.H
-          #np.exp(-1j*np.dot(k,a1+a2))*h12 + np.exp(1j*np.dot(k,a1+a2))*h12.H+\
-
 
 def reciprocal(latt_vec):
    """
@@ -119,42 +111,56 @@ def recorrido(points,nk):
          RECORRIDO.append(np.array(p))
    return RECORRIDO
 
-
-
 def cell(N,a=1.4,buck=0.0,cent=True,show=False):
    """
-   Returns the list of atoms, atomic positions, lattice vectors and sublattice
-   of a Kagome lattice
-   The Kagome lattice is not bipartite so no sublattice will be returned
+      The function returns 2 lists, one containing the positions of the atoms
+     and the other containing the lattice vectors for the simplest graphene
+     super-cell.
+     The parameters are the following:
+       N: [int] number of repetitions of the brick
+       a: [float] atomic distance
+       buck: [folat] buckling of the atoms (introduced by sublattice)
+       cent: [boolean] center the unit cell at (0,0,0)
+       show: show a 2D-plot of the unit cell and lattice vectors
    """
-   if N != 1:
-      print('WARNING: N!=1 not implemented yet. Using N=1 instead')
+   if N == 0:
+      print('WARNING: N=0 is ill-defined. Using N=1 instead')
       N = 1
    ap = np.sqrt(3)/2.   # mathematical constant
-   r3 = np.sqrt(3)
-   brick = [np.array([-a/2,0,0]),
-            np.array([ a/2,0,0]),
-            np.array([0,r3*a/2,0])]
-   e=1.
-   vectors = [e*np.array([2*a,0,0]),
-              e*np.array([a,r3*a,0])]
-   pos = []
+   b = buck/2.
+   brick = [a*np.array([-1/2.,0.,-b]),
+            a*np.array([ 1/2.,0.,b]) ]
+   vectors = [a*np.array([3/2.,-ap,0.]),
+              a*np.array([3/2., ap,0.])]
+   latt = [N*vectors[0],
+           N*vectors[1]]
+   sublatt = [1,-1]
+
+   pos,sub = [],[]
    for i in range(N):
       for j in range(N):
          for ir in range(len(brick)):
             r = brick[ir]
             p = r + i*vectors[0] + j*vectors[1]
+            s = sublatt[ir]
             pos.append(p)
+            sub.append(s)
+   ## Re-Center the unit cell
+   if cent:
+      C = np.mean(pos,axis=0)
+      for i in range(len(pos)):
+         pos[i] -= C
+   if show: plot_cell(pos,latt,tit='Simple Cell %sx%s'%(N,N))
    ats = np.array(['C' for _ in pos])
-   latt = vectors
-   return ats,np.array(pos),latt,None   # No sublattice
-
+   pos = np.array(pos)
+   sub = np.array(sub)
+   return ats,pos,latt,sub
 
 ################################################################################
 if __name__ == '__main__':
    ## Atomic positions and lattice vectors
    _,pos,latt,_ = cell(1)
-   if True:   # Plot lattice
+   if False:   # Plot lattice
       X0 = pos[:,0]
       Y0 = pos[:,1]
       X,Y = [],[]
@@ -185,7 +191,7 @@ if __name__ == '__main__':
    rec = recorrido(points,50)
 
    ## Bands for first-neighbors only
-   e0,t1,t2,t3 = 0.,-1.,0.,0.
+   e0,t1,t2,t3 = 0.,1.,0.,0.
    X0,Y0 = [],[]
    for i in range(len(rec)):
       k = rec[i]
@@ -195,7 +201,7 @@ if __name__ == '__main__':
          Y0.append(e)
 
    ## Bands for first and second neighbors
-   e0,t1,t2,t3 = 0.,-1.,-0.3,0.1
+   e0,t1,t2,t3 = 0.,1.,0.1,0.05
    X1,Y1 = [],[]
    for i in range(len(rec)):
       k = rec[i]

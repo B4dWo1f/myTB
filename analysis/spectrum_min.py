@@ -81,14 +81,13 @@ for fol in fols:
    folders = folders
 
 
-   X,P,L,G,E0 = [],[],[],[],[]
+   X,P,L,G,E0,LC,LC90 = [],[],[],[],[],[],[]
    Xplt,Yplt,YPplt = [],[],[]
    for f in tqdm(folders):
-      A = ex.Spectrum(f)
-      #try: A = ex.Spectrum(f)
-      #except:
-      #   print('ERROR reading:',f)
-      #   continue
+      try: A = ex.Spectrum(f)
+      except FileNotFoundError:
+         print('ERROR reading:',f)
+         continue
       for e,ep in zip(A.E,A.Ep):
          Xplt.append(A.elec)
          Yplt.append(e)
@@ -98,7 +97,19 @@ for fol in fols:
       L.append(A.SL)
       G.append(A.gap)
       E0.append(A.E_ingap)
+      LC.append(A.lc)
+      LC90.append(A.lc90)
    mx,Mx = np.min(X), np.max(X)
+
+   # Datos
+   f_data = open('datos.dat','w')
+   s = '   '
+   f_data.write('#elec   SP   SL   G   E0   LC   LC90\n')
+   for e,p,l,g,e0,lc,lc90 in zip(X,P,L,G,E0,LC,LC90):
+      f_data.write(str(e) +s+ str(p[0]) +s+ str(l[0]) +s+ str(g) +s+ str(e0[0]))
+      f_data.write(s+ str(lc[0]) +s+ str(lc90[0]) +'\n')
+      f_data.flush()
+   f_data.close()
 
    fig = plt.figure(figsize=(9,10))
    gs = gridspec.GridSpec(5, 1)
@@ -132,7 +143,7 @@ for fol in fols:
    ax_G.set_xlim([mx,Mx])
 
    # In-gap Energies
-   ax_E0.plot(X,E0,lw=2)
+   ax_E0.plot(X,LC90,lw=2)
    ax_E0.set_ylabel('$E_0$ $(eV)$')
    ax_E0.set_xlim([mx,Mx])
 

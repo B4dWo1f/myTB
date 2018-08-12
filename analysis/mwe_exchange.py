@@ -265,14 +265,16 @@ class Spectrum(object):
       self.gap = self.cond - self.vale
 
       self.pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3,4))
+      self.sub = self.pos[:,3]
+      self.pos = self.pos[:,:-1]
       # Requires hexagon with 1 side parallel to X or Y
       X = self.pos[:,0]
       Y = self.pos[:,1]
       Z = self.pos[:,2]
-      self.sub = self.pos[:,3]
       lx = np.max(X) - np.min(X)   # diameter
       ly = np.max(Y) - np.min(Y)
       self.a = min((lx/2.,ly/2.))
+      self.diameter = max((lx,ly))
       self.ap = self.a * np.sqrt(3)/2.
 
       # Geo stuff
@@ -313,10 +315,19 @@ class Spectrum(object):
       #print('Analyzing states',self.inds)
       self.E_ingap = self.E[inds]
       self.V_ingap = self.V[inds]
+      # Properties of the in-gap states
       SUB = self.sub[self.Ba.n]
       self.SP = [mean_val(v,SUB) for v in self.V_ingap]
       LAY = np.where(self.pos[:,2]>0,1,-1)[self.Ba.n]
       self.SL = [mean_val(v,LAY) for v in self.V_ingap]
+      norm = np.linalg.norm
+      self.lc = []
+      for v in self.V_ingap:
+         r0 = self.pos[self.vacs[0]]
+         dists = [norm(self.pos[i]-r0)**2 for i in range(len(self.pos))]
+         dists = np.array(dists)
+         self.lc.append( mean_val(v,dists)/self.diameter )
+      self.lc90 = [ get_lc(self.Ba,self.pos,v,r0) for v in self.V_ingap]
    def get_blue_parameters(self):
       UL, UR, JF, D, tLR, tRL = get_exchanges(*self.V_ingap)
       e1,e2 = self.E_ingap
@@ -357,7 +368,8 @@ class Spectrum(object):
          if ed in [self.vale, self.cond]: msg += '  * %+.7f\n'%(ed)
          elif ed in self.E_ingap:
                msg += ' -> %+.7f'%(ed)
-               msg +='   SP:%.4f  SL: %.4f\n'%(self.SP_eig[ic],self.SL_eig[ic])
+               msg +='   SP:%.4f  SL: %.4f\n'%(self.SP[ic],self.SL[ic])
+               #msg +='   SP:%.4f  SL: %.4f\n'%(self.SP_eig[ic],self.SL_eig[ic])
                ic += 1
          else: msg += '    %+.7f\n'%(ed)
       return msg
