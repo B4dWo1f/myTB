@@ -10,6 +10,7 @@ R = '../../../Documents/data/artificial_lattices/'
 fol = R+'triangular/OUTS/1orb/simple/n45_l2/nv1_na0/dNone/alpha0.0/e-0.2/'
 fol = R+'graphene/OUTS/1orb/simple/n60_l2/nv2_na0/d0/alpha0.0/e-0.2/'
 fol = R+'kagome/OUTS/1orb/simple/n60_l2/nv3_na0/dNone/alpha0.0/e-0.2/'
+nk = 100
 
 
 models = {'kagome':kagome, 'graphene':graphene,'triangular':triangular}
@@ -47,7 +48,7 @@ M = (recip[0]+recip[1])/2.
 
 ## K-path
 points = [G,K,Kp,G]
-rec = geo.recorrido(points,100)
+rec = geo.recorrido(points,nk)
 
 
 def myerror(rec,E0,t1,t2,t3):

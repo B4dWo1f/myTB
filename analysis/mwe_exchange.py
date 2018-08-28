@@ -283,6 +283,11 @@ class Spectrum(object):
       else:
          _, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
          self.Nv = nv
+      if self.Nv == 2:
+         r1 = self.pos[self.vacs][0]
+         r2 = self.pos[self.vacs][1]
+         r = r1-r2
+         self.alpha = np.degrees(np.arctan(r[1]/r[0]))
       self.analyze_ingap(slct)
    def plot(self):
       plot_spectrum(self.E, self.V, self.pos, self.Ba, self.Ep,self.inds)

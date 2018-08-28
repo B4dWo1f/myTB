@@ -27,7 +27,8 @@ class UnitCell(object):
       self.ats = np.array(ats,str)
       self.pos = np.array(pos)
       self.latt = np.array(latt)
-      self.sub = np.array(subs,int)
+      self.sub = np.array(subs)
+      #self.sub = np.array(subs,int)   #TODO check type
       if self.check() and len(self.ats) > 0: self.get_geo_info()
       else: pass
       if pasivate: self.pasivate()
@@ -274,25 +275,31 @@ def kagome(N,a=1.4,buck=0.0,cent=True,show=False):
    """
    A Kagome lattice is not bipartite so no sublattice will be returned
    """
-   if N != 1:
-      print('WARNING: N!=1 not implemented yet. Using N=1 instead')
-      N = 1
-   ap = np.sqrt(3)/2.   # mathematical constant
+   #if N != 1:
+   #   print('WARNING: N!=1 not implemented yet. Using N=1 instead')
+   #   N = 1
+   r3 = np.sqrt(3)
+   ap = r3/2.   # mathematical constant
    brick = [np.array([-a/2,0,0]),
             np.array([ a/2,0,0]),
             np.array([0,r3*a/2,0])]
-   e=1.
-   vectors = [e*np.array([2*a,0,0]),
-              e*np.array([a,r3*a,0])]
-   pos = []
+
+   vectors = [a*np.array([2,0,0]),
+              a*np.array([1,r3,0])]
+   latt = [N*vectors[0],
+           N*vectors[1]]
+   subs = [-1,0,1]
+
+   pos,sub = [],[]   #TODO check sublattice
    for i in range(N):
       for j in range(N):
          for ir in range(len(brick)):
             r = brick[ir]
             p = r + i*vectors[0] + j*vectors[1]
             pos.append(p)
+            sub.append(subs[ir])
    ats = np.array(['C' for _ in pos])
-   return ats,pos,latt,None   # No sublattice
+   return ats,pos,latt,sub
 
 def simple(N,a=1.4,buck=0.0,cent=True,show=False):
    """
@@ -544,6 +551,8 @@ if __name__ == '__main__':
    for n in range(0,50):
       for l in [2]:
          ats,pos,latt,subs = armchair(n)
+         #ats,pos,latt,subs = simple(n)
+         #ats,pos,latt,subs = kagome(n)
          A = UnitCell(ats,pos,latt,subs)
          #A.pasivate()
          if l>1: A.multilayer(l)
