@@ -92,7 +92,7 @@ class vacancy_param(object):
 
 class sys_param(vacancy_param):
    def __init__(self,xyz_file,pasivate,dists,vacancy_param,adatom_param,DOspin,\
-                     force0D):
+                     force0D,periodic):
       self.xyz_file = xyz_file
       self.pasivate = pasivate
       #self.defect = defect
@@ -100,6 +100,7 @@ class sys_param(vacancy_param):
       self.ada = adatom_param
       self.vac = vacancy_param
       self.force0D = force0D
+      self.pbc = periodic
       self.DOspin = DOspin
    def __str__(self):
       msg = 'Physical system parameters\n'
@@ -140,9 +141,10 @@ def setup(fname='SK1.ini'):
    l = int(config['system']['l'])
    xyz_file = config['system']['xyz_file']
    #xyz_dir = config['system']['xyz_dir']    #XXX future implementation
-   pasivate = bool(config['system']['pasivate'].capitalize())
+   pasivate = eval(config['system']['pasivate'].capitalize())
    dist = eval(config['system']['dist'])
    force0D = eval(config['system']['force0D'].capitalize())
+   periodic = eval(config['system']['periodic'].capitalize())
    DOspin = eval(config['system']['DOspin'].capitalize())
 
    Nv = int(config['vacancy']['N'])
@@ -154,7 +156,7 @@ def setup(fname='SK1.ini'):
    ap = adatom_param(Na)
 
    ## System parameters
-   SP = sys_param(xyz_file,pasivate,dist,vp,ap,DOspin,force0D)
+   SP = sys_param(xyz_file,pasivate,dist,vp,ap,DOspin,force0D,periodic)
 
    keys,values = [],[]
    for key in config['atoms']:

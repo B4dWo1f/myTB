@@ -120,7 +120,7 @@ if CP.spectrum:
         Dummy auxiliary function to calculate the spectrum in parallel
       """
       LG.info('Spectrum: %s'%(H.tag))
-      es,v = H.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw)
+      es,v = H.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw,pbc=SP.pbc)
       print('  ---- %s ----'%(H.tag))
       for e in es:
          print(e)

@@ -197,7 +197,7 @@ def get_lc(Ba,pos,v,r0,lim=0.9):
 
 def get_exchanges(vL,vR,U=2.7):
    """
-     Compute all the effective exchange couplings
+     Compute all the effective exchange couplings. in eV
    """
    JF, UL, UR, D, tLR, tRL = 0., 0., 0., 0., 0., 0.
    for iv in range(len(vL)):
@@ -403,17 +403,20 @@ if __name__ == '__main__':
    import sys
    fol = sys.argv[1]
    print(fol)
-   A = Spectrum(fol,slct=True)
+   A = Spectrum(fol) #,slct=True)
    A.plot()
-   print(A)
-   exit()
-   A.select_ingap()
+   #print(A)
+   #A.select_ingap()
    #A.analyze_ingap()
    JF,D,tRL,tLR,UR,UL,e1,e2 = A.get_blue_parameters()
    H = blue(JF,D,tRL,tLR,UR,UL,e1,e2)
    es,v = np.linalg.eigh(H)
    v = v.transpose()
 
+   print('Jf=',JF)
+   print('D=',D)
+   print('t=',tRL,tLR)
+   print('U=',UR,UL)
    for i in range(len(es)):
       print(i,es[i],np.round(v[i,:],4))
    import matplotlib.pyplot as plt

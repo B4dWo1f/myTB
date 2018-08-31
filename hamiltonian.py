@@ -77,14 +77,25 @@ class Hamiltonian(object):
       """ Generate kdependent hamiltonian"""
       return hk_gen(self)
    def get_k(self,k): return Hamil(self.lista,k)
-   def get_N_states(self,Op=False,border=True,n=7,sigma=0,
-                                                        folder='./',shw=False):
+   def get_N_states(self,Op=False,pbc=False,n=7,sigma=0,folder='./',shw=False):
+      """
+        Calculates the n eigenstates closest to sigma.
+        Op: [bool] calculate eigenvectors
+        pbc: [bool] implements periodic boundary conditions (by evaluating the
+             Hamiltonian in Gamma)
+        n: [int] number of eigenstates to calculate
+        sigma: [float] energy around which diagonalize
+        folder: [str] folder to store the spectrum.
+        shw: [bool] plot the spectrum
+      """
       from scipy.sparse.linalg import eigsh
       try: self.intra
       except: self.names()
       LG.info('In get_N_states')
-      if border: H = csc_matrix(self.intra)       # Island
-      else: H = csc_matrix( self.get_k(np.array((0,0,0))) )  # Peri bound cond
+      if pbc:
+         H = csc_matrix( self.get_k(np.array((0.,0.,0.))) )  # Periodic B.C.
+      else:
+         H = csc_matrix(self.intra)       # Island
       LG.info('H acquired')
       if Op:
          LG.info('Start Diagonalization')
