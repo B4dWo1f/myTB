@@ -122,24 +122,31 @@ def get_geo_stuff(fol):
    vacs = os.popen('grep " Changing onsite of atom:" %s'%(log)).readlines()
    vacs = [v.split(':')[-1] for v in vacs]
    vacs = list(set([int(v.lstrip().rstrip()) for v in vacs]))
-   Nv = len(vacs)
-   ## Get distance
-   try:
-      com = 'grep " Requested-dist/Real-dist: " %s'%(log)
-      dis = os.popen(com).read().split()[-1].split('/')[-1]
-   except IndexError:
-      #print('Distance not found')
-      dis = 0.0
-   dis = float(dis)
-   ## Get angle
-   try:
-      com = 'grep " Requested-angle/Real-angle: " %s'%(log)
-      ang = os.popen(com).read().split()[-1].split('/')[-1]
-   except IndexError:
-      #print('Angle not found')
-      ang = 0.0
-   ang = float(ang)
-   return Nv, dis, ang, vacs
+   return vacs
+   #if len(vacs) == 2:
+   #   print('here it makes sense to calculate distance/angle')
+
+   #print(vacs)
+   #print('*****')
+   #exit()
+   #Nv = len(vacs)
+   ### Get distance
+   #try:
+   #   com = 'grep " Requested-dist/Real-dist: " %s'%(log)
+   #   dis = os.popen(com).read().split()[-1].split('/')[-1]
+   #except IndexError:
+   #   #print('Distance not found')
+   #   dis = 0.0
+   #dis = float(dis)
+   ### Get angle
+   #try:
+   #   com = 'grep " Requested-angle/Real-angle: " %s'%(log)
+   #   ang = os.popen(com).read().split()[-1].split('/')[-1]
+   #except IndexError:
+   #   #print('Angle not found')
+   #   ang = 0.0
+   #ang = float(ang)
+   #return Nv, dis, ang, vacs
 
 class InGap(Exception):
    def __init__(self, value):
@@ -278,16 +285,20 @@ class Spectrum(object):
       self.ap = self.a * np.sqrt(3)/2.
 
       # Geo stuff
-      if nv == None:
-         self.Nv, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
-      else:
-         _, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
-         self.Nv = nv
+      self.vacs = get_geo_stuff(fname)
+      self.Nv = len(self.vacs)
+      #if nv == None:
+      #   self.Nv, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
+      #else:
+      #   _, self.dist, self.alpha, self.vacs = get_geo_stuff(fname)
+      #   self.Nv = nv
       if self.Nv == 2:
          r1 = self.pos[self.vacs][0]
          r2 = self.pos[self.vacs][1]
          r = r1-r2
+         self.dist = np.linalg.norm(r)
          self.alpha = np.degrees(np.arctan(r[1]/r[0]))
+      else: self.alpha, self.dist = None, None
       self.analyze_ingap(slct)
    def plot(self):
       plot_spectrum(self.E, self.V, self.pos, self.Ba, self.Ep,self.inds)

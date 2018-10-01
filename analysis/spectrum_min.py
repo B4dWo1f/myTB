@@ -78,10 +78,10 @@ for fol in fols:
       folders.append( a[0]+'/' )
    folders = folders[1:]
    folders = sorted(folders,key=lambda x: float(x.split('/')[-2][1:]))
-   folders = folders
+   #folders = folders[0:5]
 
 
-   X,P,L,G,E0,LC,LC90 = [],[],[],[],[],[],[]
+   X,P,L,G,Gg,E0,LC,LC90 = [],[],[],[],[],[],[],[]
    Xplt,Yplt,YPplt = [],[],[]
    for f in tqdm(folders):
       try: A = ex.Spectrum(f)
@@ -96,6 +96,8 @@ for fol in fols:
       P.append(A.SP)
       L.append(A.SL)
       G.append(A.gap)
+      try: Gg.append( abs(A.E_ingap[0]-A.E_ingap[1]) )
+      except: pass
       E0.append(A.E_ingap)
       LC.append(A.lc)
       LC90.append(A.lc90)
@@ -139,12 +141,17 @@ for fol in fols:
 
    # Gap
    ax_G.plot(X,G,lw=2)
+   try: 
+      ax_G1 = ax_G.twinx()
+      ax_G1.plot(X,Gg,'C1',lw=2)
+      ax_G1.grid()
+   except: pass
    ax_G.set_ylabel('$\Delta$ $(eV)$')
    ax_G.set_xlim([mx,Mx])
 
    # In-gap Energies
    ax_E0.plot(X,LC90,lw=2)
-   ax_E0.set_ylabel('$E_0$ $(eV)$')
+   ax_E0.set_ylabel('$l_c$ $(\AA)$')
    ax_E0.set_xlim([mx,Mx])
 
    fig.canvas.mpl_connect('pick_event', my_onpick)

@@ -72,7 +72,6 @@ def disable2(lg):
 
 ## Timer Decorator
 from time import time
-
 def timer(lg):
    """
    Logs the execution time of a certain funcion to the provided logger
@@ -85,4 +84,17 @@ def timer(lg):
          return ret
       return inner
    return real_timer
+
+
+def deprecated(lg):
+   """
+   Issues a warning when using a deprecated function
+   """
+   def wrapper(wrapped):
+      def inner(*args, **kwargs):
+         lg.warning('Deprecated use of '+wrapped.__name__)
+         ret = wrapped(*args, **kwargs)
+         return ret
+      return inner
+   return wrapper
 
