@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG,
                  datefmt='%Y/%m/%d-%H:%M:%S',
                  filename=FP.out+'main.log', filemode='w')
 LG = logging.getLogger('main')
-log_help.screen_handler(LG)
+log_help.screen_handler(LG,lv='info')
 ################################################################################
 
 print(FP)
@@ -126,9 +126,14 @@ if CP.spectrum:
          print(e)
    Shw = False
    n_es = min([int(H_pris.dim//2),8])
-   import multiprocessing as sub
-   pool = sub.Pool(2)
-   foo = pool.map(aux,[H_pris, H_dfct])
+   parallel = True
+   if parallel:
+      import multiprocessing as sub
+      pool = sub.Pool(2)
+      foo = pool.map(aux,[H_pris, H_dfct])
+   else:
+      for h in [H_pris, H_dfct]:
+         aux(h)
 
 LG.info('All done. Bye!')
 print('All done. Bye!')

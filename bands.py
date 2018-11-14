@@ -55,7 +55,7 @@ def diagon_window(Hm,K,Op,sigma=0,n=5):
    H = Hm.get_k(K)
    n = min([H.shape[0]-2,n])  # Protection for not enough eigvals
    if Op: return eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=True)
-   else: return eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=False,maxiters=10000)
+   else: return eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=False) #,maxiters=10000)
 
 
 @log_help.log2screen(LG)

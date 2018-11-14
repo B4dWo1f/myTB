@@ -334,7 +334,7 @@ class Spectrum(object):
       # Properties of the in-gap states
       SUB = self.sub[self.Ba.n]
       self.SP = [mean_val(v,SUB) for v in self.V_ingap]
-      LAY = np.where(self.pos[:,2]>0,1,-1)[self.Ba.n]
+      LAY = np.where(self.pos[:,2]>0,1,-1)[self.Ba.n]  # XXX shame!!
       self.SL = [mean_val(v,LAY) for v in self.V_ingap]
       norm = np.linalg.norm
       self.lc = []
@@ -342,6 +342,7 @@ class Spectrum(object):
          r0 = self.pos[self.vacs[0]]
          dists = [norm(self.pos[i]-r0)**2 for i in range(len(self.pos))]
          dists = np.array(dists)
+         v = np.bincount(self.Ba.n, weights=v)
          self.lc.append( mean_val(v,dists)/self.diameter )
       self.lc90 = [ get_lc(self.Ba,self.pos,v,r0) for v in self.V_ingap]
    def get_blue_parameters(self):

@@ -193,13 +193,13 @@ class Base(object):
       LG.info('Neighbors done')
       return self.bonds
    @log_help.log2screen(LG)
-   def adatom(self,l=1,N=1,at='H',dummy=False,inf=1e6,hollow=True):
+   def adatom(self,l=1,N=1,at='H',d=None,alpha=0.0,dummy=False,inf=1e6,hollow=True):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings
-        N: number of vacancies to add
-        d: distance between vacancies
-        alpha: angle (respect to X axis) of the vector between vacancies
+        N: number of adatoms to add
+        d: distance between adatoms
+        alpha: angle (respect to X axis) of the vector between adatoms
         ind: Not implemented
         dummy: The option dummy includes an infinite on-site energy for the
                adatom. This option is useful for maintainig the dimension of
@@ -207,7 +207,8 @@ class Base(object):
       """
       # TODO Check this changed in branch geometry and NOT TESTED
       if d == None:
-         if N == 2: d = np.linalg.norm(self.latt[0])/np.sqrt(3)
+         if N == 1: d =0.0
+         elif N == 2: d = np.linalg.norm(self.latt[0])/np.sqrt(3)
          elif N==3: d = np.linalg.norm(self.latt[0])/2     # check
          else: d = np.linalg.norm(self.latt[0])/2   # maybe??
 

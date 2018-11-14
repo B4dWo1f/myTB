@@ -508,8 +508,8 @@ def pasivate(pos,sub=[],nneig=3):
    """ Return the position of the H atoms to pasivate the edges. """
    #TODO include consideration of lattice vectors for ribbons
    ## List all the atoms of a given kind with less than nneig neighbours
-   nn = num.count_neig(pos,pos)
-   rows,cols = num.dists(pos,pos,nn)
+   nn = num.count_neig(pos,pos,1.5)
+   rows,cols = num.dists(pos,pos,nn,1.5)
    rows -= 1   # because python starts counting at 0
    cols -= 1   #
    needH,aux_sub = [],[]
@@ -548,12 +548,14 @@ def pasivate(pos,sub=[],nneig=3):
 if __name__ == '__main__':
    n = 35
    l = 2
-   for n in range(0,50):
-      for l in [2]:
+   passivate = False
+   for n in range(10,65,5):
+      for l in [1,2]:
          ats,pos,latt,subs = armchair(n)
          #ats,pos,latt,subs = simple(n)
          #ats,pos,latt,subs = kagome(n)
          A = UnitCell(ats,pos,latt,subs)
-         #A.pasivate()
+         if passivate: A.pasivate()
          if l>1: A.multilayer(l)
-         A.to_xyz('cells/ac_n%s_l%s.xyz'%(n,l))
+         if passivate: A.to_xyz('cells/ac_n%s_l%s_H.xyz'%(n,l))
+         else: A.to_xyz('cells/ac_n%s_l%s.xyz'%(n,l))
