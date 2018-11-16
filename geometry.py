@@ -132,8 +132,8 @@ def defects(N,pos,sub,lay,bonds=None,d=None,alpha=0.,hollow=True,retpoint=False)
    sub_atsB = np.where((lay==l)&(sub==-1))[0]
    nb = sub_atsB.shape[0]
    
-   lena = np.mean([len(find_neig(bonds,sub_atsA[i])) for i in range(na)])
-   lenb = np.mean([len(find_neig(bonds,sub_atsB[i])) for i in range(nb)])
+   lena = np.mean([find_neig(bonds,sub_atsA[i])[0].shape[0] for i in range(na)])
+   lenb = np.mean([find_neig(bonds,sub_atsB[i])[0].shape[0] for i in range(nb)])
 
    if hollow: ###### indices of hollow atoms
       if lena < lenb: sub_ats = sub_atsA
