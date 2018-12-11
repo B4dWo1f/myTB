@@ -105,6 +105,8 @@ if CP.bands:
       LG.info('Calculating bands')
       points = geo.get_points(base_pris.recip)
       points = [points[0],points[6],points[9], points[0]]
+      #XX = 5000
+      #points = [0.9*points[6], points[6], 1.1*points[6]]
       path = geo.recorrido(points,CP.nk)
       LG.debug('Calculating bands for Pristine')
       I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)

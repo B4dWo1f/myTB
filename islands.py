@@ -556,6 +556,7 @@ if __name__ == '__main__':
          #ats,pos,latt,subs = kagome(n)
          A = UnitCell(ats,pos,latt,subs)
          if passivate: A.pasivate()
+         r = 'cells/ac'
          if l>1: A.multilayer(l)
-         if passivate: A.to_xyz('cells/ac_n%s_l%s_H.xyz'%(n,l))
-         else: A.to_xyz('cells/ac_n%s_l%s.xyz'%(n,l))
+         if passivate: A.to_xyz(r+'_n%s_l%s_H.xyz'%(n,l))
+         else: A.to_xyz(r+'_n%s_l%s.xyz'%(n,l))

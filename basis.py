@@ -299,7 +299,8 @@ class Base(object):
         ind: Not implemented
       """
       if d == None:
-         if N == 2: d = np.linalg.norm(self.latt[0])/np.sqrt(3)
+         if N == 1: d =0.0
+         elif N == 2: d = np.linalg.norm(self.latt[0])/np.sqrt(3)
          elif N==3: d = np.linalg.norm(self.latt[0])/2     # check
          else: d = np.linalg.norm(self.latt[0])/2   # maybe??
 

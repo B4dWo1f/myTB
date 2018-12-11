@@ -30,11 +30,11 @@ def screen_handler(lg=None,lv='debug',fmt='%(name)s -%(levelname)s- %(message)s'
    return sh
 
 
-def log2screen(lg):
+def log2screen(lg,lv='info'):
    """ This decorator adds *temporarily* a screenHandler to a given logger """
    def do_it(wrapped):
       def inner(*args, **kwargs):
-         sh = screen_handler(lg)  # add ScreenHandler
+         sh = screen_handler(lg,lv=lv)  # add ScreenHandler
          ret = wrapped(*args, **kwargs)
          lg.removeHandler(sh)     # remove ScreenHandler
          return ret
