@@ -22,11 +22,14 @@ def plot_spectrum(E,V,pos,Ba=[],Ep=[],inds=[],title=''):   #,ax=None):
       V = np.bincount(Ba.n, weights=V)
       s = 1000/np.sqrt(len(X))
       fig, ax = plt.subplots()
-      ax.scatter(X,Y,c='k',s=s,edgecolors='none',alpha=0.3,zorder=0)
+      ax.scatter(X,Y,c='k',s=s,edgecolors='none',alpha=0.1,zorder=0)
       ax.scatter(X,Y,c=Z,s=900*s*V,edgecolors='none',cmap='rainbow')
-      ax.set_xlim([min(X)-1,max(X)+1])
-      ax.set_ylim([min(Y)-1,max(Y)+1])
+      #ax.scatter(X[Z>0],Y[Z>0],c='k',s=s,edgecolors='none',alpha=0.1,zorder=0)
+      #ax.scatter(X[Z>0],Y[Z>0],c='r',s=900*s*V[Z>0],edgecolors='none',cmap='rainbow')
+      ax.set_xlim([min(X)-10,max(X)+10])
+      ax.set_ylim([min(Y)-10,max(Y)+10])
       ax.set_aspect('equal')
+      ax.grid()
       fig.tight_layout()
       plt.show()
 
@@ -256,7 +259,7 @@ class Spectrum(object):
       try:  # Basis for multiorbital systems
          self.Ba = basis(dfct_basis)
       except:
-         print('No basis')
+         print('no dfct.basis in:',fname)
          self.Ba = []
 
       self.elec = float(fname.split('/')[-2][1:]) # TODO Fix this!!!
@@ -334,7 +337,8 @@ class Spectrum(object):
       # Properties of the in-gap states
       SUB = self.sub[self.Ba.n]
       self.SP = [mean_val(v,SUB) for v in self.V_ingap]
-      LAY = np.where(self.pos[:,2]>0,1,-1)[self.Ba.n]  # XXX shame!!
+      cl = np.mean(self.pos[:,2])                       # XXX shame!!
+      LAY = np.where(self.pos[:,2]>cl,1,-1)[self.Ba.n]  #
       self.SL = [mean_val(v,LAY) for v in self.V_ingap]
       norm = np.linalg.norm
       self.lc = []

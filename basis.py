@@ -287,6 +287,7 @@ class Base(object):
       self.get_layer()
       self.get_sublattice()
       self.defects = indices
+      self.dfct='ada'
       return indices
    @log_help.log2screen(LG)
    def vacancy(self,l=1,N=1,d=None,alpha=0.,ind=None,inf=1e9,hollow=True):
@@ -320,6 +321,7 @@ class Base(object):
             ID = (E.place,E.element,o)
             self.basis.append(ID)
       self.defects = indices
+      self.dfct='vac'
       return indices
    def find_neig(self,ind):
       """ returns the index of the neighbouring atoms of atom ind """
@@ -351,7 +353,7 @@ class Base(object):
       if hasattr(self, 'defects'):
          ats = []
          for E in self.elements:
-            if E.place in self.defects: ats.append('X')
+            if E.place in self.defects and self.dfct == 'vac': ats.append('X')
             else: ats.append(E.element)
       else: ats = [E.element for E in self.elements]
       IO.write.xyz(pos,self.latt,at=ats,sub=self.subs,fname=fname)
