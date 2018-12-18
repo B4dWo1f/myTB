@@ -69,8 +69,8 @@ if SP.vac.N > 0:
 else: IND_vac = []
 
 if SP.ada.N >0:
-   IND_ada = base_dfct.adatom(N=SP.ada.N,at='H1')
-   base_pris.adatom(N=SP.ada.N,at='H1', dummy=True)
+   IND_ada = base_dfct.adatom(N=SP.ada.N,at='X')
+   base_pris.adatom(N=SP.ada.N,at='X', dummy=True)
 
 
 ### Save basis
