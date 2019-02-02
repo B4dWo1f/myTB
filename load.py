@@ -55,16 +55,23 @@ class ham_param(object):
       return msg
 
 class calc_param(object):
-   def __init__(self,bands=False,spectrum=False,DOS=False,nk=100):
+   def __init__(self,bands=False,spectrum=False,DOS=False,local=False,
+                                      nk=100,ns=9,ndos=150,nddos=20,nkdos=100):
       self.bands = bands
       self.spectrum = spectrum
       self.dos = DOS
+      self.local = local
+      self.ns = ns
       self.nk = nk
+      self.ndos = ndos    # energies in which calculate the DOS
+      self.nddos = nddos  # Number of eigvalue to take into account
+      self.nkdos = nkdos  # Number of k points (per latt vec)
    def __str__(self):
       msg = 'Calculations\n'
+      msg += '  Spectrum: %s\n'%(self.spectrum)
       msg += '     Bands: %s\n'%(self.bands)
       msg += '       DOS: %s\n'%(self.dos)
-      msg += '  Spectrum: %s\n'%(self.spectrum)
+      msg += '      lDOS: %s\n'%(self.local)
       return msg
 
 class adatom_param(object):
@@ -132,9 +139,16 @@ def setup(fname='SK1.ini'):
 
    bands = eval(config['calculations']['bands'].capitalize())
    spectrum = eval(config['calculations']['spectrum'].capitalize())
-   DOS = eval(config['calculations']['dos'].capitalize())
+   try: DOS = eval(config['calculations']['dos'].capitalize())
+   except NameError: DOS = config['calculations']['dos'].lower()
+   DOS_local = eval(config['calculations']['local'].capitalize())
+   Ndos = eval(config['calculations']['Ndos'])
+   Nddos = eval(config['calculations']['Nddos'])
+   Nkdos = eval(config['calculations']['Nkdos'])
+   ns = int(config['calculations']['Ns'])
    nk = int(config['calculations']['nk'])
-   CP = calc_param(bands=bands,spectrum=spectrum,DOS=DOS,nk=nk)
+   CP = calc_param(bands=bands,spectrum=spectrum,DOS=DOS,local=DOS_local,
+                                 ns=ns,nk=nk,ndos=Ndos,nddos=Nddos,nkdos=Nkdos)
 
    sys = config['system']['sys']
    n = int(config['system']['n'])

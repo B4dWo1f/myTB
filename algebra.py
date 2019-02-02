@@ -70,3 +70,17 @@ def isinb2een(x,a,b):
          m1 = abs(c.imag/c.real)
          if m0 == m1: return True
       else: return False
+
+def dens2band(H):
+   M = []
+   for j in range(H.shape[1]):
+      aux = []
+      for im in range(H.shape[0]-j):
+         aux.append(H[im,im+j])
+      for _ in range(H.shape[0]-j,H.shape[1]):
+         aux = [0] + aux
+      M.append(aux)
+   M.reverse()
+   M = np.array(M)
+   return M
+

@@ -66,7 +66,7 @@ print(N2)
 ax.plot(N1,G1,'o-',label='monolayer')
 ax.plot(N2,G2,'o-',label='bilayer')
 ax.legend()
-ax.set_ylabel('$\delta$ $(eV)$')
+ax.set_ylabel('$\Delta$ $(eV)$')
 ax.set_xlabel('N')
 
 fig, ax = plt.subplots()

@@ -180,7 +180,7 @@ class Base(object):
          self.LAYS.append(self.layers[self.INDS[i]])
    @log_help.log2screen(LG)
    @log_help.timer(LG)
-   def get_neig(self,nvec=5,fol='./'):
+   def get_neig(self,nvec=5,dist=1.5,fol='./'):
       LG.info('Looking for neighbors')
       self.bonds = []
       for A in geo.fneig(self.pos,self.latt,fol=fol):

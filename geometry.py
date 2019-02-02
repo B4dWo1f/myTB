@@ -383,6 +383,8 @@ def vecfromcoef(coef,vecs):
    """
      Return the real vector out of the coeficients(cn) of the vectors of a
      basis(an):   v = c1*a1 + c2*a2 + ... + cn*an
+     coef: iterable like [c1,c2,c3,...] (where c1,c2... are floats in general)
+     vecs: iterable of vectors like [a1,a2,a3,...]
    """
    if len(coef) != len(vecs): LG.error('Unable to form vector')
    aux = np.array([0.,0.,0.])
@@ -391,8 +393,8 @@ def vecfromcoef(coef,vecs):
    return aux
 
 
-def vecinlist(vec,lista,eps=0.00001):
-   """ Checks if a vector vec is in a given list """
+def vecinlist(vec,lista,eps=1e-6):
+   """ Checks if a vector, vec, is in a given list, lista."""
    for v in lista:
       eq = vec - v
       if np.linalg.norm(eq) < eps: return True

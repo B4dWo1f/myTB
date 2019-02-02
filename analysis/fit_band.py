@@ -8,8 +8,8 @@ import numpy as np
 
 R = '../../../Documents/data/artificial_lattices/'
 fol = R+'triangular/OUTS/1orb/simple/n45_l2/nv1_na0/dNone/alpha0.0/e-0.2/'
-fol = R+'graphene/OUTS/1orb/simple/n60_l2/nv2_na0/d0/alpha0.0/e-0.2/'
-fol = R+'kagome/OUTS/1orb/simple/n60_l2/nv3_na0/dNone/alpha0.0/e-0.2/'
+fol = R+'graphene/OUTS/1orb/simple/n27_l2/nv2_na0/dNone/alpha0.0/e-0.2/'
+#fol = R+'kagome/OUTS/1orb/simple/n60_l2/nv3_na0/dNone/alpha0.0/e-0.2/'
 nk = 100
 
 
@@ -32,8 +32,9 @@ a1,a2 = latt
 _,pos,latt,_ = model.cell(1,a=np.linalg.norm(a1)/np.sqrt(3))
 # position and lattice of the meta-crystal
 
+
 try: X,Y,_ = np.loadtxt(dfct_bands,unpack=True)
-except FileNotFoundError:
+except:
    M = np.load(dfct_bands+'.npy')
    X = M[:,0]
    Y = M[:,1]
@@ -80,9 +81,10 @@ E0,t1,t2,t3 = cent, -0.00330413354607, 0.000188387934477, 0.0002
 a,b = curve_fit(myerror,rec,Yimp,p0=(E0,t1,t2,t3))
 E0a,t1a,t2a,t3a = a
 #E0a,t1a,t2a,t3a = E0,t1,t2,t3   # ignore fit
+err = np.sum(np.abs(b))
 
 
-print('%s, %s, %s, %s'%(E0a,t1a,t2a,t3a))
+print('%s, %s, %s, %s, %s'%(E0a,t1a,t2a,t3a,err))
 
 ## Calculate bands with the fitted parameters (and initial guess)
 x,y,ya = [],[],[]
@@ -107,5 +109,6 @@ m = min([np.min(y),np.min(Yimp)])
 M = max([np.max(y),np.max(Yimp)])
 ax.set_ylim([m,M])
 ax.set_xlim([0,300])
+ax.legend()
 plt.show()
 

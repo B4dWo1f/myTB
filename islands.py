@@ -190,7 +190,7 @@ def armchair(N,a=1.4,buck=0.0,show=False):
    ## Start combinations
    lista = range(-N,N+1)
    perms = [p for p in product(lista, repeat=2)]
-   lim = N+1
+   lim = N+1   #XXX THIS!! WTF???!!! Prime numbers??? 
    all_vecs = []  # all combis where to replicate the brick
    for p in perms:
       if abs(np.sum(p)) < lim:

@@ -104,17 +104,45 @@ if CP.bands:
       Shw = False
       LG.info('Calculating bands')
       points = geo.get_points(base_pris.recip)
-      points = [points[0],points[6],points[9], points[0]]
+      G  = points[0]
+      K  = points[6]
+      Kp = points[9]
+      M = (K+Kp)/2
+      points = [G,K,Kp,G]
       #XX = 5000
       #points = [0.9*points[6], points[6], 1.1*points[6]]
       path = geo.recorrido(points,CP.nk)
       LG.debug('Calculating bands for Pristine')
-      I,E,Z = H_pris.get_bands(path,folder=FP.out,show=Shw)
+      I,E,Z = H_pris.get_bands(path,V=True,full=True,folder=FP.out,show=Shw)
       LG.info('Bands Pristine done')
       LG.debug('Calculating bands for Defected')
-      H_dfct.get_bands(path,folder=FP.out,show=Shw)
+      H_dfct.get_bands(path,V=True,full=True,folder=FP.out,show=Shw)
       LG.info('Bands Defected done')
    else: LG.critical('No lattice vectors ==> No bands')
+
+
+if CP.dos in ['full','window'] and len(latt) != 0:
+   import numpy as np
+   LG.info('Calculation DOS')
+   Shw = False
+   g = 0.1
+   if CP.dos == 'full': full = True
+   else: full = False
+   if CP.nddos == None: Nddos = int(0.4*H_pris.dim)
+   else: Nddos = CP.nddos
+   if CP.nkdos == None: nk = 100
+   else: nk = CP.nkdos
+   path = []
+   for ix in np.linspace(0,1,nk):
+      for iy in np.linspace(0,1,nk):
+         k = ix*base_pris.recip[0] + iy*base_pris.recip[1]
+         path.append(k)
+   H_pris.get_bands(path,V=CP.local,full=full,sigma=1e-6,k=Nddos,
+                                              folder=FP.out,ext='dos',show=Shw)
+   H_dfct.get_bands(path,V=CP.local,full=full,sigma=1e-6,k=Nddos,
+                                              folder=FP.out,ext='dos',show=Shw)
+else: LG.debug('No DOS calculations')
+
 
 if CP.spectrum:
    def aux(H):
@@ -140,14 +168,14 @@ if CP.spectrum:
 LG.info('All done. Bye!')
 print('All done. Bye!')
 
-#exit()
-#print('='*80)
-#print('='*80)
-#
-#
+print('='*80)
+print('='*80)
+exit()
+
 #from calculations import get_DOS
-#E = E[(E>-50) & (E<50)]
-#mE,ME = min(E),max(E)
+##E = E[(E>-50) & (E<50)]
+##mE,ME = min(E),max(E)
+#mE,ME = -20,20
 #nE = int((ME-mE)/0.1)
 #E,Dp,Dd = get_DOS(mE,ME, H_dfct.intra,H_pris, path_slf=FP.slf,nE=nE,fol=FP.out,delta=0.001)
 #

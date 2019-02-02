@@ -154,26 +154,37 @@ class Hamiltonian(object):
          LG.info('Plotting')
          graphs.spectrum(es,show=True)
       return es,v
-   def get_bands(self,path,Op=False,sigma=None,k=None,show=False,ncpus=4,
-                                                                  folder='./'):
-      if not isinstance(Op,bool):
-         LG.info('Bands with eigevectors')
-         Opp=True
-      else:
-         LG.info('Bands without eigevectors')
-         Opp = Op
+   def get_bands(self,path,V=False,full=False,sigma=1e-6,k=5,show=False,
+                                              ncpus=4,folder='./',ext='bands'):
+      """
+        path: [list] List of K-points in which to diagonalize
+        V: [Boolean] True to save and return eigenvectors
+        full: [Boolean] True to diagonalize all the eigenvalues (using
+              np.linalg.eigh or np.linalg.eigvalsh). False to diagonalize the k
+              eigenvalues closest to sigma (using scipy.sparse.linalg.eigsh)
+        sigma: [float] center around which to diagonalize
+        k: [int] number of eigenvalues to get
+        show: [Boolean] plot the DOS
+        ncpus: [int] number of cpu cores to use. NOT IN USE
+        folder: [str] path to the folder in which to store the results
+        ext: [str] extension of the file (in order to alternate between bands
+                                                                       and dos)
+      """
       #X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
-      X,Y,Z = bands.bands(path,self,Op=Opp) #,sigma=sigma,n=k,ncpus=ncpus)
-      if Opp: Z = [(v * Op * v.H)[0,0].real for v in Z]
-      bname = folder+'%s.bands'%(self.tag)
+      X,Y,Z = bands.bands(path,self,V=V,full=full,sigma=sigma,n=k)
+      #if Opp: Z = [(v * Op * v.H)[0,0].real for v in Z]
+      bname = folder+'%s.%s'%(self.tag,ext)
       LG.debug('Writing bands to: '+bname)
-      #f = open(bname,'w')
-      ##for x,y,z in zip(X,Y,Z):
-      #for i in tqdm(range(len(X))):
-      #   x,y,z = X[i], Y[i], Z[i]
-      #   f.write('%s   %s   %s\n'%(x,y,z))
-      #f.close()
-      np.save(bname, np.column_stack([X,Y,Z]))
+      Zc = []
+      for v in Z:
+         v = np.array(v)
+         vv = v*np.conj(v)   # real by construction
+         Zc.append( vv.flatten().real )
+      X = np.array(X)
+      Y = np.array(Y)
+      Zc = np.array(Zc)
+      A = np.column_stack([X,Y,Zc])
+      np.save(bname, np.column_stack([X,Y,Zc]))
       LG.info('Bands saved to: '+bname)
       if show: graphs.bands(X,Y,Z,show=True)
       return np.array(X),np.array(Y),np.array(Z)  #TODO check type compatib

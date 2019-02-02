@@ -147,7 +147,12 @@ class basis(object):
      Minimum dummy class to store indices of atom and orbital
    """
    def __init__(self,fname='dfct.basis'):
-      self.ind,self.n = np.loadtxt(fname,usecols=(0,1),unpack=True,dtype=int)
+      #self.ind,self.n = np.loadtxt(fname,usecols=(0,1),unpack=True,dtype=int)
+      self.ind, self.n, self.SPIN, self.SUBS, self.LAYS = np.loadtxt(fname,\
+                                    usecols=(0,1,4,5,6),unpack=True,dtype=int)
+      self.ATS, self.ORBS = np.loadtxt(fname,\
+                                    usecols=(2,3),unpack=True,dtype=str)
+
 
 
 class Spectrum(object):

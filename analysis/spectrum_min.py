@@ -72,16 +72,20 @@ except IndexError:
 
 
 
+# Datos
+f_data = open('pol_elec_n10.dat','w')
+f_spec = open('spec_n10.dat','w')
 for fol in fols:
    folders = []
    for a in os.walk(fol):
       folders.append( a[0]+'/' )
    folders = folders[1:]
    folders = sorted(folders,key=lambda x: float(x.split('/')[-2][1:]))
-   #folders = folders[0:5]
+   #folders = folders[::2][::2][::2]
 
 
    X,P,L,G,Gg,E0,LC,LC90 = [],[],[],[],[],[],[],[]
+   IPRt,IPRb = [],[]
    Xplt,Yplt,YPplt = [],[],[]
    for f in tqdm(folders):
       try: A = ex.Spectrum(f)
@@ -101,25 +105,43 @@ for fol in fols:
       E0.append(A.E_ingap)
       LC.append(A.lc)
       LC90.append(A.lc90)
+      cl = np.mean(A.pos[:,2])
+      LAYS = np.where(A.pos[:,2]>cl,1,-1)[A.Ba.n]  #
+      v = A.V_ingap
+      v = v*np.conj(v)
+      v = v.flatten()
+      vt = v[LAYS>cl]
+      vb = v[LAYS<cl]
+      IPR = 0.0
+      for iv in vt:
+         IPR += iv*iv*iv*iv
+      IPRt.append(IPR)
+      IPR = 0.0
+      for iv in vb:
+         IPR += iv*iv*iv*iv
+      IPRb.append(IPR)
    mx,Mx = np.min(X), np.max(X)
 
-   # Datos
-   f_data = open('datos.dat','w')
    s = '   '
-   f_data.write('#elec   SP   SL   G   E0   LC   LC90\n')
-   for e,p,l,g,e0,lc,lc90 in zip(X,P,L,G,E0,LC,LC90):
+   #f_data.write('#elec   SP   SL   G   E0   LC   LC90\n')
+   for e,p,l,g,e0,lc,lc90,iprt,iprb in zip(X,P,L,G,E0,LC,LC90,IPRt,IPRb):
       f_data.write(str(e) +s+ str(p[0]) +s+ str(l[0]) +s+ str(g) +s+ str(e0[0]))
-      f_data.write(s+ str(lc[0]) +s+ str(lc90[0]) +'\n')
+      f_data.write(s+ str(lc[0]) +s+ str(lc90[0]) +s+ str(iprt) +s+ str(iprb))
+      f_data.write('\n')
       f_data.flush()
-   f_data.close()
+   f_spec.write('#elec   Ep   E\n')
+   for iv,iep,ie in zip(Xplt,YPplt,Yplt):
+      f_spec.write(str(iv) +s+ str(iep) +s+ str(ie)+'\n')
+      f_spec.flush()
+
 
    fig = plt.figure(figsize=(9,10))
-   gs = gridspec.GridSpec(5, 1)
+   gs = gridspec.GridSpec(4, 1)
    #fig, ax = plt.subplots()
    ax = plt.subplot(gs[0:2, 0])
    ax_P  = plt.subplot(gs[2, 0], sharex=ax)
-   ax_G  = plt.subplot(gs[3, 0], sharex=ax)
-   ax_E0 = plt.subplot(gs[4, 0], sharex=ax)
+   #ax_G  = plt.subplot(gs[3, 0], sharex=ax)
+   ax_E0 = plt.subplot(gs[3, 0], sharex=ax)
 
    # Spectrum
    ax.plot(Xplt,YPplt,'o',markersize=10,alpha=0.4)
@@ -133,21 +155,22 @@ for fol in fols:
    for i in range(P.shape[1]):
       iP = P[:,i]
       iL = L[:,i]
-      l, = ax_P.plot(X,iP,lw=2)
-      ax_P.plot(X,iL,color=l.get_color(),ls='--',lw=2)
+      l, = ax_P.plot(X,iP,lw=2,label='subla')
+      ax_P.plot(X,iL,color=l.get_color(),ls='--',lw=2,label='layer')
    ax_P.set_ylabel('Polarization')
    ax_P.set_ylim([-1,1])
    ax_P.set_xlim([mx,Mx])
+   ax_P.legend()
 
-   # Gap
-   ax_G.plot(X,G,lw=2)
-   try: 
-      ax_G1 = ax_G.twinx()
-      ax_G1.plot(X,Gg,'C1',lw=2)
-      ax_G1.grid()
-   except: pass
-   ax_G.set_ylabel('$\Delta$ $(eV)$')
-   ax_G.set_xlim([mx,Mx])
+   ## Gap
+   #ax_G.plot(X,G,lw=2)
+   #try: 
+   #   ax_G1 = ax_G.twinx()
+   #   ax_G1.plot(X,Gg,'C1',lw=2)
+   #   ax_G1.grid()
+   #except: pass
+   #ax_G.set_ylabel('$\Delta$ $(eV)$')
+   #ax_G.set_xlim([mx,Mx])
 
    # In-gap Energies
    ax_E0.plot(X,LC90,lw=2)
@@ -156,5 +179,24 @@ for fol in fols:
 
    fig.canvas.mpl_connect('pick_event', my_onpick)
    fig.tight_layout()
+f_data.close()
+f_spec.close()
 
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(X,IPRt) #,label='top')
+ax1 = ax.twinx()
+ax1.plot(X,IPRb,'C1',label='bottom')
+
+print('**')
+print(np.min(IPRt), np.max(IPRt))
+print(np.min(IPRb), np.max(IPRb))
+ax.legend()
+ax.set_xlim([min(X),max(X)])
+ax.ticklabel_format(style='sci',scilimits=(-3,4),axis='y')
+ax.set_ylabel('$IPR$ $top$',fontsize=20)
+ax1.set_ylabel('$IPR$ $bottom$' ,fontsize=20,color='C1')
+ax1.tick_params('y', colors='C1')
+ax.set_xlabel('$E$ $(eV)$',fontsize=20)
+fig.tight_layout()
 plt.show()

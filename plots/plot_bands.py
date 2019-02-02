@@ -22,7 +22,12 @@ sub = np.array([str(x,'utf-8') for x in sub])
 
 
 #Xdos,Ydos = np.loadtxt(dos,unpack=True)
-Xban,Yban,Zban = np.loadtxt(ban,unpack=True)
+try: Xban,Yban,Zban = np.loadtxt(ban,unpack=True)
+except:
+   M = np.load(ban+'.npy')
+   Xban = M[:,0]
+   Yban = M[:,1]
+   Zban = M[:,2]
 
 print('-- Bands ----')
 for x,y,z in zip(Xban,Yban,Zban):
