@@ -39,7 +39,13 @@ def diagon_window(Hm,K,Op,sigma=0,n=5,v0=None):
 
 def bands(RECORRIDO,H,V=False,sigma=0,n=5,full=False,v0=None):
    """
-      H is a Hamitlonian object
+     RECORRIDO: List of k points in which diagonalize
+     H: Hamitlonian object to be diagonalized
+     V: [Boolean] Calculate eigenvectors as wll
+     sigma: center of diagonalization window
+     n: number of eigenvalues to diagonalize (n+1)
+     full: whether full or partial diagonalization (partial = Lanczos)
+     v0: Initial vector for Lanczos diagonalization
    """
    X, Y, Z = [], [], []
    cont=0
@@ -55,7 +61,8 @@ def bands(RECORRIDO,H,V=False,sigma=0,n=5,full=False,v0=None):
       if V:
         es, vs = diag(H,k,V,sigma,n,v0=v0)
         vs = vs.transpose()
-        v0 = np.mean(vs,axis=0)
+        # TODO v0 as optional??
+        v0 = np.mean(vs,axis=0)  # Added for convergence
         for e,v in zip(es,vs):
            if e.imag > eps: sys.exit('Hamiltoniano no hermitico')
            X.append(cont)
