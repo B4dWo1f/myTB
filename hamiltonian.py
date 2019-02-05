@@ -77,7 +77,8 @@ class Hamiltonian(object):
       """ Generate kdependent hamiltonian"""
       return hk_gen(self)
    def get_k(self,k): return Hamil(self.lista,k)
-   def get_N_states(self,Op=False,pbc=False,n=7,sigma=0,folder='./',shw=False):
+   def get_N_states(self,Op=False,pbc=False,n=7,sigma=0,folder='./',
+                                                            shw=False,v0=None):
       """
         Calculates the n eigenstates closest to sigma.
         Op: [bool] calculate eigenvectors
@@ -93,7 +94,8 @@ class Hamiltonian(object):
       except: self.names()
       LG.info('In get_N_states')
       if pbc:
-         H = csc_matrix( self.get_k(np.array((0.,0.,0.))) )  # Periodic B.C.
+         # any TB  hamiltonian with real hoppings is real in Gamma
+         H = csc_matrix( self.get_k(np.array((0.,0.,0.))) ).real # Periodic B.C.
       else:
          H = csc_matrix(self.intra)       # Island
       LG.info('H acquired')
@@ -108,7 +110,7 @@ class Hamiltonian(object):
             es,v = np.linalg.eigh(H.todense())
          else:
             es,v = eigsh(H,k=kn,sigma=sigma+0.000001,which='LM',
-                                                    return_eigenvectors=True)
+                                                return_eigenvectors=True,v0=v0)
          v = v.transpose()
          ind_ord = np.argsort(es)   #XXX check that this works as expected
          es=es[ind_ord]
