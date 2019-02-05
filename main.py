@@ -147,25 +147,30 @@ else: LG.debug('No DOS calculations')
 
 
 if CP.spectrum:
-   def aux(H):
+   def aux(H,v0=None):
       """
         Dummy auxiliary function to calculate the spectrum in parallel
       """
       LG.info('Spectrum: %s'%(H.tag))
-      es,v = H.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw,pbc=SP.pbc)
+      es,v = H.get_N_states(Op=True,folder=FP.out,n=n_es,shw=Shw,pbc=SP.pbc,
+                                                                         v0=v0)
       print('  ---- %s ----'%(H.tag))
       for e in es:
          print(e)
+      return es,v
    Shw = False
-   n_es = min([int(H_pris.dim//2),8])
-   parallel = True
+   n_es = min([int(H_pris.dim//2),20])
+   parallel = False
+   import numpy as np
    if parallel:
       import multiprocessing as sub
       pool = sub.Pool(2)
       foo = pool.map(aux,[H_pris, H_dfct])
    else:
+      v0 = None
       for h in [H_pris, H_dfct]:
-         aux(h)
+         es,v = aux(h,v0)
+         v0 = np.mean(v,axis=0)
 
 LG.info('All done. Bye!')
 print('All done. Bye!')
