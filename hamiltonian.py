@@ -155,7 +155,7 @@ class Hamiltonian(object):
          graphs.spectrum(es,show=True)
       return es,v
    def get_bands(self,path,V=False,full=False,sigma=1e-6,k=5,show=False,
-                                              ncpus=4,folder='./',ext='bands'):
+                                      ncpus=4,folder='./',ext='bands',v0=None):
       """
         path: [list] List of K-points in which to diagonalize
         V: [Boolean] True to save and return eigenvectors
@@ -171,7 +171,7 @@ class Hamiltonian(object):
                                                                        and dos)
       """
       #X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
-      X,Y,Z = bands.bands(path,self,V=V,full=full,sigma=sigma,n=k)
+      X,Y,Z = bands.bands(path,self,V=V,full=full,sigma=sigma,n=k,v0=v0)
       #if Opp: Z = [(v * Op * v.H)[0,0].real for v in Z]
       bname = folder+'%s.%s'%(self.tag,ext)
       LG.debug('Writing bands to: '+bname)

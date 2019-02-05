@@ -21,7 +21,7 @@ def diagon(Hm,K,Op,sigma=0,n=0):
    if Op : return np.linalg.eigh(H)
    else: return np.linalg.eigvalsh(H)
 
-def diagon_window(Hm,K,Op,sigma=0,n=5):
+def diagon_window(Hm,K,Op,sigma=0,n=5,v0=None):
    """ Diagonalize the hamiltonian for a given k in a window of energy
    Hk is a function H(k)
    """
@@ -29,11 +29,15 @@ def diagon_window(Hm,K,Op,sigma=0,n=5):
    #H = Hamil(Htot,[kx,ky,kz])
    H = Hm.get_k(K)
    n = min([H.shape[0]-2,n])  # Protection for not enough eigvals
-   if Op: return eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=True)
-   else: return eigsh(H,k=n+1,sigma=sigma,which='LM',return_eigenvectors=False) #,maxiters=10000)
+   if Op:
+      return eigsh(H, k=n+1, sigma=sigma, which='LM',
+                   return_eigenvectors=True,v0=v0)
+   else:
+      return eigsh(H, k=n+1, sigma=sigma, which='LM',
+                   return_eigenvectors=False,v0=v0) #,maxiters=10000)
 
 
-def bands(RECORRIDO,H,V=False,sigma=0,n=5,full=False):
+def bands(RECORRIDO,H,V=False,sigma=0,n=5,full=False,v0=None):
    """
       H is a Hamitlonian object
    """
@@ -49,8 +53,9 @@ def bands(RECORRIDO,H,V=False,sigma=0,n=5,full=False):
       diag = diagon_window
    for k in tqdm(RECORRIDO, unit='K-points'):
       if V:
-        es, vs = diag(H,k,V,sigma,n)
+        es, vs = diag(H,k,V,sigma,n,v0=v0)
         vs = vs.transpose()
+        v0 = np.mean(vs,axis=0)
         for e,v in zip(es,vs):
            if e.imag > eps: sys.exit('Hamiltoniano no hermitico')
            X.append(cont)

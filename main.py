@@ -102,6 +102,7 @@ import algebra as alg
 if CP.bands:
    if len(latt) != 0:
       Shw = False
+      full = False
       LG.info('Calculating bands')
       points = geo.get_points(base_pris.recip)
       G  = points[0]
@@ -113,10 +114,11 @@ if CP.bands:
       #points = [0.9*points[6], points[6], 1.1*points[6]]
       path = geo.recorrido(points,CP.nk)
       LG.debug('Calculating bands for Pristine')
-      I,E,Z = H_pris.get_bands(path,V=True,full=True,folder=FP.out,show=Shw)
+      I,E,Z = H_pris.get_bands(path,V=True,full=full,folder=FP.out,show=Shw)
       LG.info('Bands Pristine done')
       LG.debug('Calculating bands for Defected')
-      H_dfct.get_bands(path,V=True,full=True,folder=FP.out,show=Shw)
+      v0 = Z[0]
+      H_dfct.get_bands(path,V=True,full=full,folder=FP.out,show=Shw,v0=v0)
       LG.info('Bands Defected done')
    else: LG.critical('No lattice vectors ==> No bands')
 
