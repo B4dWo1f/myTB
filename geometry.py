@@ -555,6 +555,17 @@ def get_points(recip,N=3):
       ii+=1
    return points
 
+def get_FBZ(recip,N=10):
+   """
+     Returns a grid of NxN points along any 2D FBZ
+   """
+   points =[]
+   for ix in np.linspace(0,1,N,endpoint=False):
+      for iy in np.linspace(0,1,N,endpoint=False):
+         k = ix*recip[0] + iy*recip[1]
+         points.append(k)
+   return points
+
 def recorrido(points,nk):
    """
      Returns a list of points (np.array) with nk points between each pair of

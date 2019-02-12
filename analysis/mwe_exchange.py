@@ -87,6 +87,10 @@ def plot_spectrum(E,V,pos,Ba=[],Ep=[],inds=[],title=''):   #,ax=None):
       Xd = np.array(range(len(Ed)))
       indp, = np.where(Ep == Pcond)
       indd, = np.where(Ed == Dcond)
+      if len(indp) > 1 or len(indd) > 1:
+         indp = np.min(indp)
+         indd = np.min(indd)
+         print('WARNING, possible mess up choosing In-gap state')
       if indp == indd:
          print('extra state in E>0')
          Xp = []
@@ -226,6 +230,17 @@ def mean_val(v,M):
    return np.sum(np.conj(v)*M*v)
 
 
+def get_ipr(v):
+   """
+   Returns the IPR of a provided eigenvector. v will, in general, be a complex
+   vector
+   """
+   aux = 0.0
+   for iv in range(v.shape[0]):
+      aux += (v[iv]*np.conj(v[iv]))**2
+   return aux
+
+
 ## Basis
 class basis(object):
    """
@@ -338,6 +353,11 @@ class Spectrum(object):
       #print('Analyzing states',self.inds)
       self.E_ingap = self.E[inds]
       self.V_ingap = self.V[inds]
+      IPR = []
+      for i in range(self.V_ingap.shape[0]):
+         v = self.V_ingap[i]
+         IPR.append( get_ipr(v) )
+      self.IPR = np.array(IPR)
       # Properties of the in-gap states
       SUB = self.sub[self.Ba.n]
       self.SP = [mean_val(v,SUB) for v in self.V_ingap]
@@ -370,7 +390,8 @@ class Spectrum(object):
       msg += 'Hexagon  ->  a: %s  ;  a\': %s\n'%(self.a, self.ap)
       msg += 'Confinement Length:'
       if self.Nv == 1:
-         msg +='\n   lc: %.4f\n'%(self.lc[0])
+         msg +='\n   lc: %.4f\n'%(self.lc90[0])
+         msg +='\n   IPR: %.4f\n'%(self.IPR[0])
       elif self.Nv == 2:
          msg +='\n   Left: %.4f   Right: %4f\n'%(self.lc[0],self.lc[1])
          aux = np.abs(self.E_ingap[1]-self.E_ingap[0])
@@ -424,8 +445,9 @@ if __name__ == '__main__':
    fol = sys.argv[1]
    print(fol)
    A = Spectrum(fol) #,slct=True)
+   print(A)
    A.plot()
-   #print(A)
+   exit()
    #A.select_ingap()
    #A.analyze_ingap()
    JF,D,tRL,tLR,UR,UL,e1,e2 = A.get_blue_parameters()
