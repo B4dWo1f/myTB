@@ -21,13 +21,14 @@ def diagon(Hm,K,Op,sigma=0,n=0):
    if Op : return np.linalg.eigh(H)
    else: return np.linalg.eigvalsh(H)
 
-def diagon_window(Hm,K,Op,sigma=0,n=5,v0=None):
+def diagon_window(Hm,K,Op,sigma=0.,n=5,v0=None):
    """ Diagonalize the hamiltonian for a given k in a window of energy
    Hk is a function H(k)
    """
    kx,ky,kz = K
    #H = Hamil(Htot,[kx,ky,kz])
    H = Hm.get_k(K)
+   if np.max(np.abs(H.imag)) == 0: H = H.real
    n = min([H.shape[0]-2,n])  # Protection for not enough eigvals
    if Op:
       return eigsh(H, k=n+1, sigma=sigma, which='LM',
@@ -49,8 +50,7 @@ def bands(RECORRIDO,H,V=False,sigma=0,n=5,full=False,v0=None):
    """
    X, Y, Z = [], [], []
    cont=0
-   #if n<=H.dim-1: diag = 
-   print(n,H.dim,'',V)
+   #print(n,H.dim,'',V)
    if n >= H.dim -1 or full:
       print('Full Diagonalization')
       diag = diagon

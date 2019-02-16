@@ -623,6 +623,49 @@ def rotation(v,Q,u=np.array([0,0,1]),deg=True):
    vec = np.dot(R, v)
    return vec
 
+def xyz2rtp(x,y,z):
+   """
+    This function converts cartesian coordinates to spherical coordinates
+     t is the angle measured from the Z axis
+     p is the angle measured from the X axis
+   """
+   r = np.sqrt( x**2+y**2+z**2)
+   #if r == 0: t = 0
+   #else: t = np.arccos( z/r )
+   t = np.arccos( z/r )
+   p = np.arctan2( y, x )
+   return r,p,t #XXX
+
+def rtp2xyz(r,t,p,deg=False):
+   """
+    This function converts spherical coordinates to cartesian coordinates
+    expects t,p in radians
+   """
+   x = r*np.sin(t)*np.cos(p)
+   y = r*np.sin(t)*np.sin(p)
+   z = r*np.cos(t)
+   return x,y,z
+
+
+## Decorators ##################################################################
+def cart2sph(wrapped):
+   """
+     Provided cartesian coordinates it will feed spherical coordinates to the
+     inner function
+   """
+   def inner(*args, **kwargs):
+      args = xyz2rtp(*args)
+      ret = wrapped(*args, **kwargs)
+      return ret
+   return inner
+
+def sph2cart(wrapped):
+   def inner(*args, **kwargs):
+      args = rtp2xyz(*args)
+      ret = wrapped(*args, **kwargs)
+      return ret
+   return inner
+
 
 if __name__ == '__main__':
    import IO

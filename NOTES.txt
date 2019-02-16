@@ -1,0 +1,3 @@
+In the bands calculation we only save the square of the wave function (v*conj(v)) to save space.
+
+BUT, in the spectrum the wave functions are as is (since the wave functions are real)
