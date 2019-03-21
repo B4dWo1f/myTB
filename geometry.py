@@ -566,17 +566,26 @@ def get_FBZ(recip,N=10):
          points.append(k)
    return points
 
-def recorrido(points,nk):
+def recorrido(points,nk,cte_dens=True):
    """
      Returns a list of points (np.array) with nk points between each pair of
      points in the provided list of points.
      This function is dimension independent.
     points: list of points between which to interpolate
     nk: may be an integer or a sequence of len(points)-1 integers
+    cte_dens: try to keep constant density of points along the path
    """
    ## clean nk
    try: itr = iter(nk)
-   except TypeError: nk = [nk for _ in range(len(points)-1)]
+   except TypeError:
+      if cte_dens:
+         lengths = []
+         for i in range(1,len(points)):
+            lengths.append( np.linalg.norm(points[i]-points[i-1]) )
+         lengths = np.array(lengths)
+         lengths /= np.max(lengths)
+         nk = [int(nk*l) for l in lengths]
+      else: nk = [nk for _ in range(len(points)-1)]
    else:
       if len(nk) < len(points)-1:
          msg = 'WARNING: incorrect number of points. '
@@ -585,7 +594,6 @@ def recorrido(points,nk):
          nk = [nk[0] for _ in range(len(points)-1)]
       elif len(nk) > len(points)-1: pass    # Report to log?
       else: pass    # Report to log?
-
    ## interpolate between points
    RECORRIDO = []
    ret = (1,False)   # don't skip last point
