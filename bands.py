@@ -13,7 +13,7 @@ LG = logging.getLogger(__name__)
 
 eps = 1e-5
 
-def diagon(Hm,K,Op,sigma=0,n=0):
+def diagon(Hm,K,Op,sigma=0,n=0,v0=None):
    """ Full diagonalization of the Hamiltonian for a given k """
    kx,ky,kz = K
    #H = Hamil(Htot,[kx,ky,kz])
@@ -77,7 +77,7 @@ def bands(RECORRIDO,H,V=False,sigma=0,n=5,full=False,v0=None):
            Y.append(e.real)
            Z.append(0)
       cont += 1
-   return X, Y, Z
+   return np.array(X), np.array(Y), np.array(Z)
 
 
 

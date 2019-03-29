@@ -89,6 +89,10 @@ if SP.DOspin:
    LG.warning('SPIN DOUBLING?')
    base_pris.dospin()
    base_dfct.dospin()
+   # TODO testing
+   base_pris.save(FP.out+'pris.basis.spin',FP.out+'pris.spin.xyz')
+   base_dfct.save(FP.out+'dfct.basis.spin',FP.out+'dfct.spin.xyz')
+   LG.info('Base with spin saved')
 
 
 import operators as OP
@@ -111,8 +115,8 @@ if CP.bands:
       Kp = points[9]
       M = (K+Kp)/2
       points = [G,K,Kp,G]
-      #XX = 5000
-      #points = [0.9*points[6], points[6], 1.1*points[6]]
+      #points = [K,G,M,Kp]
+      points = [0.9*K, K , 1.1*K]
       path = geo.recorrido(points,CP.nk)
       LG.debug('Calculating bands for Pristine')
       I,E,Z = H_pris.get_bands(path,V=eigvec,full=full,folder=FP.out,show=Shw)
@@ -128,7 +132,6 @@ if CP.dos in ['full','window'] and len(latt) != 0:
    import numpy as np
    LG.info('Calculation DOS')
    Shw = False
-   g = 0.1
    if CP.dos == 'full': full = True
    else: full = False
    if CP.nddos == None: Nddos = int(0.4*H_pris.dim)
