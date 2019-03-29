@@ -189,7 +189,7 @@ if __name__ == '__main__':
    X0,Y0 = [],[]
    for i in range(len(rec)):
       k = rec[i]
-      H = hamil(k,latt[0],latt[1],e0,t1,t2,t3)
+      H = hamil(k,e0,t1,t2,t3,latt)
       for e in np.linalg.eigvalsh(H):
          X0.append(i)
          Y0.append(e)
@@ -199,7 +199,7 @@ if __name__ == '__main__':
    X1,Y1 = [],[]
    for i in range(len(rec)):
       k = rec[i]
-      H = hamil(k,latt[0],latt[1],e0,t1,t2,t3)
+      H = hamil(k,e0,t1,t2,t3,latt)
       for e in np.linalg.eigvalsh(H):
          X1.append(i)
          Y1.append(e)
