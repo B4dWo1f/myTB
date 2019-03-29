@@ -157,7 +157,7 @@ class Hamiltonian(object):
          graphs.spectrum(es,show=True)
       return es,v
    def get_bands(self,path,V=False,full=False,sigma=1e-6,k=5,show=False,
-                                      ncpus=4,folder='./',ext='bands',v0=None):
+                        nbatch=100000,ncpus=4,folder='./',ext='bands',v0=None):
       """
         path: [list] List of K-points in which to diagonalize
         V: [Boolean] True to save and return eigenvectors
@@ -172,24 +172,47 @@ class Hamiltonian(object):
         ext: [str] extension of the file (in order to alternate between bands
                                                                        and dos)
       """
+      def save_bands(x,y,z,fname):
+         LG.debug('Writing bands to: '+bname)
+         zc = []
+         for v in z:
+            v = np.array(v)
+            vv = v*np.conj(v)   # real by construction
+            zc.append( vv.flatten().real )
+         #x = np.array(x)
+         #y = np.array(y)
+         zc = np.array(zc)
+         A = np.column_stack([x,y,zc])
+         np.save(bname, A)
+         LG.info('Bands saved to: '+bname)
+         return ((sys.getsizeof(A)/1024)/1024)/1024
       #X,Y,Z = bands.bandsPP(path,self.lista,Op=Opp,sigma=sigma,n=k,ncpus=ncpus)
-      X,Y,Z = bands.bands(path,self,V=V,full=full,sigma=sigma,n=k,v0=v0)
-      #if Opp: Z = [(v * Op * v.H)[0,0].real for v in Z]
-      bname = folder+'%s.%s'%(self.tag,ext)
-      LG.debug('Writing bands to: '+bname)
-      Zc = []
-      for v in Z:
-         v = np.array(v)
-         vv = v*np.conj(v)   # real by construction
-         Zc.append( vv.flatten().real )
-      X = np.array(X)
-      Y = np.array(Y)
-      Zc = np.array(Zc)
-      A = np.column_stack([X,Y,Zc])
-      np.save(bname, np.column_stack([X,Y,Zc]))
-      LG.info('Bands saved to: '+bname)
-      if show: graphs.bands(X,Y,Z,show=True)
-      return np.array(X),np.array(Y),np.array(Z)  #TODO check type compatib
+      if len(path) < nbatch:
+         X,Y,Z = bands.bands(path,self,V=V,full=full,sigma=sigma,n=k,v0=v0)
+         bname = folder+'%s.%s'%(self.tag,ext)
+         save_bands(X,Y,Z,bname)
+      else:
+         nchunks = int(len(path)/nbatch)
+         LG.warning('splitting the K-path in %s chunks'%(nchunks))
+         files = []
+         ibatch,mem_size = 0,0
+         for batch in np.array_split(path, nchunks):
+            X,Y,Z = bands.bands(batch,self,V=V,full=full,sigma=sigma,n=k,v0=v0)
+            X += ibatch * nbatch + ibatch
+            bname = folder+'%s.%s.%s'%(self.tag,ext,ibatch)
+            files.append(bname)
+            mem_size += save_bands(X,Y,Z,bname)
+            ibatch += 1
+         if mem_size < 4:
+            for f in files:
+               M = np.load(f)
+               all_arrays.append( M )
+            all_arrays = np.concatenate(all_arrays)
+            fname = '.'.join(f.split('.')[:2])
+            np.save(fname, all_arrays)
+            #TODO Remove partial files
+      if show: graphs.bands(X,Y,Z,show=show)
+      return X, Y, Z
    #DEPRECATED
    #def dospin(self):
    #   Hs = self.lista
@@ -313,6 +336,7 @@ def build_ham(base,hp,tag,dospin=False):
       Htot.append( mass(base,hp.lmass) )
    if hp.lSO != 0.0:
       LG.info('Spin-Orbit coupling: %s'%(hp.lSO))
+      a = soc(base,hp.lSO)
       Htot.append( soc(base,hp.lSO) )
    if hp.lelec != 0.0: ########################## layer on-site
       LG.info('Electric field: %s'%(hp.lelec))
