@@ -45,7 +45,7 @@ class UnitCell(object):
         Add Hidrogen atoms on the C3 missing positions
       """
       latt = []
-      hs,subh = pasivate(self.pos,sub=self.sub)
+      hs,subh = pasivate(self.pos,sub=self.sub,latt=self.latt)
       self.ats = np.append(self.ats,['H' for _ in hs])
       aux = []
       for i in range(pos.shape[0]):
@@ -504,19 +504,40 @@ def multilayer(pos,ats,sub=[],N=2,vec=np.array([1.4,0,1.4])):
 
 
 import numeric as num
-def pasivate(pos,sub=[],nneig=3):
+from scipy.sparse import coo_matrix
+def pasivate(pos,sub=[],latt=[],nneig=3):
    """ Return the position of the H atoms to pasivate the edges. """
    #TODO include consideration of lattice vectors for ribbons
    ## List all the atoms of a given kind with less than nneig neighbours
-   nn = num.count_neig(pos,pos,1.5)
-   rows,cols = num.dists(pos,pos,nn,1.5)
-   rows -= 1   # because python starts counting at 0
-   cols -= 1   #
+   ndim = len(pos)
+   print('***')
+   bonds = []
+   for Q in geo.fneig(pos,latt):
+      v0,v1 = Q[0][0], Q[0][1]   # rows,cols
+      data = [1 for _ in range(len(v0))]
+      a = coo_matrix( (data,(v0,v1)), shape=(ndim,ndim) )
+      bonds.append((a,Q[1],Q[2]))
+   mats = []
+   for b in bonds:
+      m,v,nm = b
+      mats.append(m)
+      if nm != 'intra': mats.append(np.transpose(m))
+   vecin = np.sum(mats)
    needH,aux_sub = [],[]
    for i in range(len(pos)):
-      if len(cols[rows==i]) < nneig:
-         needH.append( (i,cols[rows==i]) )
+      if np.sum(vecin[i,:]) < nneig:
+         print(i,vecin[i,:].indices)
+         needH.append( (i,vecin[i,:].indices) )
          aux_sub.append( sub[i] )
+   #nn = num.count_neig(pos,pos,1.5)
+   #rows,cols = num.dists(pos,pos,nn,1.5)
+   #rows -= 1   # because python starts counting at 0
+   #cols -= 1   #
+   #needH,aux_sub = [],[]
+   #for i in range(len(pos)):
+   #   if len(cols[rows==i]) < nneig:
+   #      needH.append( (i,cols[rows==i]) )
+   #      aux_sub.append( sub[i] )
    new_atoms, new_sub = [],[]
    for i in range(len(needH)):
       at,neig = needH[i]
