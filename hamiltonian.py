@@ -204,13 +204,15 @@ class Hamiltonian(object):
             mem_size += save_bands(X,Y,Z,bname)
             ibatch += 1
          if mem_size < 4:
+            all_arrays = []
             for f in files:
-               M = np.load(f)
+               M = np.load(f+'.npy')
                all_arrays.append( M )
             all_arrays = np.concatenate(all_arrays)
-            fname = '.'.join(f.split('.')[:2])
-            np.save(fname, all_arrays)
+            bname = folder+'%s.%s'%(self.tag,ext)
+            np.save(bname, all_arrays)
             #TODO Remove partial files
+         else: LG.warning('Over 4Gb of data for DOS. Not merging')
       if show: graphs.bands(X,Y,Z,show=show)
       return X, Y, Z
    #DEPRECATED

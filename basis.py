@@ -303,7 +303,7 @@ class Base(object):
          if N == 1: d =0.0
          elif N == 2: d = np.linalg.norm(self.latt[0])/np.sqrt(3)
          elif N==3: d = np.linalg.norm(self.latt[0])/2     # check
-         else: d = np.linalg.norm(self.latt[0])/2   # maybe??
+         else: d = np.linalg.norm(self.latt[0])/3   # maybe??
 
       b = self.bonds[0][0]
       indices = geo.defects(N,self.pos,self.subs,self.layers,
