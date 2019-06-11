@@ -566,7 +566,7 @@ def get_FBZ(recip,N=10):
          points.append(k)
    return points
 
-def recorrido(points,nk,cte_dens=True):
+def recorrido(points,nk,cte_dens=False):
    """
      Returns a list of points (np.array) with nk points between each pair of
      points in the provided list of points.
@@ -584,7 +584,7 @@ def recorrido(points,nk,cte_dens=True):
             lengths.append( np.linalg.norm(points[i]-points[i-1]) )
          lengths = np.array(lengths)
          lengths /= np.max(lengths)
-         nk = [int(nk*l) for l in lengths]
+         nk = [round(nk*l) for l in lengths]
       else: nk = [nk for _ in range(len(points)-1)]
    else:
       if len(nk) < len(points)-1:
@@ -605,7 +605,9 @@ def recorrido(points,nk,cte_dens=True):
       P2 = points[ipunto+1]
       coors = []
       for idim in range(len(P1)):
-         coors.append(np.linspace(P1[idim],P2[idim],N+ret[0],endpoint=ret[1]))
+         L = np.linspace(P1[idim],P2[idim],N+ret[0])
+         if not ret[1]: L = L[:-1]
+         coors.append( L )
       for p in zip(*coors):
          RECORRIDO.append(np.array(p))
    return RECORRIDO
