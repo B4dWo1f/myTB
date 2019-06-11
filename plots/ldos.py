@@ -28,8 +28,19 @@ def lDOS(centers,heights,c=0.3,norm=True,show=False,fortran=True):
    
    X = centers[:,0]
    Y = centers[:,1]
+
+   lx = 15
+   mx,Mx = -lx,lx    #np.min(X),np.max(X)
+   ly = 30
+   my,My = -ly,ly    #np.min(Y),np.max(Y)
+   mz,Mz = np.min(Z),np.max(Z)
+
    d = 3*c
-   xv, yv = np.mgrid[np.min(X)-d:np.max(X)+d:0.1, np.min(Y)-d:np.max(Y)+d:0.1]
+   #xv, yv = np.mgrid[np.min(X)-d:np.max(X)+d:0.1, np.min(Y)-d:np.max(Y)+d:0.1]
+   x = np.linspace(mx-d,Mx+d,n0)
+   y = np.linspace(my-d,My+d,int(n0*(ly/lx)))
+   yv, xv = np.meshgrid(x,y)
+
    
    if fortran: zv = num.ldos(xv,yv,centers,heights,0.3)
    else: zv = calc_lDOS(xv,yv,centers,heights)
