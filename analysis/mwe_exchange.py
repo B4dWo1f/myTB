@@ -163,8 +163,8 @@ class InGap(Exception):
 
 def get_ingap(E,V,Ba,pos,vacs,cond,vale):
    # Check in-gap
-   v = E[E>vale]
-   v= v[v<cond]
+   v = E[E>=vale]
+   v= v[v<=cond]
    if v.shape[0] == len(vacs):
       inds = np.array([np.where(E==iv)[0][0] for iv in v])
       return inds,False
