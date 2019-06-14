@@ -163,8 +163,8 @@ class InGap(Exception):
 
 def get_ingap(E,V,Ba,pos,vacs,cond,vale):
    # Check in-gap
-   v = E[E>=vale]
-   v= v[v<=cond]
+   v = E[E>vale]
+   v = v[v<cond]
    if v.shape[0] == len(vacs):
       inds = np.array([np.where(E==iv)[0][0] for iv in v])
       return inds,False
@@ -353,6 +353,10 @@ class Spectrum(object):
       #print('Analyzing states',self.inds)
       self.E_ingap = self.E[inds]
       self.V_ingap = self.V[inds]
+      ##XXX LEFT-RIGHT
+      #r2 = np.sqrt(2)
+      #self.V_ingap = np.array([(self.V_ingap[0] + self.V_ingap[1])/r2,
+      #                         (self.V_ingap[0] - self.V_ingap[1])/r2])
       IPR = []
       for i in range(self.V_ingap.shape[0]):
          v = self.V_ingap[i]
@@ -363,7 +367,7 @@ class Spectrum(object):
       self.SP = [mean_val(v,SUB) for v in self.V_ingap]
       cl = np.mean(self.pos[:,2])                       # XXX shame!!
       LAY = np.where(self.pos[:,2]>cl,1,-1)[self.Ba.n]  #
-      self.SL = [mean_val(v,LAY) for v in self.V_ingap]
+      self.LP = [mean_val(v,LAY) for v in self.V_ingap]
       norm = np.linalg.norm
       self.lc = []
       for v in self.V_ingap:
@@ -392,16 +396,18 @@ class Spectrum(object):
       if self.Nv == 1:
          msg +='\n   lc: %.4f\n'%(self.lc90[0])
          msg +='\n   IPR: %.4f\n'%(self.IPR[0])
+         msg +='\n   SP: %.4f\n'%(self.SP[0])
+         msg +='\n   LP: %.4f\n'%(self.LP[0])
       elif self.Nv == 2:
          msg +='\n   Left: %.4f   Right: %4f\n'%(self.lc[0],self.lc[1])
          aux = np.abs(self.E_ingap[1]-self.E_ingap[0])
          msg += '\nIn-gap splitting: %s (eV)\n'%(aux)
-         fac = 1000   #XXX meV!!!
-         msg += 'Effective Exchange couplings (meV)\n'
-         msg += '  UL: %s    ;    UR: %s\n'%(self.UL*fac, self.UR*fac)
-         msg += '  J_f: %s    ;    D: %s\n'%(self.J_f*fac,self.D*fac)
-         msg += '  tLR: %s    ;    tRL: %s\n'%(self.tLR*fac, self.tRL*fac)
-         msg += '  J_af: %s\n'%(self.J_af*fac)
+         #fac = 1000   #XXX meV!!!
+         #msg += 'Effective Exchange couplings (meV)\n'
+         #msg += '  UL: %s    ;    UR: %s\n'%(self.UL*fac, self.UR*fac)
+         #msg += '  J_f: %s    ;    D: %s\n'%(self.J_f*fac,self.D*fac)
+         #msg += '  tLR: %s    ;    tRL: %s\n'%(self.tLR*fac, self.tRL*fac)
+         #msg += '  J_af: %s\n'%(self.J_af*fac)
       msg += '\n ------ Pristine ------           ------ Defected ------\n'
       ic = 0 # In-gap counter
       for i in range(len(self.Ep)):
@@ -414,7 +420,7 @@ class Spectrum(object):
          if ed in [self.vale, self.cond]: msg += '  * %+.7f\n'%(ed)
          elif ed in self.E_ingap:
                msg += ' -> %+.7f'%(ed)
-               msg +='   SP:%.4f  SL: %.4f\n'%(self.SP[ic],self.SL[ic])
+               msg +='   SP:%.4f  LP: %.4f\n'%(self.SP[ic],self.LP[ic])
                #msg +='   SP:%.4f  SL: %.4f\n'%(self.SP_eig[ic],self.SL_eig[ic])
                ic += 1
          else: msg += '    %+.7f\n'%(ed)
@@ -451,18 +457,35 @@ if __name__ == '__main__':
    #A.select_ingap()
    #A.analyze_ingap()
    JF,D,tRL,tLR,UR,UL,e1,e2 = A.get_blue_parameters()
+   print(JF,D,tRL,tLR,UR,UL,e1,e2)
+   #A.plot()
    H = blue(JF,D,tRL,tLR,UR,UL,e1,e2)
    es,v = np.linalg.eigh(H)
-   v = v.transpose()
+   print('****')
+   print(es)
+   print('****')
 
+   print('\nhopp=',abs(A.E_ingap[1]-A.E_ingap[0])/2)
    print('Jf=',JF)
    print('D=',D)
    print('t=',tRL,tLR)
    print('U=',UR,UL)
+   print('')
+   #v = v.transpose()
    for i in range(len(es)):
-      print(i,es[i],np.round(v[i,:],4))
+      print(i,es[i])
+      print(np.round(v[:,i],4))
+   #v = v.transpose()
    import matplotlib.pyplot as plt
    plt.close('all')
+   fig, ax = plt.subplots()
+   C = ax.imshow(v*np.conj(v),cmap='gray_r',vmin=0.,vmax=1.)
+   fig.colorbar(C)
+   #ax.set_xticks([])
+   #ax.set_yticks([])
+   ax.grid()
+   ax.set_aspect('equal')
+
    fig, ax = plt.subplots()
    ax.plot(es,'o')
    ax.grid()

@@ -75,8 +75,9 @@ class calc_param(object):
       return msg
 
 class adatom_param(object):
-   def __init__(self,N):
+   def __init__(self,N,sp3=0.0):
       self.N = N
+      self.sp3 = sp3
    def __str__(self):
       if self.N == 0: msg = 'No adatoms to be introduced\n'
       elif self.N == 1:
@@ -167,7 +168,8 @@ def setup(fname='SK1.ini'):
    vp = vacancy_param(Nv,d,alpha)
 
    Na = int(config['adatom']['na'])
-   ap = adatom_param(Na)
+   sp3 = float(config['adatom']['sp3'])
+   ap = adatom_param(Na,sp3)
 
    ## System parameters
    SP = sys_param(xyz_file,pasivate,dist,vp,ap,DOspin,force0D,periodic)

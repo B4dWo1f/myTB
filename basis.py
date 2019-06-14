@@ -193,7 +193,7 @@ class Base(object):
       LG.info('Neighbors done')
       return self.bonds
    @log_help.log2screen(LG)
-   def adatom(self,l=1,N=1,at='H',d=None,alpha=0.0,dummy=False,inf=1e6,hollow=True):
+   def adatom(self,l=1,N=1,at='H',d=None,alpha=0.0,dummy=False,inf=1e6,hollow=True,sp3=0.0):
       """
         This function chooses N atoms in the center of the cell and adds an
         infinite on-site energy to them killing the hoppings
@@ -215,59 +215,11 @@ class Base(object):
       b = self.bonds[0][0]
       indices = geo.defects(N,self.pos,self.subs,self.layers,
                             bonds=b,d=d,alpha=alpha,hollow=True)
-      ### Get atoms in layer 1 and not connected in layer 0
-      ##print(len(self.layers),len(self.subs),len(self.INDS))
-      ## XXX WARNING this algorithm fails for some cells!!!!
-      #l = max(set(self.layers))
-      #LG.info('Adatoms introduced in layer: %s'%(l))
-      #aux = range(max(self.INDS)+1)   #+1 because python starts in 0
-      #sub_atsA =np.where((self.layers==l)&(self.subs==1),aux,-1)  #A
-      #sub_atsA = sub_atsA[sub_atsA>0]
-      #lena = len(self.find_neig(sub_atsA[0]))
-      #sub_atsB =np.where((self.layers==l)&(self.subs==-1),aux,-1) #B
-      #sub_atsB = sub_atsB[sub_atsB>0]
-      #lenb = len(self.find_neig(sub_atsB[0]))
-
-      ### sub_ats contains the hollow atoms in layer 1
-      #if hollow:
-      #   if lena < lenb: sub_ats = sub_atsA  # indices of hollow atoms
-      #   else: sub_ats = sub_atsB  # indices of hollow atoms
-      #else:  #XXX check
-      #   if lena > lenb: sub_ats = sub_atsA  # indices of hollow atoms
-      #   else: sub_ats = sub_atsB  # indices of hollow atoms
-
-      ## Select atoms for defects
-      #if N == 1: ## 1 defect
-      #   C = np.mean(self.pos[sub_ats],axis=0)
-      #   ind = geo.snap(C,self.pos[sub_ats])
-      #   indices = [sub_ats[ind]]
-      #   LG.info('Changing onsite of atom: %s'%(indices[0])) #XXX XXX XXX
-      #   ## TODO generalize for list of adatoms
-      #   pl = self.elements[-1].place + 1
-      #   r = self.pos[indices[0]] + np.array([0,0,1.4])
-      #   LG.info('Adatom in position: %.3f, %.3f, %.3f'%(r[0],r[1],r[2]))
-      #   la = self.elements[-1].layer  # TODO think + 1
-      #   #sub_dict = {'A':1,'B':-1}
-      #   #tcid_bus = {1:'A',-1:'B'}
-      #   su = -1 * self.elements[-1].sublattice
-      #   if dummy:
-      #      # Include an adatom with infinite on-site energy
-      #      fake_atoms = deepcopy(self.atoms)
-      #      for k,v in fake_atoms[at].items():
-      #         fake_atoms[at][k] = inf
-      #      self.elements.append( Base_Element(pl,at,fake_atoms,r) )
-      #   else: self.elements.append( Base_Element(pl,at,self.atoms,r) )
-      #   self.elements[-1].layer = la  #TODO fix
-      #   self.elements[-1].sublattice = su  #TODO fix
-      #   ## Update basis attributes
-      #   self.evaluate()
-      #   self.get_neig(fol='')   #TODO Fix to read from file?
-      #   self.get_layer()
-      #   self.get_sublattice()
       for ind in indices:
          LG.info('Changing onsite of atom: %s'%(ind)) #XXX XXX XXX
          ## TODO generalize for list of adatoms
          pl = self.elements[-1].place + 1
+         self.elements[ind].position[2] += sp3
          r = self.pos[ind] + np.array([0,0,1.4])
          LG.info('Adatom in position: %.3f, %.3f, %.3f'%(r[0],r[1],r[2]))
          la = self.elements[-1].layer  # TODO think + 1
@@ -281,11 +233,20 @@ class Base(object):
          else: self.elements.append( Base_Element(pl,at,self.atoms,r) )
          self.elements[-1].layer = la  #TODO fix
          self.elements[-1].sublattice = su  #TODO fix
+         # Fix basis
+         cont = 1
+         for o in self.elements[-1].orbitals:
+            self.AUX_INDS = np.append(self.AUX_INDS, pl + cont)
+            self.INDS = np.append(self.INDS, pl)
+            self.ORBS = np.append(self.ORBS, o)
+            self.ATS = np.append(self.ATS, at)
+            self.SPIN = np.append(self.SPIN, 1) #XXX future expansion
+            self.SUBS = np.append(self.SUBS, su) #XXX future expansion
+            self.LAYS = np.append(self.LAYS, la) #XXX future expansion
+            cont += 1
       ## Update basis attributes
       self.evaluate()
       self.get_neig(fol='')   #TODO Fix to read from file?
-      self.get_layer()
-      self.get_sublattice()
       self.defects = indices
       self.dfct='ada'
       return indices
@@ -349,14 +310,12 @@ class Base(object):
       self.save_xyz(f_xyz)
    def save_xyz(self,fname='base.xyz'):
       """ Save the base positions and lattice vector to a xyz file """
-      pos = [E.position for E in self.elements]
-      if hasattr(self, 'defects'):
-         ats = []
-         for E in self.elements:
-            if E.place in self.defects and self.dfct == 'vac': ats.append('X')
-            else: ats.append(E.element)
-      else: ats = [E.element for E in self.elements]
-      IO.write.xyz(pos,self.latt,at=ats,sub=self.subs,fname=fname)
+      pos,ats,subs = [],[],[]
+      for e in self.elements:
+         pos.append(e.position)
+         ats.append(e.element)
+         subs.append(e.sublattice)
+      IO.write.xyz(pos,self.latt,at=ats,sub=subs,fname=fname)
    def dospin(self):
       LG.info('Modifying basis for spin')
       self.LAYS = alg.m2spin(self.LAYS)

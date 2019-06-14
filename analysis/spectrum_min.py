@@ -98,7 +98,7 @@ for fol in fols:
          YPplt.append(ep)
       X.append(A.elec)
       P.append(A.SP)
-      L.append(A.SL)
+      L.append(A.LP)
       G.append(A.gap)
       try: Gg.append( abs(A.E_ingap[0]-A.E_ingap[1]) )
       except: pass
@@ -123,7 +123,7 @@ for fol in fols:
    mx,Mx = np.min(X), np.max(X)
 
    s = '   '
-   #f_data.write('#elec   SP   SL   G   E0   LC   LC90\n')
+   #f_data.write('#elec   SP   LP   G   E0   LC   LC90\n')
    for e,p,l,g,e0,lc,lc90,iprt,iprb,gg in zip(X,P,L,G,E0,LC,LC90,IPRt,IPRb,Gg):
       f_data.write(str(e) +s+ str(p[0]) +s+ str(l[0]) +s+ str(g) +s+ str(e0[0]))
       f_data.write(s+ str(lc[0]) +s+ str(lc90[0]) +s+ str(iprt) +s+ str(iprb))

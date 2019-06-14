@@ -69,8 +69,8 @@ if SP.vac.N > 0:
 else: IND_vac = []
 
 if SP.ada.N >0:
-   IND_ada = base_dfct.adatom(N=SP.ada.N,at='X')
-   base_pris.adatom(N=SP.ada.N,at='X', dummy=True)
+   IND_ada = base_dfct.adatom(N=SP.ada.N,at='X', sp3=SP.ada.sp3)
+   base_pris.adatom(N=SP.ada.N,at='X', dummy=True, sp3=SP.ada.sp3)
 
 
 ### Save basis
@@ -117,7 +117,7 @@ if CP.spectrum:
          print(e)
       return es,v
    Shw = False
-   n_es = min([int(H_pris.dim//2),20])
+   n_es = min([int(H_pris.dim//2),11])
    parallel = True
    import numpy as np
    if parallel:
@@ -144,7 +144,7 @@ if CP.bands:
       M = (K+Kp)/2
       points = [G,K,Kp,G]
       #points = [K,G,M,Kp]
-      points = [0.9*K, K , 1.1*K]
+      #points = [0.9*K, K , 1.1*K]
       path = geo.recorrido(points,CP.nk)
       LG.debug('Calculating bands for Pristine')
       I,E,Z = H_pris.get_bands(path,V=eigvec,full=full,folder=FP.out,show=Shw)

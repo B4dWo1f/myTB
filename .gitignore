@@ -12,5 +12,6 @@
 **.vsz
 **.bands
 **.bak
+**.bkp
 cells/*.xyz
 STOP
