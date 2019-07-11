@@ -453,7 +453,6 @@ if __name__ == '__main__':
    A = Spectrum(fol) #,slct=True)
    print(A)
    A.plot()
-   exit()
    #A.select_ingap()
    #A.analyze_ingap()
    JF,D,tRL,tLR,UR,UL,e1,e2 = A.get_blue_parameters()

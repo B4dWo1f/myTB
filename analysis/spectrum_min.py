@@ -123,11 +123,12 @@ for fol in fols:
    mx,Mx = np.min(X), np.max(X)
 
    s = '   '
-   #f_data.write('#elec   SP   LP   G   E0   LC   LC90\n')
-   for e,p,l,g,e0,lc,lc90,iprt,iprb,gg in zip(X,P,L,G,E0,LC,LC90,IPRt,IPRb,Gg):
+   f_data.write('#elec   SP   LP   G   E0   LC   LC90   IPRt   IPRb   split\n')
+   #for e,p,l,g,e0,lc,lc90,iprt,iprb,gg in zip(X,P,L,G,E0,LC,LC90,IPRt,IPRb,Gg):
+   for e,p,l,g,e0,lc,lc90,iprt,iprb in zip(X,P,L,G,E0,LC,LC90,IPRt,IPRb):
       f_data.write(str(e) +s+ str(p[0]) +s+ str(l[0]) +s+ str(g) +s+ str(e0[0]))
-      f_data.write(s+ str(lc[0]) +s+ str(lc90[0]) +s+ str(iprt) +s+ str(iprb))
-      f_data.write(s+ str(gg)+ '\n')
+      f_data.write(s+ str(lc[0]) +s+ str(lc90[0]) +s+ str(iprt) +s+ str(iprb)+'\n')
+      #f_data.write(s+ str(gg)+ '\n')
       f_data.flush()
    f_spec.write('#elec   Ep   E\n')
    for iv,iep,ie in zip(Xplt,YPplt,Yplt):
