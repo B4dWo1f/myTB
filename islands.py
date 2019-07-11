@@ -54,8 +54,8 @@ class UnitCell(object):
          aux.append(hs[i])
       self.pos = np.array(aux) #np.append(self.pos,np.array(hs))
       self.sub = np.append(self.sub,subh)
-   def multilayer(self,lN):
-      self.ats,self.pos,self.sub = multilayer(self.pos,self.ats,self.sub,N=lN)
+   def multilayer(self,lN,vec=np.array([1.4,0.,1.4])):
+      self.ats,self.pos,self.sub = multilayer(self.pos,self.ats,self.sub,N=lN,vec=vec)
       #self.center = np.mean(np.array(self.pos),axis=0)
       self.get_geo_info()
    def check(self):

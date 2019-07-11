@@ -214,7 +214,7 @@ class Base(object):
 
       b = self.bonds[0][0]
       indices = geo.defects(N,self.pos,self.subs,self.layers,
-                            bonds=b,d=d,alpha=alpha,hollow=True)
+                            bonds=b,d=d,alpha=alpha,hollow=hollow)
       for ind in indices:
          LG.info('Changing onsite of atom: %s'%(ind)) #XXX XXX XXX
          ## TODO generalize for list of adatoms
@@ -268,7 +268,7 @@ class Base(object):
 
       b = self.bonds[0][0]
       indices = geo.defects(N,self.pos,self.subs,self.layers,
-                            bonds=b,d=d,alpha=alpha,hollow=True)
+                            bonds=b,d=d,alpha=alpha,hollow=hollow)
       ## Add Vacancies
       for i in indices:
          LG.info('Changing onsite of atom: %s'%(i))

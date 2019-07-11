@@ -64,8 +64,10 @@ del base
 
 LG.info('Defects for the basis')
 if SP.vac.N > 0:
-   IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha) #,hollow=False)
-   #IND_vac = base_dfct.vacancy(N=SP.vac.N,d=SP.vac.d,alpha=SP.vac.alpha) #,hollow=False)
+   IND_vac = base_dfct.vacancy(N=SP.vac.N, d=SP.vac.d, alpha=SP.vac.alpha,
+                                                       hollow=SP.vac.hollow)
+   #IND_vac = base_dfct.vacancy(N=SP.vac.N, d=SP.vac.d, alpha=SP.vac.alpha,
+   #                                                    hollow=False)
 else: IND_vac = []
 
 if SP.ada.N >0:
@@ -117,7 +119,7 @@ if CP.spectrum:
          print(e)
       return es,v
    Shw = False
-   n_es = min([int(H_pris.dim//2),11])
+   n_es = min([int(H_pris.dim//2), CP.ns])
    parallel = True
    import numpy as np
    if parallel:

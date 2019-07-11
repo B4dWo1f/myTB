@@ -75,9 +75,10 @@ class calc_param(object):
       return msg
 
 class adatom_param(object):
-   def __init__(self,N,sp3=0.0):
+   def __init__(self,N,sp3=0.0,hollow=True):
       self.N = N
       self.sp3 = sp3
+      self.hollow = hollow
    def __str__(self):
       if self.N == 0: msg = 'No adatoms to be introduced\n'
       elif self.N == 1:
@@ -85,10 +86,11 @@ class adatom_param(object):
       return msg
 
 class vacancy_param(object):
-   def __init__(self,N,d,alpha):
+   def __init__(self,N,d,alpha,hollow=True):
       self.N = N
       self.d = d
       self.alpha = alpha
+      self.hollow = hollow
    def __str__(self):
       if self.N == 0: msg = 'No vacancies to be introduced\n'
       elif self.N == 1:
@@ -165,11 +167,13 @@ def setup(fname='SK1.ini'):
    Nv = int(config['vacancy']['N'])
    d = eval(config['vacancy']['d'])
    alpha = float(config['vacancy']['alpha'])
-   vp = vacancy_param(Nv,d,alpha)
+   hollow = eval(config['vacancy']['hollow'])
+   vp = vacancy_param(Nv, d, alpha, hollow=hollow)
 
    Na = int(config['adatom']['na'])
    sp3 = float(config['adatom']['sp3'])
-   ap = adatom_param(Na,sp3)
+   hollow = bool(config['adatom']['hollow'])
+   ap = adatom_param(Na,sp3,hollow)
 
    ## System parameters
    SP = sys_param(xyz_file,pasivate,dist,vp,ap,DOspin,force0D,periodic)
