@@ -117,6 +117,8 @@ class sys_param(vacancy_param):
       msg += '      Pasivate Unit Cell: %s\n'%(self.pasivate)
       #msg += '          Type of defect: %s\n'%(self.defect)
       msg += '                XYZ file: %s\n'%(self.xyz_file)
+      Natoms = os.popen(f'head -n 1 {self.xyz_file}').read().strip()
+      msg += f"        number of atoms: {Natoms}\n"
       msg += '  Distance between atoms:\n'
       for key, value in self.dists.items():
          msg += '     %s: %s\n'%(key,value)

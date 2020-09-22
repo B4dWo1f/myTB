@@ -228,6 +228,7 @@ def defects(N,pos,sub,lay,bonds=None,d=None,alpha=0.,hollow=True,retpoint=False)
 #   return lays
 
 @log_help.log2screen(LG)
+@log_help.timer(LG)
 def layer(pos,dist=1.5,lim=100,eps=0.2):
    """
     Determine the layer distribution of the atoms (so far only for Z direction)

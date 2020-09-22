@@ -123,9 +123,12 @@ if CP.spectrum:
    parallel = True
    import numpy as np
    if parallel:
-      import multiprocessing as sub
-      pool = sub.Pool(2)
+      from multiprocessing import Pool
+      pool = Pool(2)
       foo = pool.map(aux,[H_pris, H_dfct])
+      pool.close()
+      pool.join()
+      print('end parallel')
    else:
       v0 = None
       for h in [H_pris, H_dfct]:
@@ -184,6 +187,7 @@ print('All done. Bye!')
 
 print('='*80)
 print('='*80)
+print('Done!')
 exit()
 
 #from calculations import get_DOS

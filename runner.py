@@ -3,6 +3,7 @@
 
 import os
 import numpy as np
+from time import time
 
 
 f_in = 'inputs.in'
@@ -33,10 +34,13 @@ while True:
    if len(inputs[0]) == 0: break
    inp = list(map(float,inputs[0].split()))
    modify(f_tmp,inp,f_ini)
-   com = 'python3 %s %s'%(exe,f_ini)
+   # com = 'python3 %s %s && echo "hey, done"'%(exe,f_ini)
+   com = f'./{exe} {f_ini} && echo "hey, done"'
    print(com)
+   told = time()
    os.system(com)
-   print('\n\n')
+   print(f'\nDone in {time()-told:.3f}s')
+   print('--------- main done ---------\n')
    with open(f_done,'a') as f:
       f.write(inputs[0]+'\n')
    f.close()
