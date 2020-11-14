@@ -276,6 +276,7 @@ class Base(object):
          for k,v in aux.items():
             aux[k] = inf
          self.elements[i].onsite = aux
+         self.elements[i].element = 'X'
       self.basis = []
       for E in self.elements:
          for o in E.orbitals:

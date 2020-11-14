@@ -296,6 +296,7 @@ class Spectrum(object):
       self.pos = np.loadtxt(dfct_pos,skiprows=2,usecols=(1,2,3,4))
       self.sub = self.pos[:,3]
       self.pos = self.pos[:,:-1]
+      self.Nc = self.pos.shape[0]
       # Requires hexagon with 1 side parallel to X or Y
       X = self.pos[:,0]
       Y = self.pos[:,1]

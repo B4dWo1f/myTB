@@ -25,7 +25,7 @@ def compile_fortran(fname):
         Actual compilation with f2py
       """
       LG.info('Compilando fortran con f2py')
-      os.system('f2py3.5 -c -m %s %s'%(root_fname,fname))
+      os.system('f2py3 -c -m %s %s'%(root_fname,fname))
       LG.info('   ...Compilado fortran con f2py')
       os.system('cp %s .%s'%(fname,fname))
       LG.warning('Hidden copy to avoid re-compiling')

@@ -253,7 +253,7 @@ def compile_fortran(fname):
    def doit(fname):
       LG.debug('Backup file (.%s) not found'%(fname))
       LG.info('Compilando fortran con f2py')
-      os.system('f2py3.5 -c -m %s %s'%(root_fname,fname))
+      os.system('f2py3 -c -m %s %s'%(root_fname,fname))
       LG.info('   ...Compilado fortran con f2py')
       os.system('cp %s .%s'%(fname,fname))
       LG.warning('Hidden copy to avoid re-compiling')

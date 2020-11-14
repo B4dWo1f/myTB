@@ -86,7 +86,7 @@ for fol in fols:
    #folders = folders[::2][::2][::2]
 
 
-   X,P,L,G,Gg,E0,LC,LC90 = [],[],[],[],[],[],[],[]
+   X,P,L,G,GP,Gg,E0,LC,LC90 = [],[],[],[],[],[],[],[],[]
    IPRt,IPRb = [],[]
    Xplt,Yplt,YPplt = [],[],[]
    for f in tqdm(folders):
@@ -102,6 +102,7 @@ for fol in fols:
       P.append(A.SP)
       L.append(A.LP)
       G.append(A.gap)
+      GP.append(A.gapP)
       try: Gg.append( abs(A.E_ingap[0]-A.E_ingap[1]) )
       except: pass
       E0.append(A.E_ingap)
@@ -125,16 +126,17 @@ for fol in fols:
    mx,Mx = np.min(X), np.max(X)
 
    s = '   '
-   f_data.write('#elec   SP   LP   G   E0   LC   LC90   IPRt   IPRb   split\n')
+   f_data.write('#elec   SP   LP   GP   G   E0   LC   LC90   IPRt   IPRb   split\n')
    #for e,p,l,g,e0,lc,lc90,iprt,iprb,gg in zip(X,P,L,G,E0,LC,LC90,IPRt,IPRb,Gg):
-   for e,p,l,g,e0,lc,lc90,iprt,iprb in zip(X,P,L,G,E0,LC,LC90,IPRt,IPRb):
-      f_data.write(str(e) +s+ str(p[0]) +s+ str(l[0]) +s+ str(g) +s+ str(e0[0]))
-      f_data.write(s+ str(lc[0]) +s+ str(lc90[0]) +s+ str(iprt) +s+ str(iprb)+'\n')
+   for e,p,l,gp,g,e0,lc,lc90,iprt,iprb in zip(X,P,L,GP,G,E0,LC,LC90,IPRt,IPRb):
+      f_data.write(f'{e}   {p[0]}   {l[0]}   {gp}   {g}   {e0[0]}   {lc[0]}')
+      f_data.write(f'   {lc90[0]}   {iprt}   {iprb}\n')
       #f_data.write(s+ str(gg)+ '\n')
       # f_data.flush()
    f_spec.write('#elec   Ep   E\n')
    for iv,iep,ie in zip(Xplt,YPplt,Yplt):
-      f_spec.write(str(iv) +s+ str(iep) +s+ str(ie)+'\n')
+      f_spec.write(f'{iv}   {iep}   {ie}\n')
+      # f_spec.write(str(iv) +s+ str(iep) +s+ str(ie)+'\n')
       # f_spec.flush()
 
 
